@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35707.178 d17.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrackAPI", "WealthTrackAPI\WealthTrackAPI.csproj", "{0243F8C0-005B-461D-AA2C-6F6141A9852E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.API", "WealthTrackAPI\WealthTrack.API.csproj", "{0243F8C0-005B-461D-AA2C-6F6141A9852E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Business", "WealthTrack.Business\WealthTrack.Business.csproj", "{E7E07DB5-8ACA-4CBD-B239-BDE83B85F575}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Data", "WealthTrack.Data\WealthTrack.Data.csproj", "{084FB303-F842-4EE5-9F7A-937BCC17E2D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Business.Tests", "WealthTrack.Business.Tests\WealthTrack.Business.Tests.csproj", "{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{0243F8C0-005B-461D-AA2C-6F6141A9852E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0243F8C0-005B-461D-AA2C-6F6141A9852E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0243F8C0-005B-461D-AA2C-6F6141A9852E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E7E07DB5-8ACA-4CBD-B239-BDE83B85F575}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7E07DB5-8ACA-4CBD-B239-BDE83B85F575}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7E07DB5-8ACA-4CBD-B239-BDE83B85F575}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7E07DB5-8ACA-4CBD-B239-BDE83B85F575}.Release|Any CPU.Build.0 = Release|Any CPU
+		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
