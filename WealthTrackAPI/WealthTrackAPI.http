@@ -1,6 +1,0 @@
-@WealthTrackAPI_HostAddress = http://localhost:5183
-
-GET {{WealthTrackAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

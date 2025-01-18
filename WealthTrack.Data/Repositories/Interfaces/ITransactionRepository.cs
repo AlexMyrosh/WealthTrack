@@ -1,0 +1,19 @@
+﻿using WealthTrack.Data.DomainModels;
+
+namespace WealthTrack.Data.Repositories.Interfaces
+{
+    public interface ITransactionRepository
+    {
+        public Task<Transaction> CreateAsync(Transaction model);
+
+        public Task<Transaction?> GetByIdAsync(Guid id);
+
+        public Task<List<Transaction>> GetAllAsync();
+
+        public Transaction Update(Transaction model);
+
+        public Task<Transaction?> HardDeleteAsync(Guid id);
+
+        public Transaction HardDelete(Transaction model);
+    }
+}

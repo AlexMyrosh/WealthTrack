@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace WealthTrackAPI.Controllers
+namespace WealthTrack.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

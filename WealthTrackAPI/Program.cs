@@ -1,7 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using WealthTrack.Data.Context;
+using WealthTrack.Data.UnitOfWork;
 
-namespace WealthTrackAPI
+namespace WealthTrack.API
 {
     public class Program
     {
@@ -12,8 +13,9 @@ namespace WealthTrackAPI
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
             using (var scope = app.Services.CreateScope())

@@ -1,4 +1,4 @@
-namespace WealthTrackAPI
+namespace WealthTrack.API
 {
     public class WeatherForecast
     {
