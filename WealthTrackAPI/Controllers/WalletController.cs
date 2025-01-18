@@ -1,33 +1,38 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace WealthTrackAPI.Controllers
+namespace WealthTrack.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CryptoController : ControllerBase
+    public class WalletController : ControllerBase
     {
+        // GET: api/<WalletController>
         [HttpGet]
         public IEnumerable<string> Get()
         {
             return new string[] { "value1", "value2" };
         }
 
+        // GET api/<WalletController>/5
         [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
         }
 
+        // POST api/<WalletController>
         [HttpPost]
         public void Post([FromBody] string value)
         {
         }
 
+        // PUT api/<WalletController>/5
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
         }
 
+        // DELETE api/<WalletController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
