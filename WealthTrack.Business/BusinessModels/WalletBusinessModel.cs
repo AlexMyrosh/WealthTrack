@@ -1,11 +1,9 @@
 ﻿using WealthTrack.Shared.Enums;
 
-namespace WealthTrack.Data.DomainModels
+namespace WealthTrack.Business.BusinessModels
 {
-    public class Wallet
+    public class WalletBusinessModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
         public decimal Balance { get; set; }
@@ -20,10 +18,8 @@ namespace WealthTrack.Data.DomainModels
 
         public WalletType Type { get; set; }
 
-        public Guid CurrencyId { get; set; }
+        public CurrencyBusinessModel Currency { get; set; }
 
-        public virtual Currency Currency { get; set; }
-
-        public virtual List<Transaction> Transactions { get; set; }
+        public List<TransactionBusinessModel> Transactions { get; set; }
     }
 }

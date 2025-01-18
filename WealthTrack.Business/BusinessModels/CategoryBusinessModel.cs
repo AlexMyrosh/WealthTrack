@@ -1,11 +1,9 @@
 ﻿using WealthTrack.Shared.Enums;
 
-namespace WealthTrack.Data.DomainModels
+namespace WealthTrack.Business.BusinessModels
 {
-    public class Category
+    public class CategoryBusinessModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
         public string IconName { get; set; }
@@ -18,12 +16,8 @@ namespace WealthTrack.Data.DomainModels
 
         public CategoryStatus Status { get; set; }
 
-        public Guid? ParentCategoryId { get; set; }
+        public CategoryBusinessModel ParentCategory { get; set; }
 
-        public virtual Category ParentCategory { get; set; }
-
-        public virtual List<Category> ChildCategories { get; set; }
-
-        public virtual List<Transaction> Transactions { get; set; }
+        public List<CategoryBusinessModel> ChildCategories { get; set; }
     }
 }

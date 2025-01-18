@@ -7,16 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="CoinMarketCap-API" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WealthTrack.Data\WealthTrack.Data.csproj" />
     <ProjectReference Include="..\WealthTrack.Shared\WealthTrack.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="BusinessModels\" />
   </ItemGroup>
 
 </Project>
