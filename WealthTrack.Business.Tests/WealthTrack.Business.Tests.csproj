@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
+    <ProjectReference Include="..\WealthTrack.Shared\WealthTrack.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -8,6 +8,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DtoModels\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
+    <ProjectReference Include="..\WealthTrack.Shared\WealthTrack.Shared.csproj" />
   </ItemGroup>
 
 </Project>
