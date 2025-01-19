@@ -13,15 +13,39 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result.Entity;
         }
 
-        public async Task<Wallet?> GetByIdAsync(Guid id)
+        public async Task<Wallet?> GetByIdAsync(Guid id, string include = "")
         {
-            var result = await context.Wallets.FindAsync(id);
+            var query = context.Wallets.AsQueryable();
+            var includeProperties = include.Split(",");
+            foreach (var property in includeProperties)
+            {
+                if (string.IsNullOrWhiteSpace(property))
+                {
+                    continue;
+                }
+
+                query = EntityFrameworkQueryableExtensions.Include(query, property);
+            }
+
+            var result = await query.SingleOrDefaultAsync(e => e.Id == id);
             return result;
         }
 
-        public async Task<List<Wallet>> GetAllAsync()
+        public async Task<List<Wallet>> GetAllAsync(string include = "")
         {
-            var result = await context.Wallets.ToListAsync();
+            var query = context.Wallets.AsSplitQuery();
+            var includeProperties = include.Split(",");
+            foreach (var property in includeProperties)
+            {
+                if (string.IsNullOrWhiteSpace(property))
+                {
+                    continue;
+                }
+
+                query = query.Include(property);
+            }
+
+            var result = await query.ToListAsync();
             return result;
         }
 

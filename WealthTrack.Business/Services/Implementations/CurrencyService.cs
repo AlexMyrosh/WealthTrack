@@ -1,84 +1,29 @@
 ﻿using AutoMapper;
-using WealthTrack.Business.BusinessModels;
+using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.Services.Interfaces;
-using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
-using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
     public class CurrencyService(IUnitOfWork unitOfWork, IMapper mapper) : ICurrencyService
     {
-        public async Task<CurrencyBusinessModel> CreateAsync(CurrencyBusinessModel model)
-        {
-            var domainModel = mapper.Map<Currency>(model);
-            var createdDomainModel = await unitOfWork.CurrencyRepository.CreateAsync(domainModel);
-            await unitOfWork.SaveAsync();
-            var result = mapper.Map<CurrencyBusinessModel>(createdDomainModel);
-            return result;
-        }
-
-        public async Task<CurrencyBusinessModel?> GetByIdAsync(Guid id)
+        public async Task<CurrencyDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "")
         {
             if (id == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
-            var domainModel = await unitOfWork.CurrencyRepository.GetByIdAsync(id);
-            var result = mapper.Map<CurrencyBusinessModel>(domainModel);
+            var domainModel = await unitOfWork.CurrencyRepository.GetByIdAsync(id, include);
+            var result = mapper.Map<CurrencyDetailsBusinessModel>(domainModel);
             return result;
         }
 
-        public async Task<List<CurrencyBusinessModel>> GetAllAsync()
+        public async Task<List<CurrencyDetailsBusinessModel>> GetAllAsync(string include = "")
         {
-            var domainModels = await unitOfWork.CurrencyRepository.GetAllAsync();
-            var result = mapper.Map<List<CurrencyBusinessModel>>(domainModels);
+            var domainModels = await unitOfWork.CurrencyRepository.GetAllAsync(include);
+            var result = mapper.Map<List<CurrencyDetailsBusinessModel>>(domainModels);
             return result;
-        }
-
-        public async Task<CurrencyBusinessModel> UpdateAsync(CurrencyBusinessModel model)
-        {
-            var domainModel = mapper.Map<Currency>(model);
-            var updatedDomainModel = unitOfWork.CurrencyRepository.Update(domainModel);
-            await unitOfWork.SaveAsync();
-            var result = mapper.Map<CurrencyBusinessModel>(updatedDomainModel);
-            return result;
-        }
-
-        public async Task<bool> HardDeleteAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(id), "id is empty");
-            }
-
-            var deletedDomainModel = await unitOfWork.CurrencyRepository.HardDeleteAsync(id);
-            if (deletedDomainModel is null)
-            {
-                return false;
-            }
-
-            await unitOfWork.SaveAsync();
-            return true;
-        }
-
-        public async Task<bool> SoftDeleteAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(id), "id is empty");
-            }
-
-            var domainModel = await unitOfWork.CurrencyRepository.GetByIdAsync(id);
-            if (domainModel is null)
-            {
-                return false;
-            }
-
-            domainModel.Status = CurrencyStatus.Deleted;
-            await unitOfWork.SaveAsync();
-            return true;
         }
     }
 }

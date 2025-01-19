@@ -8,7 +8,7 @@ namespace WealthTrack.Data.DomainModels
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
 
         public CategoryType Type { get; set; }
 
@@ -20,10 +20,10 @@ namespace WealthTrack.Data.DomainModels
 
         public Guid? ParentCategoryId { get; set; }
 
-        public virtual Category ParentCategory { get; set; }
+        public Category ParentCategory { get; set; }
 
-        public virtual List<Category> ChildCategories { get; set; }
+        public List<Category> ChildCategories { get; set; }
 
-        public virtual List<Transaction> Transactions { get; set; }
+        public List<Transaction> Transactions { get; set; }
     }
 }

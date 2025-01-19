@@ -1,36 +1,67 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using WealthTrack.API.ApiModels.Transaction;
+using WealthTrack.Business.BusinessModels.Transaction;
+using WealthTrack.Business.Services.Interfaces;
 
 namespace WealthTrack.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TransactionController : ControllerBase
+    public class TransactionController(ITransactionService transactionService, IMapper mapper) : ControllerBase
     {
+        // GET: api/transaction
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult<List<TransactionDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            return new string[] { "value1", "value2" };
+            var businessModels = await transactionService.GetAllAsync(include);
+            var apiModels = mapper.Map<List<TransactionDetailsApiModel>>(businessModels);
+            return Ok(apiModels);
         }
 
+        // GET api/transaction/{id}
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<ActionResult<TransactionDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            return "value";
+            var businessModel = await transactionService.GetByIdAsync(id, include);
+            if (businessModel is null)
+            {
+                return NotFound();
+            }
+
+            var apiModel = mapper.Map<TransactionDetailsApiModel>(businessModel);
+            return Ok(apiModel);
         }
 
-        [HttpPost]
-        public void Post([FromBody] string value)
+        // POST api/transaction/create
+        [HttpPost("create")]
+        public async Task<ActionResult> Create([FromBody] CreateTransactionApiModel model)
         {
+            var businessModel = mapper.Map<CreateTransactionBusinessModel>(model);
+            await transactionService.CreateAsync(businessModel);
+            return Created();
         }
 
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        // PUT api/transaction/update
+        [HttpPut("update")]
+        public async Task<ActionResult> Update([FromBody] UpdateTransactionApiModel model)
         {
+            var businessModel = mapper.Map<UpdateTransactionBusinessModel>(model);
+            await transactionService.UpdateAsync(businessModel);
+            return Accepted();
         }
 
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        // DELETE api/transaction/hard_delete/{id}
+        [HttpDelete("hard_delete/{id}")]
+        public async Task<ActionResult> HardDelete(Guid id)
         {
+            var result = await transactionService.HardDeleteAsync(id);
+            if (result)
+            {
+                return NoContent();
+            }
+
+            return BadRequest();
         }
     }
 }

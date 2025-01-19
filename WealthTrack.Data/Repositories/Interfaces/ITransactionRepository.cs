@@ -6,9 +6,9 @@ namespace WealthTrack.Data.Repositories.Interfaces
     {
         public Task<Transaction> CreateAsync(Transaction model);
 
-        public Task<Transaction?> GetByIdAsync(Guid id);
+        public Task<Transaction?> GetByIdAsync(Guid id, string include = "");
 
-        public Task<List<Transaction>> GetAllAsync();
+        public Task<List<Transaction>> GetAllAsync(string include = "");
 
         public Transaction Update(Transaction model);
 

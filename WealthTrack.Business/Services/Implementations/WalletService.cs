@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using WealthTrack.Business.BusinessModels;
+using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
@@ -9,41 +9,47 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class WalletService(IUnitOfWork unitOfWork, IMapper mapper) : IWalletService
     {
-        public async Task<WalletBusinessModel> CreateAsync(WalletBusinessModel model)
+        public async Task CreateAsync(CreateWalletBusinessModel model)
         {
             var domainModel = mapper.Map<Wallet>(model);
-            var createdDomainModel = await unitOfWork.WalletRepository.CreateAsync(domainModel);
+            domainModel.CreatedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.Status = WalletStatus.Active;
+            await unitOfWork.WalletRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
-            var result = mapper.Map<WalletBusinessModel>(createdDomainModel);
-            return result;
         }
 
-        public async Task<WalletBusinessModel?> GetByIdAsync(Guid id)
+        public async Task<WalletDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "")
         {
             if (id == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
-            var domainModel = await unitOfWork.WalletRepository.GetByIdAsync(id);
-            var result = mapper.Map<WalletBusinessModel>(domainModel);
+            var domainModel = await unitOfWork.WalletRepository.GetByIdAsync(id, include);
+            var result = mapper.Map<WalletDetailsBusinessModel>(domainModel);
             return result;
         }
 
-        public async Task<List<WalletBusinessModel>> GetAllAsync()
+        public async Task<List<WalletDetailsBusinessModel>> GetAllAsync(string include = "")
         {
-            var domainModels = await unitOfWork.WalletRepository.GetAllAsync();
-            var result = mapper.Map<List<WalletBusinessModel>>(domainModels);
+            var domainModels = await unitOfWork.WalletRepository.GetAllAsync(include);
+            var result = mapper.Map<List<WalletDetailsBusinessModel>>(domainModels);
             return result;
         }
 
-        public async Task<WalletBusinessModel> UpdateAsync(WalletBusinessModel model)
+        public async Task UpdateAsync(UpdateWalletBusinessModel model)
         {
-            var domainModel = mapper.Map<Wallet>(model);
-            var updatedDomainModel = unitOfWork.WalletRepository.Update(domainModel);
+            var originalModel = await unitOfWork.WalletRepository.GetByIdAsync(model.Id);
+            mapper.Map(model, originalModel);
+            if (originalModel is null)
+            {
+                throw new AutoMapperMappingException("Entity is null after mapping");
+            }
+
+            originalModel.ModifiedDate = DateTimeOffset.Now;
+            unitOfWork.WalletRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
-            var result = mapper.Map<WalletBusinessModel>(updatedDomainModel);
-            return result;
         }
 
         public async Task<bool> HardDeleteAsync(Guid id)
@@ -59,42 +65,6 @@ namespace WealthTrack.Business.Services.Implementations
                 return false;
             }
 
-            await unitOfWork.SaveAsync();
-            return true;
-        }
-
-        public async Task<bool> SoftDeleteAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(id), "id is empty");
-            }
-
-            var domainModel = await unitOfWork.WalletRepository.GetByIdAsync(id);
-            if (domainModel is null)
-            {
-                return false;
-            }
-
-            domainModel.Status = WalletStatus.Deleted;
-            await unitOfWork.SaveAsync();
-            return true;
-        }
-
-        public async Task<bool> ArchivedAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(id), "id is empty");
-            }
-
-            var domainModel = await unitOfWork.WalletRepository.GetByIdAsync(id);
-            if (domainModel is null)
-            {
-                return false;
-            }
-
-            domainModel.Status = WalletStatus.Archived;
             await unitOfWork.SaveAsync();
             return true;
         }

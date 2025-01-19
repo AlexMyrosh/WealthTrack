@@ -22,8 +22,8 @@ namespace WealthTrack.Data.DomainModels
 
         public Guid CurrencyId { get; set; }
 
-        public virtual Currency Currency { get; set; }
+        public Currency Currency { get; set; }
 
-        public virtual List<Transaction> Transactions { get; set; }
+        public List<Transaction> Transactions { get; set; }
     }
 }

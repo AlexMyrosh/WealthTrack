@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using WealthTrack.Business.BusinessModels;
+using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
@@ -9,41 +9,47 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class CategoryService(IUnitOfWork unitOfWork, IMapper mapper) : ICategoryService
     {
-        public async Task<CategoryBusinessModel> CreateAsync(CategoryBusinessModel model)
+        public async Task CreateAsync(CreateCategoryBusinessModel model)
         {
             var domainModel = mapper.Map<Category>(model);
-            var createdDomainModel = await unitOfWork.CategoryRepository.CreateAsync(domainModel);
+            domainModel.CreatedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.Status = CategoryStatus.Active;
+            await unitOfWork.CategoryRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
-            var result = mapper.Map<CategoryBusinessModel>(createdDomainModel);
-            return result;
         }
 
-        public async Task<CategoryBusinessModel?> GetByIdAsync(Guid id)
+        public async Task<CategoryDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "")
         {
             if (id == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
-            var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
-            var result = mapper.Map<CategoryBusinessModel>(domainModel);
+            var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, include);
+            var result = mapper.Map<CategoryDetailsBusinessModel>(domainModel);
             return result;
         }
 
-        public async Task<List<CategoryBusinessModel>> GetAllAsync()
+        public async Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "")
         {
-            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync();
-            var result = mapper.Map<List<CategoryBusinessModel>>(domainModels);
+            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync(include);
+            var result = mapper.Map<List<CategoryDetailsBusinessModel>>(domainModels);
             return result;
         }
 
-        public async Task<CategoryBusinessModel> UpdateAsync(CategoryBusinessModel model)
+        public async Task UpdateAsync(UpdateCategoryBusinessModel model)
         {
-            var domainModel = mapper.Map<Category>(model);
-            var updatedDomainModel = unitOfWork.CategoryRepository.Update(domainModel);
+            var originalModel = await unitOfWork.CategoryRepository.GetByIdAsync(model.Id);
+            mapper.Map(model, originalModel);
+            if (originalModel is null)
+            {
+                throw new AutoMapperMappingException("Entity is null after mapping");
+            }
+
+            originalModel.ModifiedDate = DateTimeOffset.Now;
+            unitOfWork.CategoryRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
-            var result = mapper.Map<CategoryBusinessModel>(updatedDomainModel);
-            return result;
         }
 
         public async Task<bool> HardDeleteAsync(Guid id)
@@ -70,12 +76,13 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
-            var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
+            var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, "ChildCategories");
             if (domainModel is null)
             {
                 return false;
             }
 
+            // TODO: Add soft delete of all child categories (recursively). As an option, can Load method be used
             domainModel.Status = CategoryStatus.Deleted;
             await unitOfWork.SaveAsync();
             return true;

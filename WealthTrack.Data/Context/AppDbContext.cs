@@ -60,7 +60,12 @@ namespace WealthTrack.Data.Context
                     .IsUnicode()
                     .HasMaxLength(3);
 
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasConversion<string>();
+
                 entity.Property(e => e.Status)
+                    .IsRequired()
                     .HasConversion<string>();
             });
 
@@ -73,6 +78,7 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(100);
 
                 entity.Property(e => e.Balance)
+                    .HasColumnType("decimal(18,9)")
                     .IsRequired();
 
                 entity.Property(e => e.IsPartOfGeneralBalance)
@@ -106,6 +112,7 @@ namespace WealthTrack.Data.Context
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Amount)
+                    .HasColumnType("decimal(18,9)")
                     .IsRequired();
 
                 entity.Property(e => e.Description)

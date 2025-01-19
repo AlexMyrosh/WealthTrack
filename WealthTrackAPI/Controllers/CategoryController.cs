@@ -1,41 +1,80 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using WealthTrack.API.ApiModels.Category;
+using WealthTrack.Business.BusinessModels.Category;
+using WealthTrack.Business.Services.Interfaces;
 
 namespace WealthTrack.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController : ControllerBase
+    public class CategoryController(ICategoryService categoryService, IMapper mapper) : ControllerBase
     {
-        // GET: api/<CategoryController>
+        // GET: api/category
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<ActionResult<List<CategoryDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            return new string[] { "value1", "value2" };
+            var businessModels = await categoryService.GetAllAsync(include);
+            var apiModels = mapper.Map<List<CategoryDetailsApiModel>>(businessModels);
+            return Ok(apiModels);
         }
 
-        // GET api/<CategoryController>/5
+        // GET api/category/{id}
         [HttpGet("{id}")]
-        public string Get(int id)
+        public async Task<ActionResult<CategoryDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            return "value";
+            var businessModel = await categoryService.GetByIdAsync(id, include);
+            if (businessModel is null)
+            {
+                return NotFound();
+            }
+
+            var apiModel = mapper.Map<CategoryDetailsApiModel>(businessModel);
+            return Ok(apiModel);
         }
 
-        // POST api/<CategoryController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        // POST api/category/create
+        [HttpPost("create")]
+        public async Task<ActionResult> Create([FromBody] CreateCategoryApiModel model)
         {
+            var businessModel = mapper.Map<CreateCategoryBusinessModel>(model);
+            await categoryService.CreateAsync(businessModel);
+            return Created();
         }
 
-        // PUT api/<CategoryController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        // PUT api/category/update
+        [HttpPut("update")]
+        public async Task<ActionResult> Update([FromBody] UpdateCategoryApiModel model)
         {
+            var businessModel = mapper.Map<UpdateCategoryBusinessModel>(model);
+            await categoryService.UpdateAsync(businessModel);
+            return Accepted();
         }
 
-        // DELETE api/<CategoryController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        // DELETE api/category/hard_delete/{id}
+        [HttpDelete("hard_delete/{id}")]
+        public async Task<ActionResult> HardDelete(Guid id)
         {
+            var result = await categoryService.HardDeleteAsync(id);
+            if (result)
+            {
+                return NoContent();
+            }
+
+            return BadRequest();
+        }
+
+        // DELETE api/category/soft_delete/{id}
+        [HttpDelete("soft_delete/{id}")]
+        public async Task<ActionResult> SoftDelete(Guid id)
+        {
+            var result = await categoryService.SoftDeleteAsync(id);
+            if (result)
+            {
+                return NoContent();
+            }
+
+            return BadRequest();
         }
     }
 }

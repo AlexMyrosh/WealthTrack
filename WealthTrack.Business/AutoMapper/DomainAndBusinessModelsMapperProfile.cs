@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
-using WealthTrack.Business.BusinessModels;
+using WealthTrack.Business.BusinessModels.Category;
+using WealthTrack.Business.BusinessModels.Currency;
+using WealthTrack.Business.BusinessModels.Transaction;
+using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Data.DomainModels;
 
 namespace WealthTrack.Business.AutoMapper
@@ -8,10 +11,28 @@ namespace WealthTrack.Business.AutoMapper
     {
         public DomainAndBusinessModelsMapperProfile()
         {
-            CreateMap<CategoryBusinessModel, Category>().ReverseMap();
-            CreateMap<CurrencyBusinessModel, Currency>().ReverseMap();
-            CreateMap<TransactionBusinessModel, Transaction>().ReverseMap();
-            CreateMap<WalletBusinessModel, Wallet>().ReverseMap();
+            // Category
+            CreateMap<CreateCategoryBusinessModel, Category>();
+            CreateMap<UpdateCategoryBusinessModel, Category>();
+            CreateMap<Category, CategoryDetailsBusinessModel>();
+            CreateMap<Category, ParentCategoryDetailsBusinessModel>();
+            CreateMap<Category, ChildCategoryDetailsBusinessModel>();
+
+            // Transaction
+            CreateMap<CreateTransactionBusinessModel, Transaction>();
+            CreateMap<UpdateTransactionBusinessModel, Transaction>();
+            CreateMap<Transaction, TransactionDetailsBusinessModel>();
+            CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
+            CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();
+
+            // Wallet
+            CreateMap<CreateWalletBusinessModel, Wallet>();
+            CreateMap<UpdateWalletBusinessModel, Wallet>();
+            CreateMap<Wallet, WalletDetailsBusinessModel>();
+            CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
+
+            // Currencies
+            CreateMap<Currency, CurrencyDetailsBusinessModel>();
         }
     }
 }
