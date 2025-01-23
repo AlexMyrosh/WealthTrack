@@ -5,17 +5,17 @@ using WealthTrack.Data.Repositories.Interfaces;
 
 namespace WealthTrack.Data.Repositories.Implementations
 {
-    public class CategoryRepository(AppDbContext context) : ICategoryRepository
+    public class BudgetRepository(AppDbContext context) : IBudgetRepository
     {
-        public async Task<Category> CreateAsync(Category model)
+        public async Task<Budget> CreateAsync(Budget model)
         {
-            var result = await context.Categories.AddAsync(model);
+            var result = await context.Budgets.AddAsync(model);
             return result.Entity;
         }
 
-        public async Task<Category?> GetByIdAsync(Guid id, string include = "")
+        public async Task<Budget?> GetByIdAsync(Guid id, string include = "")
         {
-            var query = context.Categories.AsQueryable();
+            var query = context.Budgets.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -31,15 +31,13 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public async Task<List<Category>> GetAllAsync(string include = "")
+        public async Task<List<Budget>> GetAllAsync(string include = "")
         {
-            var query = context.Categories.AsQueryable();
+            var query = context.Budgets.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property) || 
-                    string.Equals(property, "parentcategory", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(property, "childcategories", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(property))
                 {
                     continue;
                 }
@@ -51,27 +49,27 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public Category Update(Category model)
+        public Budget Update(Budget model)
         {
-            var result = context.Categories.Update(model);
+            var result = context.Budgets.Update(model);
             return result.Entity;
         }
 
-        public async Task<Category?> HardDeleteAsync(Guid id)
+        public async Task<Budget?> HardDeleteAsync(Guid id)
         {
-            var model = await context.Categories.FindAsync(id);
+            var model = await context.Budgets.FindAsync(id);
             if (model is null)
             {
                 return null;
             }
 
-            var result = context.Categories.Remove(model);
+            var result = context.Budgets.Remove(model);
             return result.Entity;
         }
 
-        public Category HardDelete(Category model)
+        public Budget HardDelete(Budget model)
         {
-            var result = context.Categories.Remove(model);
+            var result = context.Budgets.Remove(model);
             return result.Entity;
         }
     }

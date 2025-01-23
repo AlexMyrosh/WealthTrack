@@ -27,7 +27,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<List<Currency>> GetAllAsync(string include = "")
         {
-            var query = context.Currencies.AsSplitQuery();
+            var query = context.Currencies.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {

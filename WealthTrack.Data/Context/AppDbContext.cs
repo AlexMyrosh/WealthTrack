@@ -9,6 +9,7 @@ namespace WealthTrack.Data.Context
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<Budget> Budgets { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -105,6 +106,11 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Wallets)
                     .HasForeignKey(e => e.CurrencyId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Budget)
+                    .WithMany(e => e.Wallets)
+                    .HasForeignKey(e => e.BudgetId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             modelBuilder.Entity<Transaction>(entity =>
@@ -133,6 +139,42 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Transactions)
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<Budget>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.ModifiedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.Status)
+                    .IsRequired()
+                    .HasConversion<string>();
+
+                entity.Property(e => e.Status)
+                    .IsRequired()
+                    .HasConversion<string>();
+
+                entity.Property(e => e.CurrencyId)
+                    .IsRequired();
+
+                entity.HasOne(e => e.Currency)
+                    .WithMany(e => e.Budgets)
+                    .HasForeignKey(e => e.CurrencyId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(e => e.Wallets)
+                    .WithOne(e => e.Budget)
+                    .HasForeignKey(e => e.BudgetId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

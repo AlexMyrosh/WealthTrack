@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.API.ApiModels.Category;
 using WealthTrack.API.ApiModels.Currency;
 using WealthTrack.API.ApiModels.Transaction;
 using WealthTrack.API.ApiModels.Wallet;
+using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Transaction;
@@ -36,6 +38,13 @@ namespace WealthTrack.API.AutoMapper
 
             // Currencies
             CreateMap<CurrencyDetailsApiModel, CurrencyDetailsBusinessModel>().ReverseMap();
+
+            // Budgets
+            CreateMap<CreateBudgetApiModel, CreateBudgetBusinessModel>();
+            CreateMap<UpdateBudgetApiModel, UpdateBudgetBusinessModel>();
+            CreateMap<BudgetDetailsApiModel, BudgetDetailsBusinessModel>().ReverseMap();
+            CreateMap<CurrencyRelatedToBudgetDetailsApiModel, CurrencyRelatedToBudgetDetailsBusinessModel>().ReverseMap();
+            CreateMap<WalletRelatedToBudgetDetailsApiModel, WalletRelatedToBudgetDetailsBusinessModel>().ReverseMap();
         }
     }
 }

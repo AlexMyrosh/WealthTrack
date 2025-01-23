@@ -33,7 +33,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<List<Wallet>> GetAllAsync(string include = "")
         {
-            var query = context.Wallets.AsSplitQuery();
+            var query = context.Wallets.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {

@@ -18,6 +18,8 @@ namespace WealthTrack.Data.DomainModels
 
         public List<Wallet> Wallets { get; set; }
 
+        public List<Budget> Budgets { get; set; }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;

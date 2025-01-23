@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Transaction;
@@ -33,6 +34,13 @@ namespace WealthTrack.Business.AutoMapper
 
             // Currencies
             CreateMap<Currency, CurrencyDetailsBusinessModel>();
+
+            // Budgets
+            CreateMap<CreateBudgetBusinessModel, Budget>();
+            CreateMap<UpdateBudgetBusinessModel, Budget>();
+            CreateMap<Budget, BudgetDetailsBusinessModel>();
+            CreateMap<Currency, CurrencyRelatedToBudgetDetailsBusinessModel>();
+            CreateMap<Wallet, WalletRelatedToBudgetDetailsBusinessModel>();
         }
     }
 }
