@@ -9,7 +9,7 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class BudgetService(IUnitOfWork unitOfWork, IMapper mapper) : IBudgetService
     {
-        public async Task CreateAsync(CreateBudgetBusinessModel model)
+        public async Task CreateAsync(BudgetUpsertBusinessModel model)
         {
             var domainModel = mapper.Map<Budget>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
@@ -38,9 +38,9 @@ namespace WealthTrack.Business.Services.Implementations
             return result;
         }
 
-        public async Task UpdateAsync(UpdateBudgetBusinessModel model)
+        public async Task UpdateAsync(Guid id, BudgetUpsertBusinessModel model)
         {
-            var originalModel = await unitOfWork.BudgetRepository.GetByIdAsync(model.Id);
+            var originalModel = await unitOfWork.BudgetRepository.GetByIdAsync(id);
             mapper.Map(model, originalModel);
             if (originalModel is null)
             {

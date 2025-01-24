@@ -1,14 +1,12 @@
 ﻿using WealthTrack.Shared.Enums;
 
-namespace WealthTrack.Business.BusinessModels.Category
+namespace WealthTrack.API.ApiModels.Category
 {
-    public class UpdateCategoryBusinessModel
+    public class CategoryUpsertApiModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
 
         public CategoryType Type { get; set; }
 

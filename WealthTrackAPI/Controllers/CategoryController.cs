@@ -35,19 +35,19 @@ namespace WealthTrack.API.Controllers
 
         // POST api/category/create
         [HttpPost("create")]
-        public async Task<ActionResult> Create([FromBody] CreateCategoryApiModel model)
+        public async Task<ActionResult> Create([FromBody] CategoryUpsertApiModel model)
         {
-            var businessModel = mapper.Map<CreateCategoryBusinessModel>(model);
+            var businessModel = mapper.Map<CategoryUpsertBusinessModel>(model);
             await categoryService.CreateAsync(businessModel);
             return Created();
         }
 
-        // PUT api/category/update
-        [HttpPut("update")]
-        public async Task<ActionResult> Update([FromBody] UpdateCategoryApiModel model)
+        // PUT api/category/update/{id}
+        [HttpPut("update/{id}")]
+        public async Task<ActionResult> Update(Guid id, [FromBody] CategoryUpsertApiModel model)
         {
-            var businessModel = mapper.Map<UpdateCategoryBusinessModel>(model);
-            await categoryService.UpdateAsync(businessModel);
+            var businessModel = mapper.Map<CategoryUpsertBusinessModel>(model);
+            await categoryService.UpdateAsync(id, businessModel);
             return Accepted();
         }
 

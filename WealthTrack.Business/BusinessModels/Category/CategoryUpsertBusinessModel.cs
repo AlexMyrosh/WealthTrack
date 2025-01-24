@@ -2,7 +2,7 @@
 
 namespace WealthTrack.Business.BusinessModels.Category
 {
-    public class CreateCategoryBusinessModel
+    public class CategoryUpsertBusinessModel
     {
         public string Name { get; set; }
 

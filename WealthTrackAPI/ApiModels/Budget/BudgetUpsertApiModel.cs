@@ -1,6 +1,6 @@
-﻿namespace WealthTrack.Business.BusinessModels.Budget
+﻿namespace WealthTrack.API.ApiModels.Budget
 {
-    public class CreateBudgetBusinessModel
+    public class BudgetUpsertApiModel
     {
         public string Name { get; set; }
 

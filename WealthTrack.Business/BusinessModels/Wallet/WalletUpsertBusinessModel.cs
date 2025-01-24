@@ -2,10 +2,8 @@
 
 namespace WealthTrack.Business.BusinessModels.Wallet
 {
-    public class UpdateWalletBusinessModel
+    public class WalletUpsertBusinessModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
         public decimal Balance { get; set; }

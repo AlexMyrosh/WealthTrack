@@ -4,13 +4,13 @@ namespace WealthTrack.Business.Services.Interfaces
 {
     public interface ICategoryService
     {
-        public Task CreateAsync(CreateCategoryBusinessModel model);
+        public Task CreateAsync(CategoryUpsertBusinessModel model);
 
         public Task<CategoryDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "");
 
         public Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "");
 
-        public Task UpdateAsync(UpdateCategoryBusinessModel model);
+        public Task UpdateAsync(Guid id, CategoryUpsertBusinessModel model);
 
         public Task<bool> HardDeleteAsync(Guid id);
 

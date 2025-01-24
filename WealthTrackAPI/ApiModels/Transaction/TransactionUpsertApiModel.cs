@@ -1,12 +1,12 @@
 ﻿using WealthTrack.Shared.Enums;
 
-namespace WealthTrack.Business.BusinessModels.Transaction
+namespace WealthTrack.API.ApiModels.Transaction
 {
-    public class CreateTransactionBusinessModel
+    public class TransactionUpsertApiModel
     {
         public decimal Amount { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public TransactionType Type { get; set; }
 

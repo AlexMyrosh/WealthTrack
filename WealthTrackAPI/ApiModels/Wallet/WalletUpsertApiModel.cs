@@ -2,10 +2,8 @@
 
 namespace WealthTrack.API.ApiModels.Wallet
 {
-    public class UpdateWalletApiModel
+    public class WalletUpsertApiModel
     {
-        public Guid Id { get; set; }
-
         public string Name { get; set; }
 
         public decimal Balance { get; set; }

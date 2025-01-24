@@ -13,22 +13,19 @@ namespace WealthTrack.Business.AutoMapper
         public DomainAndBusinessModelsMapperProfile()
         {
             // Category
-            CreateMap<CreateCategoryBusinessModel, Category>();
-            CreateMap<UpdateCategoryBusinessModel, Category>();
+            CreateMap<CategoryUpsertBusinessModel, Category>();
             CreateMap<Category, CategoryDetailsBusinessModel>();
             CreateMap<Category, ParentCategoryDetailsBusinessModel>();
             CreateMap<Category, ChildCategoryDetailsBusinessModel>();
 
             // Transaction
-            CreateMap<CreateTransactionBusinessModel, Transaction>();
-            CreateMap<UpdateTransactionBusinessModel, Transaction>();
+            CreateMap<TransactionUpsertBusinessModel, Transaction>();
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();
 
             // Wallet
-            CreateMap<CreateWalletBusinessModel, Wallet>();
-            CreateMap<UpdateWalletBusinessModel, Wallet>();
+            CreateMap<WalletUpsertBusinessModel, Wallet>();
             CreateMap<Wallet, WalletDetailsBusinessModel>();
             CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
 
@@ -36,8 +33,7 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Currency, CurrencyDetailsBusinessModel>();
 
             // Budgets
-            CreateMap<CreateBudgetBusinessModel, Budget>();
-            CreateMap<UpdateBudgetBusinessModel, Budget>();
+            CreateMap<BudgetUpsertBusinessModel, Budget>();
             CreateMap<Budget, BudgetDetailsBusinessModel>();
             CreateMap<Currency, CurrencyRelatedToBudgetDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToBudgetDetailsBusinessModel>();

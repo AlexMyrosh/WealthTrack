@@ -9,7 +9,7 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class CategoryService(IUnitOfWork unitOfWork, IMapper mapper) : ICategoryService
     {
-        public async Task CreateAsync(CreateCategoryBusinessModel model)
+        public async Task CreateAsync(CategoryUpsertBusinessModel model)
         {
             var domainModel = mapper.Map<Category>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
@@ -38,9 +38,9 @@ namespace WealthTrack.Business.Services.Implementations
             return result;
         }
 
-        public async Task UpdateAsync(UpdateCategoryBusinessModel model)
+        public async Task UpdateAsync(Guid id, CategoryUpsertBusinessModel model)
         {
-            var originalModel = await unitOfWork.CategoryRepository.GetByIdAsync(model.Id);
+            var originalModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
             mapper.Map(model, originalModel);
             if (originalModel is null)
             {

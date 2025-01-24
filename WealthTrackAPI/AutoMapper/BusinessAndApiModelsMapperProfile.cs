@@ -17,22 +17,19 @@ namespace WealthTrack.API.AutoMapper
         public BusinessAndApiModelsMapperProfile()
         {
             // Categories
-            CreateMap<CreateCategoryApiModel, CreateCategoryBusinessModel>();
-            CreateMap<UpdateCategoryApiModel, UpdateCategoryBusinessModel>();
+            CreateMap<CategoryUpsertApiModel, CategoryUpsertBusinessModel>();
             CreateMap<CategoryDetailsBusinessModel, CategoryDetailsApiModel>().ReverseMap();
             CreateMap<ParentCategoryDetailsBusinessModel, ParentCategoryDetailsApiModel>().ReverseMap();
             CreateMap<ChildCategoryDetailsBusinessModel, ChildCategoryDetailsApiModel>().ReverseMap();
 
             // Transactions
-            CreateMap<CreateTransactionApiModel, CreateTransactionBusinessModel>();
-            CreateMap<UpdateTransactionApiModel, UpdateTransactionBusinessModel>();
+            CreateMap<TransactionUpsertApiModel, TransactionUpsertBusinessModel>();
             CreateMap<TransactionDetailsApiModel, TransactionDetailsBusinessModel>().ReverseMap();
             CreateMap<CategoryRelatedToTransactionDetailsApiModel, CategoryRelatedToTransactionDetailsBusinessModel>().ReverseMap();
             CreateMap<WalletRelatedToTransactionDetailsApiModel, WalletRelatedToTransactionDetailsBusinessModel>().ReverseMap();
 
             // Wallets
-            CreateMap<CreateWalletApiModel, CreateWalletBusinessModel>();
-            CreateMap<UpdateWalletApiModel, UpdateWalletBusinessModel>();
+            CreateMap<WalletUpsertApiModel, WalletUpsertBusinessModel>();
             CreateMap<WalletDetailsApiModel, WalletDetailsBusinessModel>().ReverseMap();
             CreateMap<CurrencyRelatedToWalletDetailsApiModel, CurrencyRelatedToWalletDetailsBusinessModel>().ReverseMap();
 
@@ -40,8 +37,7 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<CurrencyDetailsApiModel, CurrencyDetailsBusinessModel>().ReverseMap();
 
             // Budgets
-            CreateMap<CreateBudgetApiModel, CreateBudgetBusinessModel>();
-            CreateMap<UpdateBudgetApiModel, UpdateBudgetBusinessModel>();
+            CreateMap<BudgetUpsertApiModel, BudgetUpsertBusinessModel>();
             CreateMap<BudgetDetailsApiModel, BudgetDetailsBusinessModel>().ReverseMap();
             CreateMap<CurrencyRelatedToBudgetDetailsApiModel, CurrencyRelatedToBudgetDetailsBusinessModel>().ReverseMap();
             CreateMap<WalletRelatedToBudgetDetailsApiModel, WalletRelatedToBudgetDetailsBusinessModel>().ReverseMap();
