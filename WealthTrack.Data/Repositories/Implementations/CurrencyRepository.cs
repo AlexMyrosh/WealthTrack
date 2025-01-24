@@ -43,10 +43,10 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public async Task<Currency> CreateAsync(Currency model)
+        public async Task<Guid> CreateAsync(Currency model)
         {
             var result = await context.Currencies.AddAsync(model);
-            return result.Entity;
+            return result.Entity.Id;
         }
     }
 }

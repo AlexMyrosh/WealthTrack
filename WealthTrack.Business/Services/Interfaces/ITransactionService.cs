@@ -4,7 +4,7 @@ namespace WealthTrack.Business.Services.Interfaces
 {
     public interface ITransactionService
     {
-        public Task CreateAsync(TransactionUpsertBusinessModel model);
+        public Task<Guid> CreateAsync(TransactionUpsertBusinessModel model);
 
         public Task<TransactionDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "");
 

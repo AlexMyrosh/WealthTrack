@@ -8,11 +8,11 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class TransactionService(IUnitOfWork unitOfWork, IMapper mapper) : ITransactionService
     {
-        public async Task CreateAsync(TransactionUpsertBusinessModel model)
+        public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            await unitOfWork.TransactionRepository.CreateAsync(domainModel);
+            var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
             var wallet = await unitOfWork.WalletRepository.GetByIdAsync(domainModel.WalletId);
             if (wallet is null)
             {
@@ -20,6 +20,7 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             await unitOfWork.SaveAsync();
+            return createdEntityId;
         }
 
         public async Task<TransactionDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "")

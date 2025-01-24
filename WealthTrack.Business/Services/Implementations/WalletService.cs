@@ -9,14 +9,15 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class WalletService(IUnitOfWork unitOfWork, IMapper mapper) : IWalletService
     {
-        public async Task CreateAsync(WalletUpsertBusinessModel model)
+        public async Task<Guid> CreateAsync(WalletUpsertBusinessModel model)
         {
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
             domainModel.Status = WalletStatus.Active;
-            await unitOfWork.WalletRepository.CreateAsync(domainModel);
+            var createdEntityId = await unitOfWork.WalletRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
+            return createdEntityId;
         }
 
         public async Task<WalletDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "")

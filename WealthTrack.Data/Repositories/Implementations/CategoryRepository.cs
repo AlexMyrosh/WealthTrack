@@ -7,10 +7,10 @@ namespace WealthTrack.Data.Repositories.Implementations
 {
     public class CategoryRepository(AppDbContext context) : ICategoryRepository
     {
-        public async Task<Category> CreateAsync(Category model)
+        public async Task<Guid> CreateAsync(Category model)
         {
             var result = await context.Categories.AddAsync(model);
-            return result.Entity;
+            return result.Entity.Id;
         }
 
         public async Task<Category?> GetByIdAsync(Guid id, string include = "")

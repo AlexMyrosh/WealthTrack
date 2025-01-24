@@ -4,7 +4,7 @@ namespace WealthTrack.Data.Repositories.Interfaces
 {
     public interface IWalletRepository
     {
-        public Task<Wallet> CreateAsync(Wallet model);
+        public Task<Guid> CreateAsync(Wallet model);
 
         public Task<Wallet?> GetByIdAsync(Guid id, string include = "");
 

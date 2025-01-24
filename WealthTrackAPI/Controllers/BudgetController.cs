@@ -38,8 +38,8 @@ namespace WealthTrack.API.Controllers
         public async Task<ActionResult> Create([FromBody] BudgetUpsertApiModel model)
         {
             var businessModel = mapper.Map<BudgetUpsertBusinessModel>(model);
-            await budgetService.CreateAsync(businessModel);
-            return Created();
+            var createdEntityId = await budgetService.CreateAsync(businessModel);
+            return Ok(createdEntityId);
         }
 
         // PUT api/budget/update/{id}

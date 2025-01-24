@@ -7,10 +7,10 @@ namespace WealthTrack.Data.Repositories.Implementations
 {
     public class TransactionRepository(AppDbContext context) : ITransactionRepository
     {
-        public async Task<Transaction> CreateAsync(Transaction model)
+        public async Task<Guid> CreateAsync(Transaction model)
         {
             var result = await context.Transactions.AddAsync(model);
-            return result.Entity;
+            return result.Entity.Id;
         }
 
         public async Task<Transaction?> GetByIdAsync(Guid id, string include = "")

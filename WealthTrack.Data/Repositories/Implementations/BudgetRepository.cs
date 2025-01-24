@@ -7,10 +7,10 @@ namespace WealthTrack.Data.Repositories.Implementations
 {
     public class BudgetRepository(AppDbContext context) : IBudgetRepository
     {
-        public async Task<Budget> CreateAsync(Budget model)
+        public async Task<Guid> CreateAsync(Budget model)
         {
             var result = await context.Budgets.AddAsync(model);
-            return result.Entity;
+            return result.Entity.Id;
         }
 
         public async Task<Budget?> GetByIdAsync(Guid id, string include = "")

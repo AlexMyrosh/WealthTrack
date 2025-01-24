@@ -8,6 +8,6 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task<List<Currency>> GetAllAsync(string include = "");
 
-        public Task<Currency> CreateAsync(Currency model);
+        public Task<Guid> CreateAsync(Currency model);
     }
 }
