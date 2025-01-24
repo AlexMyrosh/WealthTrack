@@ -17,6 +17,8 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public WalletType Type { get; set; }
 
         public CurrencyRelatedToWalletDetailsBusinessModel Currency { get; set; }
+
+        public BudgetRelatedToWalletDetailsBusinessModel Budget { get; set; }
     }
 
     public class CurrencyRelatedToWalletDetailsBusinessModel
@@ -26,5 +28,12 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public string Name { get; set; }
 
         public string Symbol { get; set; }
+    }
+
+    public class BudgetRelatedToWalletDetailsBusinessModel
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; }
     }
 }

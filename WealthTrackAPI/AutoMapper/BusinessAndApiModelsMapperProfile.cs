@@ -2,11 +2,13 @@
 using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.API.ApiModels.Category;
 using WealthTrack.API.ApiModels.Currency;
+using WealthTrack.API.ApiModels.Goal;
 using WealthTrack.API.ApiModels.Transaction;
 using WealthTrack.API.ApiModels.Wallet;
 using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
+using WealthTrack.Business.BusinessModels.Goal;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.BusinessModels.Wallet;
 
@@ -32,6 +34,7 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<WalletUpsertApiModel, WalletUpsertBusinessModel>();
             CreateMap<WalletDetailsApiModel, WalletDetailsBusinessModel>().ReverseMap();
             CreateMap<CurrencyRelatedToWalletDetailsApiModel, CurrencyRelatedToWalletDetailsBusinessModel>().ReverseMap();
+            CreateMap<BudgetRelatedToWalletDetailsApiModel, BudgetRelatedToWalletDetailsBusinessModel>().ReverseMap();
 
             // Currencies
             CreateMap<CurrencyDetailsApiModel, CurrencyDetailsBusinessModel>().ReverseMap();
@@ -41,6 +44,12 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<BudgetDetailsApiModel, BudgetDetailsBusinessModel>().ReverseMap();
             CreateMap<CurrencyRelatedToBudgetDetailsApiModel, CurrencyRelatedToBudgetDetailsBusinessModel>().ReverseMap();
             CreateMap<WalletRelatedToBudgetDetailsApiModel, WalletRelatedToBudgetDetailsBusinessModel>().ReverseMap();
+
+            // Goal
+            CreateMap<GoalUpsertApiModel, GoalUpsertBusinessModel>();
+            CreateMap<GoalDetailsApiModel, GoalDetailsBusinessModel>().ReverseMap();
+            CreateMap<CategoryRelatedToGoalDetailsApiModel, CategoryRelatedToGoalDetailsBusinessModel>().ReverseMap();
+            CreateMap<WalletRelatedToGoalDetailsApiModel, WalletRelatedToGoalDetailsBusinessModel>().ReverseMap();
         }
     }
 }

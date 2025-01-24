@@ -16,6 +16,7 @@ namespace WealthTrack.Data.UnitOfWork
             CurrencyRepository = new CurrencyRepository(_context);
             WalletRepository = new WalletRepository(_context);
             BudgetRepository = new BudgetRepository(_context);
+            GoalRepository = new GoalRepository(_context);
         }
 
         public ICategoryRepository CategoryRepository { get; }
@@ -27,6 +28,8 @@ namespace WealthTrack.Data.UnitOfWork
         public IWalletRepository WalletRepository { get; }
 
         public IBudgetRepository BudgetRepository { get; }
+
+        public IGoalRepository GoalRepository { get; }
 
         public async Task<int> SaveAsync()
         {

@@ -29,5 +29,7 @@ namespace WealthTrack.Data.DomainModels
         public Budget Budget { get; set; }
 
         public List<Transaction> Transactions { get; set; }
+
+        public List<Goal> Goals { get; set; }
     }
 }

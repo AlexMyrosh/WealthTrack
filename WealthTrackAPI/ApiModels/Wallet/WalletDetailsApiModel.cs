@@ -17,6 +17,8 @@ namespace WealthTrack.API.ApiModels.Wallet
         public WalletType Type { get; set; }
 
         public CurrencyRelatedToWalletDetailsApiModel Currency { get; set; }
+
+        public BudgetRelatedToWalletDetailsApiModel Budget { get; set; }
     }
 
     public class CurrencyRelatedToWalletDetailsApiModel
@@ -26,5 +28,12 @@ namespace WealthTrack.API.ApiModels.Wallet
         public string Name { get; set; }
 
         public string Symbol { get; set; }
+    }
+
+    public class BudgetRelatedToWalletDetailsApiModel
+    {
+        public Guid Id { get; set; }
+
+        public string Name { get; set; }
     }
 }

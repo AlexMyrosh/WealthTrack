@@ -58,6 +58,7 @@ namespace WealthTrack.API
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IBudgetService, BudgetService>();
+            services.AddScoped<IGoalService, GoalService>();
 
             services.AddScoped<CurrencySeeder>();
         }

@@ -2,6 +2,7 @@
 using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
+using WealthTrack.Business.BusinessModels.Goal;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Data.DomainModels;
@@ -39,9 +40,11 @@ namespace WealthTrack.Business.AutoMapper
                 .ForMember(dest => dest.Type, opt => opt.Condition(src => src.Type.HasValue))
                 .ForMember(dest => dest.Balance, opt => opt.Condition(src => src.Balance.HasValue))
                 .ForMember(dest => dest.IsPartOfGeneralBalance, opt => opt.Condition(src => src.IsPartOfGeneralBalance.HasValue))
-                .ForMember(dest => dest.CurrencyId, opt => opt.Condition(src => src.CurrencyId.HasValue));
+                .ForMember(dest => dest.CurrencyId, opt => opt.Condition(src => src.CurrencyId.HasValue))
+                .ForMember(dest => dest.BudgetId, opt => opt.Condition(src => src.BudgetId.HasValue));
             CreateMap<Wallet, WalletDetailsBusinessModel>();
             CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
+            CreateMap<Budget, BudgetRelatedToWalletDetailsBusinessModel>();
 
             // Currencies
             CreateMap<Currency, CurrencyDetailsBusinessModel>();
@@ -53,6 +56,28 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Budget, BudgetDetailsBusinessModel>();
             CreateMap<Currency, CurrencyRelatedToBudgetDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToBudgetDetailsBusinessModel>();
+
+            // Goal
+            CreateMap<GoalUpsertBusinessModel, Goal>()
+                .ForMember(dest => dest.Name, opt => opt.Condition(src => src.Name != null))
+                .ForMember(dest => dest.Type, opt => opt.Condition(src => src.Type.HasValue))
+                .ForMember(dest => dest.PlannedMoneyAmount,
+                    opt => opt.Condition(src => src.PlannedMoneyAmount.HasValue))
+                .ForMember(dest => dest.StartDate, opt => opt.Condition(src => src.StartDate.HasValue))
+                .ForMember(dest => dest.EndDate, opt => opt.Condition(src => src.EndDate.HasValue))
+                .ForMember(dest => dest.Categories, opt =>
+                {
+                    opt.PreCondition(src => src.CategoryIds != null && src.CategoryIds.Count > 0);
+                    opt.MapFrom(src => new List<Category>(src.CategoryIds.Count));
+                })
+                .ForMember(dest => dest.Wallets, opt =>
+                {
+                    opt.PreCondition(src => src.WalletIds != null && src.WalletIds.Count > 0);
+                    opt.MapFrom(src => new List<Wallet>(src.WalletIds.Count));
+                });
+            CreateMap<Goal, GoalDetailsBusinessModel>();
+            CreateMap<Category, CategoryRelatedToGoalDetailsBusinessModel>();
+            CreateMap<Wallet, WalletRelatedToGoalDetailsBusinessModel>();
         }
     }
 }

@@ -13,5 +13,7 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public WalletType? Type { get; set; }
 
         public Guid? CurrencyId { get; set; }
+
+        public Guid? BudgetId { get; set; }
     }
 }

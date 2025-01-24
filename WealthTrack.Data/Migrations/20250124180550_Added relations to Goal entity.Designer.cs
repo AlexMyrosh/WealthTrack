@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WealthTrack.Data.Context;
 
@@ -11,9 +12,11 @@ using WealthTrack.Data.Context;
 namespace WealthTrack.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250124180550_Added relations to Goal entity")]
+    partial class AddedrelationstoGoalentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +24,21 @@ namespace WealthTrack.Data.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("GoalBudget", b =>
+                {
+                    b.Property<Guid>("BudgetId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("GoalId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("BudgetId", "GoalId");
+
+                    b.HasIndex("GoalId");
+
+                    b.ToTable("GoalBudget");
+                });
 
             modelBuilder.Entity("GoalCategory", b =>
                 {
@@ -278,6 +296,21 @@ namespace WealthTrack.Data.Migrations
                     b.HasIndex("CurrencyId");
 
                     b.ToTable("Wallets");
+                });
+
+            modelBuilder.Entity("GoalBudget", b =>
+                {
+                    b.HasOne("WealthTrack.Data.DomainModels.Budget", null)
+                        .WithMany()
+                        .HasForeignKey("BudgetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WealthTrack.Data.DomainModels.Goal", null)
+                        .WithMany()
+                        .HasForeignKey("GoalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("GoalCategory", b =>

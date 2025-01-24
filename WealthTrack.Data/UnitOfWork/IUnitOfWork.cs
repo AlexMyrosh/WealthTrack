@@ -14,6 +14,8 @@ namespace WealthTrack.Data.UnitOfWork
 
         public IBudgetRepository BudgetRepository { get; }
 
+        public IGoalRepository GoalRepository { get; }
+
         Task<int> SaveAsync();
     }
 }

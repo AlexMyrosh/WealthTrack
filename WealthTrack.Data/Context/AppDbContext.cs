@@ -10,6 +10,7 @@ namespace WealthTrack.Data.Context
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Budget> Budgets { get; set; }
+        public DbSet<Goal> Goals { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -175,6 +176,55 @@ namespace WealthTrack.Data.Context
                     .WithOne(e => e.Budget)
                     .HasForeignKey(e => e.BudgetId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<Goal>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.StartDate)
+                    .IsRequired();
+
+                entity.Property(e => e.EndDate)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.ModifiedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.PlannedMoneyAmount)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+
+                entity.Property(e => e.ActualMoneyAmount)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasConversion<string>();
+
+                entity.HasMany(s => s.Categories)
+                    .WithMany(c => c.Goals)
+                    .UsingEntity<Dictionary<string, object>>(
+                        "GoalCategory",
+                        j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId"),
+                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
+                    );
+
+                entity.HasMany(s => s.Wallets)
+                    .WithMany(c => c.Goals)
+                    .UsingEntity<Dictionary<string, object>>(
+                        "GoalWallet",
+                        j => j.HasOne<Wallet>().WithMany().HasForeignKey("WalletId"),
+                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
+                    );
             });
         }
     }
