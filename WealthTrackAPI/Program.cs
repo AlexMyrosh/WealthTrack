@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WealthTrack.API.AutoMapper;
+using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.Seeders;
 using WealthTrack.Business.Services.Implementations;
@@ -16,6 +17,8 @@ namespace WealthTrack.API
             var builder = WebApplication.CreateBuilder(args);
             ConfigureServices(builder.Services, builder.Configuration);
             var app = builder.Build();
+
+            app.UseMiddleware<ApiKeyValidationMiddleware>();
 
             await using (var scope = app.Services.CreateAsyncScope())
             {
@@ -50,6 +53,8 @@ namespace WealthTrack.API
 
             services.AddAutoMapper(typeof(DomainAndBusinessModelsMapperProfile));
             services.AddAutoMapper(typeof(BusinessAndApiModelsMapperProfile));
+
+            services.AddTransient<ApiKeyValidationMiddleware>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
