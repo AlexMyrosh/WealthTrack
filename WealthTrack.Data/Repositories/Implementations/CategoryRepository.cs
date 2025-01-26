@@ -2,6 +2,7 @@
 using WealthTrack.Data.Context;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.Repositories.Interfaces;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Data.Repositories.Implementations
 {
@@ -15,7 +16,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<Category?> GetByIdAsync(Guid id, string include = "")
         {
-            var query = context.Categories.AsQueryable();
+            var query = context.Categories.Where(c => c.Type != CategoryType.System).AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -33,7 +34,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<List<Category>> GetAllAsync(string include = "")
         {
-            var query = context.Categories.AsQueryable();
+            var query = context.Categories.Where(c => c.Type != CategoryType.System).AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -48,6 +49,12 @@ namespace WealthTrack.Data.Repositories.Implementations
             }
 
             var result = await query.ToListAsync();
+            return result;
+        }
+
+        public async Task<List<Category>> GetAllSystemOwnedAsync()
+        {
+            var result = await context.Categories.Where(c => c.Type == CategoryType.System).ToListAsync();
             return result;
         }
 

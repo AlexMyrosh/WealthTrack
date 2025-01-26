@@ -6,11 +6,11 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Seeders
 {
-    public class CurrencySeeder(IUnitOfWork unitOfWork, HttpClient client, IConfiguration configuration)
+    public class CurrenciesSeeder(IUnitOfWork unitOfWork, HttpClient client, IConfiguration configuration)
     {
         private readonly string? BaseUrl = configuration["fxratesapi:BaseUrl"];
         private readonly string? Api_key = configuration["fxratesapi:ApiKey"];
-        public async Task SeedCurrenciesAsync()
+        public async Task SeedAsync()
         {
             var existedCurrencies = await unitOfWork.CurrencyRepository.GetAllAsync(); 
             var predefinedCurrencies = new List<Currency>

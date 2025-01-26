@@ -3,7 +3,7 @@ using WealthTrack.Business.Events.Models;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 
-namespace WealthTrack.Business.EventHandlers.WalletEventHandlers
+namespace WealthTrack.Business.EventHandlers.WalletUpdatedHandlers
 {
     public class BudgetBalanceUpdateEventHandler(IUnitOfWork unitOfWork) : IEventHandler<WalletBalanceChangedEvent>
     {

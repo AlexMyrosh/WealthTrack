@@ -27,5 +27,22 @@ namespace WealthTrack.Data.DomainModels
         public List<Transaction> Transactions { get; set; }
 
         public List<Goal> Goals { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+
+            if (obj == null || GetType() != obj.GetType()) return false;
+
+            var other = (Category)obj;
+
+            return Id == other.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = Id.GetHashCode();
+            return hashCode;
+        }
     }
 }

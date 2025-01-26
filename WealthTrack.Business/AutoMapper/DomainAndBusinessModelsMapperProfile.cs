@@ -28,8 +28,15 @@ namespace WealthTrack.Business.AutoMapper
                 .ForMember(dest => dest.Description, opt => opt.Condition(src => src.Description != null))
                 .ForMember(dest => dest.Type, opt => opt.Condition(src => src.Type.HasValue))
                 .ForMember(dest => dest.Amount, opt => opt.Condition(src => src.Amount.HasValue))
+                .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue))
                 .ForMember(dest => dest.CategoryId, opt => opt.Condition(src => src.CategoryId.HasValue))
                 .ForMember(dest => dest.WalletId, opt => opt.Condition(src => src.WalletId.HasValue));
+            CreateMap<TransferTransactionUpsertBusinessModel, TransferTransaction>()
+                .ForMember(dest => dest.Description, opt => opt.Condition(src => src.Description != null))
+                .ForMember(dest => dest.Amount, opt => opt.Condition(src => src.Amount.HasValue))
+                .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue))
+                .ForMember(dest => dest.SourceWalletId, opt => opt.Condition(src => src.SourceWalletId.HasValue))
+                .ForMember(dest => dest.TargetWalletId, opt => opt.Condition(src => src.TargetWalletId.HasValue));
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();

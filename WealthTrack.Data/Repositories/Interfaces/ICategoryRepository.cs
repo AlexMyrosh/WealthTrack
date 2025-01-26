@@ -10,6 +10,8 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task<List<Category>> GetAllAsync(string include = "");
 
+        public Task<List<Category>> GetAllSystemOwnedAsync();
+
         public Category Update(Category model);
 
         public Task<Category?> HardDeleteAsync(Guid id);

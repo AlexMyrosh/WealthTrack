@@ -5,7 +5,7 @@ using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.EventHandlers.TransactionAddedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers;
-using WealthTrack.Business.EventHandlers.WalletEventHandlers;
+using WealthTrack.Business.EventHandlers.WalletUpdatedHandlers;
 using WealthTrack.Business.Events;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -35,8 +35,11 @@ namespace WealthTrack.API
 
             await using (var scope = app.Services.CreateAsyncScope())
             {
-                var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrencySeeder>();
-                await currencySeeder.SeedCurrenciesAsync();
+                var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrenciesSeeder>();
+                await currencySeeder.SeedAsync();
+
+                var categorySeeder = scope.ServiceProvider.GetRequiredService<SystemCategoriesSeeder>();
+                await categorySeeder.SeedAsync();
             }
 
             if (app.Environment.IsDevelopment())
@@ -63,7 +66,7 @@ namespace WealthTrack.API
 
             services.AddTransient<ApiKeyValidationMiddleware>();
 
-            services.AddHttpClient<CurrencySeeder>();
+            services.AddHttpClient<CurrenciesSeeder>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -74,7 +77,8 @@ namespace WealthTrack.API
             services.AddScoped<IBudgetService, BudgetService>();
             services.AddScoped<IGoalService, GoalService>();
 
-            services.AddScoped<CurrencySeeder>();
+            services.AddScoped<CurrenciesSeeder>();
+            services.AddScoped<SystemCategoriesSeeder>();
 
             services.AddScoped<IEventHandler<WalletBalanceChangedEvent>, BudgetBalanceUpdateEventHandler>();
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -9,8 +10,10 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher) : IWalletService
+    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : IWalletService
     {
+        private readonly string _balanceCorrectionId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
+
         public async Task<Guid> CreateAsync(WalletUpsertBusinessModel model)
         {
             // TODO: Add here observer for creating wallet with not 0 amount
@@ -61,6 +64,7 @@ namespace WealthTrack.Business.Services.Implementations
                         Amount = decimal.Abs(originalModel.Balance - model.Balance.Value),
                         Description = "Balance correction",
                         CreatedDate = DateTimeOffset.Now,
+                        CategoryId = new Guid(_balanceCorrectionId),
                         Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
                         WalletId = id
                     });

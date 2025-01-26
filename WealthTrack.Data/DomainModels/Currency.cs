@@ -22,7 +22,7 @@ namespace WealthTrack.Data.DomainModels
 
         public List<Budget> Budgets { get; set; }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(this, obj)) return true;
 
@@ -35,10 +35,10 @@ namespace WealthTrack.Data.DomainModels
 
         public override int GetHashCode()
         {
-            int hashCode = Id.GetHashCode();
+            var hashCode = Id.GetHashCode();
 
-            hashCode = (hashCode * 397) ^ (Code?.GetHashCode() ?? 0);
-            hashCode = (hashCode * 397) ^ (Name?.GetHashCode() ?? 0);
+            hashCode = (hashCode * 397) ^ (Code.GetHashCode());
+            hashCode = (hashCode * 397) ^ (Name.GetHashCode());
 
             return hashCode;
         }

@@ -26,6 +26,7 @@ namespace WealthTrack.API.AutoMapper
 
             // Transactions
             CreateMap<TransactionUpsertApiModel, TransactionUpsertBusinessModel>();
+            CreateMap<TransferTransactionUpsertApiModel, TransferTransactionUpsertBusinessModel>();
             CreateMap<TransactionDetailsBusinessModel, TransactionDetailsApiModel>();
             CreateMap<CategoryRelatedToTransactionDetailsBusinessModel, CategoryRelatedToTransactionDetailsApiModel>();
             CreateMap<WalletRelatedToTransactionDetailsBusinessModel, WalletRelatedToTransactionDetailsApiModel>();

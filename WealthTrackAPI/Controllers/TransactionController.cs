@@ -42,11 +42,29 @@ namespace WealthTrack.API.Controllers
             return Ok(createdEntityId);
         }
 
+        // POST api/transaction/transfer/create
+        [HttpPost("transfer/create")]
+        public async Task<ActionResult> Create([FromBody] TransferTransactionUpsertApiModel model)
+        {
+            var businessModel = mapper.Map<TransferTransactionUpsertBusinessModel>(model);
+            var createdEntityId = await transactionService.CreateAsync(businessModel);
+            return Ok(createdEntityId);
+        }
+
         // PUT api/transaction/update/{id}
         [HttpPut("update/{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] TransactionUpsertApiModel model)
         {
             var businessModel = mapper.Map<TransactionUpsertBusinessModel>(model);
+            await transactionService.UpdateAsync(id, businessModel);
+            return Accepted();
+        }
+
+        // PUT api/transaction/transfer/update/{id}
+        [HttpPut("transfer/update/{id}")]
+        public async Task<ActionResult> Update(Guid id, [FromBody] TransferTransactionUpsertApiModel model)
+        {
+            var businessModel = mapper.Map<TransferTransactionUpsertBusinessModel>(model);
             await transactionService.UpdateAsync(id, businessModel);
             return Accepted();
         }
