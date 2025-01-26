@@ -56,6 +56,8 @@ namespace WealthTrack.API
 
             services.AddTransient<ApiKeyValidationMiddleware>();
 
+            services.AddHttpClient<CurrencySeeder>();
+
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             services.AddScoped<ICategoryService, CategoryService>();

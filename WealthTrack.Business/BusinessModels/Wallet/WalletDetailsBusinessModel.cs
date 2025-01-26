@@ -28,6 +28,8 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public string Name { get; set; }
 
         public string Symbol { get; set; }
+
+        public decimal ExchangeRate { get; set; }
     }
 
     public class BudgetRelatedToWalletDetailsBusinessModel

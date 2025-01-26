@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WealthTrack.Data.Context;
 
@@ -11,9 +12,11 @@ using WealthTrack.Data.Context;
 namespace WealthTrack.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250125132630_Added balance to Budget entity")]
+    partial class AddedbalancetoBudgetentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -135,9 +138,6 @@ namespace WealthTrack.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<decimal>("ExchangeRate")
-                        .HasColumnType("decimal(18,9)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -148,9 +148,9 @@ namespace WealthTrack.Data.Migrations
 
                     b.Property<string>("Symbol")
                         .IsRequired()
-                        .HasMaxLength(10)
+                        .HasMaxLength(3)
                         .IsUnicode(true)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<string>("Type")
                         .IsRequired()

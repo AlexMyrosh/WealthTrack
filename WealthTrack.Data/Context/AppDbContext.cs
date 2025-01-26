@@ -57,10 +57,14 @@ namespace WealthTrack.Data.Context
                 entity.HasIndex(e => e.Name)
                     .IsUnique();
 
+                entity.Property(e => e.ExchangeRate)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+
                 entity.Property(e => e.Symbol)
                     .IsRequired()
                     .IsUnicode()
-                    .HasMaxLength(3);
+                    .HasMaxLength(10);
 
                 entity.Property(e => e.Type)
                     .IsRequired()
@@ -149,6 +153,10 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);
+
+                entity.Property(e => e.OverallBalance)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
 
                 entity.Property(e => e.CreatedDate)
                     .IsRequired();

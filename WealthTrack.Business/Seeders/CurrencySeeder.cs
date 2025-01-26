@@ -1,11 +1,15 @@
-﻿using WealthTrack.Data.DomainModels;
+﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Seeders
 {
-    public class CurrencySeeder(IUnitOfWork unitOfWork)
+    public class CurrencySeeder(IUnitOfWork unitOfWork, HttpClient client, IConfiguration configuration)
     {
+        private readonly string? BaseUrl = configuration["fxratesapi:BaseUrl"];
+        private readonly string? Api_key = configuration["fxratesapi:ApiKey"];
         public async Task SeedCurrenciesAsync()
         {
             var existedCurrencies = await unitOfWork.CurrencyRepository.GetAllAsync(); 
@@ -160,15 +164,6 @@ namespace WealthTrack.Business.Seeders
                 },
                 new()
                 {
-                    Id = new Guid("1c2fd8b4-dc3f-43cd-b2fd-9e493ed07d32"),
-                    Code = "DOGE",
-                    Name = "Dogecoin",
-                    Symbol = "Ð",
-                    Status = CurrencyStatus.Active,
-                    Type = CurrencyType.Crypto
-                },
-                new()
-                {
                     Id = new Guid("2d4ebc9a-dc6e-40ad-a0fd-38249f4cfb32"),
                     Code = "SOL",
                     Name = "Solana",
@@ -195,16 +190,79 @@ namespace WealthTrack.Business.Seeders
                     Type = CurrencyType.Crypto
                 }
             };
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}latest?api-key={Api_key}");
+            var response = await client.SendAsync(requestMessage);
+            var content = await response.Content.ReadAsStringAsync();
+            var rates = JsonConvert.DeserializeObject<Rates>(content).rates;
+            if (rates is null)
+            {
+                throw new JsonException($"Unable to cast JSON response to {nameof(Rates)} model");
+            }
 
             foreach (var currency in predefinedCurrencies)
             {
                 if (!existedCurrencies.Any(c => c.Equals(currency)))
                 {
+                    var currencyCode = currency.Code == "USDT" ? "USD" : currency.Code;
+                    var rateProperty = typeof(ExchangeRates).GetProperty(currencyCode);
+                    if (rateProperty is null)
+                    {
+                        throw new InvalidCastException($"Unable to get exchange rate for {currency.Code}");
+                    }
+
+                    var exchangeRate = (decimal)(rateProperty.GetValue(rates) ?? 0);
+                    currency.ExchangeRate = exchangeRate;
                     await unitOfWork.CurrencyRepository.CreateAsync(currency);
                 }
             }
 
             await unitOfWork.SaveAsync();
         }
+    }
+
+    public class Rates
+    {
+        public ExchangeRates rates { get; set; }
+    }
+
+    public class ExchangeRates
+    {
+        public decimal AUD { get; set; }
+
+        public decimal CAD { get; set; }
+
+        public decimal CHF { get; set; }
+
+        public decimal CNY { get; set; }
+
+        public decimal EUR { get; set; }
+
+        public decimal GBP { get; set; }
+
+        public decimal INR { get; set; }
+
+        public decimal JPY { get; set; }
+
+        public decimal UAH { get; set; }
+
+        public decimal USD { get; set; }
+
+        public decimal BTC { get; set; }
+
+        public decimal ETH { get; set; }
+
+        public decimal USDT { get; set; }
+
+        public decimal BNB { get; set; }
+
+        public decimal XRP { get; set; }
+
+        public decimal ADA { get; set; }
+
+        public decimal SOL { get; set; }
+
+        public decimal DOT { get; set; }
+
+        public decimal LTC { get; set; }
     }
 }

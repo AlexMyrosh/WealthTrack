@@ -12,6 +12,8 @@ namespace WealthTrack.Data.DomainModels
 
         public string Symbol { get; set; }
 
+        public decimal ExchangeRate { get; set; }
+
         public CurrencyStatus Status { get; set; }
 
         public CurrencyType Type { get; set; }
@@ -40,6 +42,5 @@ namespace WealthTrack.Data.DomainModels
 
             return hashCode;
         }
-
     }
 }
