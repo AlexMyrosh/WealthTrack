@@ -10,6 +10,8 @@ namespace WealthTrack.Data.DomainModels
 
         public string? Description { get; set; }
 
+        public DateTimeOffset TransactionDate { get; set; }
+
         public DateTimeOffset CreatedDate { get; set; }
 
         public TransactionType Type { get; set; }

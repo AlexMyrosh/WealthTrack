@@ -132,6 +132,9 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.CreatedDate)
                     .IsRequired();
 
+                entity.Property(e => e.TransactionDate)
+                    .IsRequired();
+
                 entity.Property(e => e.Type)
                     .HasConversion<string>();
 

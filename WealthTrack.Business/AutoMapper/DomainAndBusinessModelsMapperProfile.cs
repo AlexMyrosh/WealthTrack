@@ -45,6 +45,7 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Wallet, WalletDetailsBusinessModel>();
             CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
             CreateMap<Budget, BudgetRelatedToWalletDetailsBusinessModel>();
+            CreateMap<Transaction, TransactionRelatedToWalletDetailsBusinessModel>();
 
             // Currencies
             CreateMap<Currency, CurrencyDetailsBusinessModel>();
@@ -61,19 +62,18 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<GoalUpsertBusinessModel, Goal>()
                 .ForMember(dest => dest.Name, opt => opt.Condition(src => src.Name != null))
                 .ForMember(dest => dest.Type, opt => opt.Condition(src => src.Type.HasValue))
-                .ForMember(dest => dest.PlannedMoneyAmount,
-                    opt => opt.Condition(src => src.PlannedMoneyAmount.HasValue))
+                .ForMember(dest => dest.PlannedMoneyAmount, opt => opt.Condition(src => src.PlannedMoneyAmount.HasValue))
                 .ForMember(dest => dest.StartDate, opt => opt.Condition(src => src.StartDate.HasValue))
                 .ForMember(dest => dest.EndDate, opt => opt.Condition(src => src.EndDate.HasValue))
                 .ForMember(dest => dest.Categories, opt =>
                 {
                     opt.PreCondition(src => src.CategoryIds != null && src.CategoryIds.Count > 0);
-                    opt.MapFrom(src => new List<Category>(src.CategoryIds.Count));
+                    opt.MapFrom(src => new List<Category>(src.CategoryIds!.Count));
                 })
                 .ForMember(dest => dest.Wallets, opt =>
                 {
                     opt.PreCondition(src => src.WalletIds != null && src.WalletIds.Count > 0);
-                    opt.MapFrom(src => new List<Wallet>(src.WalletIds.Count));
+                    opt.MapFrom(src => new List<Wallet>(src.WalletIds!.Count));
                 });
             CreateMap<Goal, GoalDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToGoalDetailsBusinessModel>();

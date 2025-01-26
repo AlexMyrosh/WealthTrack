@@ -10,6 +10,8 @@ namespace WealthTrack.API.ApiModels.Transaction
 
         public string Description { get; set; }
 
+        public DateTimeOffset TransactionDate { get; set; }
+
         public TransactionType Type { get; set; }
 
         public CategoryRelatedToTransactionDetailsApiModel Category { get; set; }

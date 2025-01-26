@@ -8,6 +8,8 @@ namespace WealthTrack.Business.BusinessModels.Budget
 
         public string Name { get; set; }
 
+        public decimal OverallBalance { get; set; }
+
         public CurrencyRelatedToBudgetDetailsBusinessModel Currency { get; set; }
 
         public List<WalletRelatedToBudgetDetailsBusinessModel> Wallets { get; set; }

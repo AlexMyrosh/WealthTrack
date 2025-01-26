@@ -2,6 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using WealthTrack.API.AutoMapper;
 using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
+using WealthTrack.Business.EventHandlers.TransactionAddedEventHandlers;
+using WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers;
+using WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers;
+using WealthTrack.Business.EventHandlers.WalletEventHandlers;
+using WealthTrack.Business.Events;
+using WealthTrack.Business.Events.Interfaces;
+using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Seeders;
 using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
@@ -68,6 +75,19 @@ namespace WealthTrack.API
             services.AddScoped<IGoalService, GoalService>();
 
             services.AddScoped<CurrencySeeder>();
+
+            services.AddScoped<IEventHandler<WalletBalanceChangedEvent>, BudgetBalanceUpdateEventHandler>();
+
+            services.AddScoped<IEventHandler<TransactionAddedEvent>, WalletBalanceUpdateOnTransactionAddingEventHandler>();
+            services.AddScoped<IEventHandler<TransactionAddedEvent>, GoalStateUpdateOnTransactionAddingEventHandler>();
+
+            services.AddScoped<IEventHandler<TransactionUpdatedEvent>, WalletBalanceUpdateOnTransactionUpdateEventHandler>();
+            services.AddScoped<IEventHandler<TransactionUpdatedEvent>, GoalStateUpdateOnTransactionUpdateEventHandler>();
+
+            services.AddScoped<IEventHandler<TransactionDeletedEvent>, WalletBalanceUpdateOnTransactionDeletionEventHandler>();
+            services.AddScoped<IEventHandler<TransactionDeletedEvent>, GoalStateUpdateOnTransactionDeletionEventHandler>();
+
+            services.AddScoped<IEventPublisher, EventPublisher>();
         }
     }
 }

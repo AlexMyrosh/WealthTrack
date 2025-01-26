@@ -20,36 +20,37 @@ namespace WealthTrack.API.AutoMapper
         {
             // Categories
             CreateMap<CategoryUpsertApiModel, CategoryUpsertBusinessModel>();
-            CreateMap<CategoryDetailsBusinessModel, CategoryDetailsApiModel>().ReverseMap();
-            CreateMap<ParentCategoryDetailsBusinessModel, ParentCategoryDetailsApiModel>().ReverseMap();
-            CreateMap<ChildCategoryDetailsBusinessModel, ChildCategoryDetailsApiModel>().ReverseMap();
+            CreateMap<CategoryDetailsBusinessModel, CategoryDetailsApiModel>();
+            CreateMap<ParentCategoryDetailsBusinessModel, ParentCategoryDetailsApiModel>();
+            CreateMap<ChildCategoryDetailsBusinessModel, ChildCategoryDetailsApiModel>();
 
             // Transactions
             CreateMap<TransactionUpsertApiModel, TransactionUpsertBusinessModel>();
-            CreateMap<TransactionDetailsApiModel, TransactionDetailsBusinessModel>().ReverseMap();
-            CreateMap<CategoryRelatedToTransactionDetailsApiModel, CategoryRelatedToTransactionDetailsBusinessModel>().ReverseMap();
-            CreateMap<WalletRelatedToTransactionDetailsApiModel, WalletRelatedToTransactionDetailsBusinessModel>().ReverseMap();
+            CreateMap<TransactionDetailsBusinessModel, TransactionDetailsApiModel>();
+            CreateMap<CategoryRelatedToTransactionDetailsBusinessModel, CategoryRelatedToTransactionDetailsApiModel>();
+            CreateMap<WalletRelatedToTransactionDetailsBusinessModel, WalletRelatedToTransactionDetailsApiModel>();
 
             // Wallets
             CreateMap<WalletUpsertApiModel, WalletUpsertBusinessModel>();
-            CreateMap<WalletDetailsApiModel, WalletDetailsBusinessModel>().ReverseMap();
-            CreateMap<CurrencyRelatedToWalletDetailsApiModel, CurrencyRelatedToWalletDetailsBusinessModel>().ReverseMap();
-            CreateMap<BudgetRelatedToWalletDetailsApiModel, BudgetRelatedToWalletDetailsBusinessModel>().ReverseMap();
+            CreateMap<WalletDetailsBusinessModel, WalletDetailsApiModel>();
+            CreateMap<CurrencyRelatedToWalletDetailsBusinessModel, CurrencyRelatedToWalletDetailsApiModel>();
+            CreateMap<BudgetRelatedToWalletDetailsBusinessModel, BudgetRelatedToWalletDetailsApiModel>();
+            CreateMap<TransactionRelatedToWalletDetailsBusinessModel, TransactionRelatedToWalletDetailsApiModel>();
 
             // Currencies
-            CreateMap<CurrencyDetailsApiModel, CurrencyDetailsBusinessModel>().ReverseMap();
+            CreateMap<CurrencyDetailsBusinessModel, CurrencyDetailsApiModel>();
 
             // Budgets
             CreateMap<BudgetUpsertApiModel, BudgetUpsertBusinessModel>();
-            CreateMap<BudgetDetailsApiModel, BudgetDetailsBusinessModel>().ReverseMap();
-            CreateMap<CurrencyRelatedToBudgetDetailsApiModel, CurrencyRelatedToBudgetDetailsBusinessModel>().ReverseMap();
-            CreateMap<WalletRelatedToBudgetDetailsApiModel, WalletRelatedToBudgetDetailsBusinessModel>().ReverseMap();
+            CreateMap<BudgetDetailsBusinessModel, BudgetDetailsApiModel>();
+            CreateMap<CurrencyRelatedToBudgetDetailsBusinessModel, CurrencyRelatedToBudgetDetailsApiModel>();
+            CreateMap<WalletRelatedToBudgetDetailsBusinessModel, WalletRelatedToBudgetDetailsApiModel>();
 
             // Goal
             CreateMap<GoalUpsertApiModel, GoalUpsertBusinessModel>();
-            CreateMap<GoalDetailsApiModel, GoalDetailsBusinessModel>().ReverseMap();
-            CreateMap<CategoryRelatedToGoalDetailsApiModel, CategoryRelatedToGoalDetailsBusinessModel>().ReverseMap();
-            CreateMap<WalletRelatedToGoalDetailsApiModel, WalletRelatedToGoalDetailsBusinessModel>().ReverseMap();
+            CreateMap<GoalDetailsBusinessModel, GoalDetailsApiModel>();
+            CreateMap<CategoryRelatedToGoalDetailsBusinessModel, CategoryRelatedToGoalDetailsApiModel>();
+            CreateMap<WalletRelatedToGoalDetailsBusinessModel, WalletRelatedToGoalDetailsApiModel>();
         }
     }
 }

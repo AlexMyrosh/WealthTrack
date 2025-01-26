@@ -8,6 +8,8 @@ namespace WealthTrack.Business.BusinessModels.Transaction
 
         public string? Description { get; set; }
 
+        public DateTimeOffset? TransactionDate { get; set; }
+
         public TransactionType? Type { get; set; }
 
         public Guid? CategoryId { get; set; }

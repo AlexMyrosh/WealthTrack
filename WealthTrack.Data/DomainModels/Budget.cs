@@ -8,6 +8,8 @@ namespace WealthTrack.Data.DomainModels
 
         public string Name { get; set; }
 
+        public decimal OverallBalance { get; set; }
+
         public DateTimeOffset CreatedDate { get; set; }
 
         public DateTimeOffset ModifiedDate { get; set; }
