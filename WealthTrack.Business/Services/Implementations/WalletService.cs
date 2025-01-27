@@ -16,7 +16,7 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(WalletUpsertBusinessModel model)
         {
-            // TODO: Add here observer for creating wallet with not 0 amount
+            // TODO: Add here observer for creating wallet with not 0 amount of money
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
@@ -47,6 +47,11 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task UpdateAsync(Guid id, WalletUpsertBusinessModel model)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(id), "id is empty");
+            }
+
             var originalModel = await unitOfWork.WalletRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
@@ -82,6 +87,7 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<bool> HardDeleteAsync(Guid id)
         {
+            // TODO: Add event handler for wallet deletion, to update budget balance
             if (id == Guid.Empty)
             {
                 throw new ArgumentNullException(nameof(id), "id is empty");

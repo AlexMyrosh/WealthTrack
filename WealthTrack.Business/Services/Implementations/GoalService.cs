@@ -40,13 +40,18 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task UpdateAsync(Guid id, GoalUpsertBusinessModel model)
         {
-            var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, "Categories,Wallets");
-            mapper.Map(model, originalModel);
-            if (originalModel is null)
+            if (id == Guid.Empty)
             {
-                throw new AutoMapperMappingException("Entity is null after mapping");
+                throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
+            var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, "Categories,Wallets");
+            if (originalModel is null)
+            {
+                throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
+            }
+
+            mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
             unitOfWork.GoalRepository.Update(originalModel);

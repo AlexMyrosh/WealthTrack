@@ -62,6 +62,11 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task UpdateAsync(Guid id, TransactionUpsertBusinessModel model)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(id), "id is empty");
+            }
+
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, "Wallet");
             if (originalModel is null)
             {
@@ -70,15 +75,18 @@ namespace WealthTrack.Business.Services.Implementations
 
             TransactionUpdatedEvent transactionEvent = new(originalModel.CategoryId, model.CategoryId, originalModel.Type, model.Type, originalModel.WalletId.Value, model.WalletId, originalModel.Amount, model.Amount, originalModel.TransactionDate, model.TransactionDate);
             await eventPublisher.PublishAsync(transactionEvent);
-
             mapper.Map(model, originalModel);
-
             unitOfWork.TransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
 
         public async Task UpdateAsync(Guid id, TransferTransactionUpsertBusinessModel model)
         {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(id), "id is empty");
+            }
+
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
@@ -97,14 +105,18 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(id), "id is empty");
             }
 
-            var deletedDomainModel = await unitOfWork.TransactionRepository.HardDeleteAsync(id);
-            if (deletedDomainModel is null)
+            var domainModelToDelete = await unitOfWork.TransactionRepository.GetByIdAsync(id);
+            if (domainModelToDelete is null)
             {
-                return false;
+                throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
-            //TransactionDeletedEvent transactionEvent = new(deletedDomainModel.Type, deletedDomainModel.Amount, deletedDomainModel.WalletId.Value, deletedDomainModel.CategoryId, deletedDomainModel.TransactionDate);
-            //await eventPublisher.PublishAsync(transactionEvent);
+            if ((domainModelToDelete.Type == TransactionType.Income || domainModelToDelete.Type == TransactionType.Expense) &&
+                domainModelToDelete.WalletId.HasValue)
+            {
+                TransactionDeletedEvent transactionEvent = new(domainModelToDelete.Type, domainModelToDelete.Amount, domainModelToDelete.WalletId.Value, domainModelToDelete.CategoryId, domainModelToDelete.TransactionDate);
+                await eventPublisher.PublishAsync(transactionEvent);
+            }
 
             await unitOfWork.SaveAsync();
             return true;
