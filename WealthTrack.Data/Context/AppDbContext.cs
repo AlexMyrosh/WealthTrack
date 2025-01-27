@@ -8,7 +8,6 @@ namespace WealthTrack.Data.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<TransferTransaction> TransferTransactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Goal> Goals { get; set; }
@@ -148,24 +147,6 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Transactions)
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
-            });
-
-            modelBuilder.Entity<TransferTransaction>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Amount)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
-
-                entity.Property(e => e.Description)
-                    .HasMaxLength(1000);
-
-                entity.Property(e => e.CreatedDate)
-                    .IsRequired();
-
-                entity.Property(e => e.TransactionDate)
-                    .IsRequired();
 
                 entity.HasOne(e => e.SourceWallet)
                     .WithMany(e => e.OutgoingTransferTransactions)

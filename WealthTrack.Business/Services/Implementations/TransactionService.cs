@@ -4,14 +4,16 @@ using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
-using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
+using WealthTrack.Shared.Enums;
 using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations
 {
     public class TransactionService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : ITransactionService
     {
+        private readonly string _transferCategoryId = configuration["SystemCategories:TransferId"] ?? throw new InvalidOperationException("Unable to get transfer category id from configuration");
+
         public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
             var domainModel = mapper.Map<Transaction>(model);
@@ -30,9 +32,11 @@ namespace WealthTrack.Business.Services.Implementations
         public async Task<Guid> CreateAsync(TransferTransactionUpsertBusinessModel model)
         {
             // TODO: Add event handlers to update wallet and budget balances after this transaction
-            var domainModel = mapper.Map<TransferTransaction>(model);
+            var domainModel = mapper.Map<Transaction>(model);
+            domainModel.CategoryId = new Guid(_transferCategoryId);
+            domainModel.Type = TransactionType.Transfer;
             domainModel.CreatedDate = DateTimeOffset.Now;
-            var createdEntityId = await unitOfWork.TransferTransactionRepository.CreateAsync(domainModel);
+            var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -64,7 +68,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
-            TransactionUpdatedEvent transactionEvent = new(originalModel.CategoryId, model.CategoryId, originalModel.Type, model.Type, originalModel.WalletId, model.WalletId, originalModel.Amount, model.Amount, originalModel.TransactionDate, model.TransactionDate);
+            TransactionUpdatedEvent transactionEvent = new(originalModel.CategoryId, model.CategoryId, originalModel.Type, model.Type, originalModel.WalletId.Value, model.WalletId, originalModel.Amount, model.Amount, originalModel.TransactionDate, model.TransactionDate);
             await eventPublisher.PublishAsync(transactionEvent);
 
             mapper.Map(model, originalModel);
@@ -75,14 +79,14 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task UpdateAsync(Guid id, TransferTransactionUpsertBusinessModel model)
         {
-            var originalModel = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
+            var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
             mapper.Map(model, originalModel);
-            unitOfWork.TransferTransactionRepository.Update(originalModel);
+            unitOfWork.TransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
 
@@ -99,8 +103,8 @@ namespace WealthTrack.Business.Services.Implementations
                 return false;
             }
 
-            TransactionDeletedEvent transactionEvent = new(deletedDomainModel.Type, deletedDomainModel.Amount, deletedDomainModel.WalletId, deletedDomainModel.CategoryId, deletedDomainModel.TransactionDate);
-            await eventPublisher.PublishAsync(transactionEvent);
+            //TransactionDeletedEvent transactionEvent = new(deletedDomainModel.Type, deletedDomainModel.Amount, deletedDomainModel.WalletId.Value, deletedDomainModel.CategoryId, deletedDomainModel.TransactionDate);
+            //await eventPublisher.PublishAsync(transactionEvent);
 
             await unitOfWork.SaveAsync();
             return true;

@@ -20,8 +20,16 @@ namespace WealthTrack.Data.DomainModels
 
         public Category Category { get; set; }
 
-        public Guid WalletId { get; set; }
+        public Guid? WalletId { get; set; }
 
         public Wallet? Wallet { get; set; }
+
+        public Guid? SourceWalletId { get; set; }
+
+        public Wallet SourceWallet { get; set; }
+
+        public Guid? TargetWalletId { get; set; }
+
+        public Wallet TargetWallet { get; set; }
     }
 }

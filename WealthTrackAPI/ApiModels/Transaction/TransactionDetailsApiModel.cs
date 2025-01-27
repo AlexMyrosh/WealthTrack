@@ -17,10 +17,16 @@ namespace WealthTrack.API.ApiModels.Transaction
         public CategoryRelatedToTransactionDetailsApiModel Category { get; set; }
 
         public WalletRelatedToTransactionDetailsApiModel Wallet { get; set; }
+
+        public WalletRelatedToTransactionDetailsApiModel SourceWallet { get; set; }
+
+        public WalletRelatedToTransactionDetailsApiModel TargetWallet { get; set; }
     }
 
     public class CategoryRelatedToTransactionDetailsApiModel
     {
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
 
         public string IconName { get; set; }
@@ -28,6 +34,8 @@ namespace WealthTrack.API.ApiModels.Transaction
 
     public class WalletRelatedToTransactionDetailsApiModel
     {
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
     }
 }

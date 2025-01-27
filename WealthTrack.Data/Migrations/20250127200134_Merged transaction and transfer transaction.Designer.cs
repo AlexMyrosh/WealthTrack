@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WealthTrack.Data.Context;
 
@@ -11,9 +12,11 @@ using WealthTrack.Data.Context;
 namespace WealthTrack.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250127200134_Merged transaction and transfer transaction")]
+    partial class Mergedtransactionandtransfertransaction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -224,10 +227,10 @@ namespace WealthTrack.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<Guid?>("SourceWalletId")
+                    b.Property<Guid>("SourceWalletId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("TargetWalletId")
+                    b.Property<Guid>("TargetWalletId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("TransactionDate")
@@ -237,7 +240,7 @@ namespace WealthTrack.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("WalletId")
+                    b.Property<Guid>("WalletId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -360,17 +363,20 @@ namespace WealthTrack.Data.Migrations
                     b.HasOne("WealthTrack.Data.DomainModels.Wallet", "SourceWallet")
                         .WithMany("OutgoingTransferTransactions")
                         .HasForeignKey("SourceWalletId")
-                        .OnDelete(DeleteBehavior.ClientCascade);
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
 
                     b.HasOne("WealthTrack.Data.DomainModels.Wallet", "TargetWallet")
                         .WithMany("IncomeTransferTransactions")
                         .HasForeignKey("TargetWalletId")
-                        .OnDelete(DeleteBehavior.ClientCascade);
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
 
                     b.HasOne("WealthTrack.Data.DomainModels.Wallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Category");
 

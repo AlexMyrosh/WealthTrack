@@ -25,6 +25,8 @@ namespace WealthTrack.API.ApiModels.Wallet
 
     public class CurrencyRelatedToWalletDetailsApiModel
     {
+        public Guid Id { get; set; }
+
         public string Code { get; set; }
 
         public string Name { get; set; }

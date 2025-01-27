@@ -6,6 +6,7 @@ using WealthTrack.Business.BusinessModels.Goal;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Data.DomainModels;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.AutoMapper
 {
@@ -30,13 +31,17 @@ namespace WealthTrack.Business.AutoMapper
                 .ForMember(dest => dest.Amount, opt => opt.Condition(src => src.Amount.HasValue))
                 .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue))
                 .ForMember(dest => dest.CategoryId, opt => opt.Condition(src => src.CategoryId.HasValue))
-                .ForMember(dest => dest.WalletId, opt => opt.Condition(src => src.WalletId.HasValue));
-            CreateMap<TransferTransactionUpsertBusinessModel, TransferTransaction>()
-                .ForMember(dest => dest.Description, opt => opt.Condition(src => src.Description != null))
+                .ForMember(dest => dest.WalletId, opt => opt.Condition(src => src.WalletId.HasValue))
+                .ForMember(dest => dest.SourceWalletId, opt => opt.Ignore())
+                .ForMember(dest => dest.TargetWalletId, opt => opt.Ignore());
+
+            CreateMap<TransferTransactionUpsertBusinessModel, Transaction>()
                 .ForMember(dest => dest.Amount, opt => opt.Condition(src => src.Amount.HasValue))
+                .ForMember(dest => dest.Description, opt => opt.Condition(src => src.Description != null))
                 .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue))
                 .ForMember(dest => dest.SourceWalletId, opt => opt.Condition(src => src.SourceWalletId.HasValue))
                 .ForMember(dest => dest.TargetWalletId, opt => opt.Condition(src => src.TargetWalletId.HasValue));
+
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();

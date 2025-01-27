@@ -12,7 +12,7 @@ namespace WealthTrack.Business.Services.Implementations
 {
     public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : IWalletService
     {
-        private readonly string _balanceCorrectionId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
+        private readonly string _balanceCorrectionCategoryId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
 
         public async Task<Guid> CreateAsync(WalletUpsertBusinessModel model)
         {
@@ -64,7 +64,7 @@ namespace WealthTrack.Business.Services.Implementations
                         Amount = decimal.Abs(originalModel.Balance - model.Balance.Value),
                         Description = "Balance correction",
                         CreatedDate = DateTimeOffset.Now,
-                        CategoryId = new Guid(_balanceCorrectionId),
+                        CategoryId = new Guid(_balanceCorrectionCategoryId),
                         Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
                         WalletId = id
                     });

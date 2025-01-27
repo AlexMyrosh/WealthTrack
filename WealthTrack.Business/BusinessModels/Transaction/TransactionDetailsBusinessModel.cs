@@ -17,10 +17,16 @@ namespace WealthTrack.Business.BusinessModels.Transaction
         public CategoryRelatedToTransactionDetailsBusinessModel Category { get; set; }
 
         public WalletRelatedToTransactionDetailsBusinessModel Wallet { get; set; }
+
+        public WalletRelatedToTransactionDetailsBusinessModel SourceWallet { get; set; }
+
+        public WalletRelatedToTransactionDetailsBusinessModel TargetWallet { get; set; }
     }
 
     public class CategoryRelatedToTransactionDetailsBusinessModel
     {
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
 
         public string IconName { get; set; }
@@ -28,6 +34,8 @@ namespace WealthTrack.Business.BusinessModels.Transaction
 
     public class WalletRelatedToTransactionDetailsBusinessModel
     {
+        public Guid Id { get; set; }
+
         public string Name { get; set; }
     }
 }

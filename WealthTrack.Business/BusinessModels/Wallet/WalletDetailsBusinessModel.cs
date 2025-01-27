@@ -25,6 +25,8 @@ namespace WealthTrack.Business.BusinessModels.Wallet
 
     public class CurrencyRelatedToWalletDetailsBusinessModel
     {
+        public Guid Id { get; set; }
+
         public string Code { get; set; }
 
         public string Name { get; set; }
