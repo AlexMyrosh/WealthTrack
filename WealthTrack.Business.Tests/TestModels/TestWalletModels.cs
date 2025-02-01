@@ -1,0 +1,105 @@
+﻿using WealthTrack.Business.BusinessModels.Wallet;
+using WealthTrack.Data.DomainModels;
+using WealthTrack.Shared.Enums;
+
+namespace WealthTrack.Business.Tests.TestModels
+{
+    public static class TestWalletModels
+    {
+        public static Wallet DomainModel
+        {
+            get
+            {
+                var model = DomainModelWithoutDetails;
+                model.Currency = TestCurrencyModels.DomainModelWithoutDetails;
+                model.CurrencyId = model.Currency.Id;
+                model.Budget = TestBudgetModels.DomainModelWithoutDetails;
+                model.BudgetId = model.Budget.Id;
+                model.Transactions = [TestTransactionModels.DomainModelWithoutDetails];
+                model.IncomeTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
+                model.OutgoingTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
+                model.Goals = [TestGoalModels.DomainModelWithoutDetails];
+                return model;
+            }
+        }
+
+        public static WalletUpsertBusinessModel UpsertBusinessModel
+        {
+            get
+            {
+                var model = new WalletUpsertBusinessModel
+                {
+                    Name = DomainModel.Name,
+                    Balance = DomainModel.Balance,
+                    IsPartOfGeneralBalance = DomainModel.IsPartOfGeneralBalance,
+                    Type = DomainModel.Type,
+                    CurrencyId = DomainModel.CurrencyId,
+                    BudgetId = DomainModel.BudgetId
+                };
+
+                return model;
+            }
+        }
+
+        public static WalletDetailsBusinessModel DetailsBusinessModel
+        {
+            get
+            {
+                var model = new WalletDetailsBusinessModel
+                {
+                    Id = DomainModel.Id,
+                    Name = DomainModel.Name,
+                    Balance = DomainModel.Balance,
+                    IsPartOfGeneralBalance = DomainModel.IsPartOfGeneralBalance,
+                    Status = DomainModel.Status,
+                    Type = DomainModel.Type,
+                    Currency = new CurrencyRelatedToWalletDetailsBusinessModel
+                    {
+                        Id = TestCurrencyModels.DomainModel.Id,
+                        Code = TestCurrencyModels.DomainModel.Code,
+                        Name = TestCurrencyModels.DomainModel.Name,
+                        Symbol = TestCurrencyModels.DomainModel.Symbol,
+                        ExchangeRate = TestCurrencyModels.DomainModel.ExchangeRate
+                    },
+                    Budget = new BudgetRelatedToWalletDetailsBusinessModel
+                    {
+                        Id = TestBudgetModels.DomainModel.Id,
+                        Name = TestBudgetModels.DomainModel.Name,
+                        OverallBalance = TestBudgetModels.DomainModel.OverallBalance
+                    },
+                    Transactions =
+                    [
+                        new()
+                        {
+                            Id = TestTransactionModels.TransactionDomainModel.Id,
+                            Amount = TestTransactionModels.TransactionDomainModel.Amount,
+                            Description = TestTransactionModels.TransactionDomainModel.Description,
+                            TransactionDate = TestTransactionModels.TransactionDomainModel.TransactionDate,
+                            Type = TestTransactionModels.TransactionDomainModel.Type
+                        }
+                    ]
+                };
+
+                return model;
+            }
+        }
+
+        public static Wallet DomainModelWithoutDetails
+        {
+            get
+            {
+                return new Wallet
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Test wallet name",
+                    Balance = 200.123M,
+                    IsPartOfGeneralBalance = true,
+                    CreatedDate = DateTimeOffset.Now,
+                    ModifiedDate = DateTimeOffset.Now,
+                    Status = WalletStatus.Active,
+                    Type = WalletType.Cash,
+                };
+            }
+        }
+    }
+}

@@ -8,7 +8,7 @@ namespace WealthTrack.Business.BusinessModels.Category
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
 
         public CategoryType Type { get; set; }
 
@@ -23,7 +23,7 @@ namespace WealthTrack.Business.BusinessModels.Category
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
     }
 
     public class ChildCategoryDetailsBusinessModel
@@ -32,7 +32,7 @@ namespace WealthTrack.Business.BusinessModels.Category
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
 
         public List<ChildCategoryDetailsBusinessModel> ChildCategories { get; set; }
     }

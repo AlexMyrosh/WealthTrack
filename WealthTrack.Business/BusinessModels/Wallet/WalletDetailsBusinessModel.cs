@@ -51,7 +51,7 @@ namespace WealthTrack.Business.BusinessModels.Wallet
 
         public decimal Amount { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public DateTimeOffset TransactionDate { get; set; }
 
