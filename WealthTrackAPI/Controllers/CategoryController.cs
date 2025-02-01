@@ -63,18 +63,5 @@ namespace WealthTrack.API.Controllers
 
             return BadRequest();
         }
-
-        // DELETE api/category/soft_delete/{id}
-        [HttpDelete("soft_delete/{id}")]
-        public async Task<ActionResult> SoftDelete(Guid id)
-        {
-            var result = await categoryService.SoftDeleteAsync(id);
-            if (result)
-            {
-                return NoContent();
-            }
-
-            return BadRequest();
-        }
     }
 }

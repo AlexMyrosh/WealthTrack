@@ -11,6 +11,11 @@ namespace WealthTrack.Business.Services.Implementations
     {
         public async Task<Guid> CreateAsync(CategoryUpsertBusinessModel model)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             var domainModel = mapper.Map<Category>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
@@ -71,25 +76,6 @@ namespace WealthTrack.Business.Services.Implementations
                 return false;
             }
 
-            await unitOfWork.SaveAsync();
-            return true;
-        }
-
-        public async Task<bool> SoftDeleteAsync(Guid id)
-        {
-            if (id == Guid.Empty)
-            {
-                throw new ArgumentNullException(nameof(id), "id is empty");
-            }
-
-            var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, "ChildCategories");
-            if (domainModel is null)
-            {
-                throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
-            }
-
-            // TODO: Add soft delete of all child categories (recursively). As an option, can Load method be used
-            domainModel.Status = CategoryStatus.Deleted;
             await unitOfWork.SaveAsync();
             return true;
         }

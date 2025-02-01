@@ -16,6 +16,11 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(WalletUpsertBusinessModel model)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             // TODO: Add here observer for creating wallet with not 0 amount of money
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;

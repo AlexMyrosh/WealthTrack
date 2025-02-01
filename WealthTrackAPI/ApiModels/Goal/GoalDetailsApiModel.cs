@@ -29,7 +29,7 @@ namespace WealthTrack.API.ApiModels.Goal
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
 
         public CategoryType Type { get; set; }
     }

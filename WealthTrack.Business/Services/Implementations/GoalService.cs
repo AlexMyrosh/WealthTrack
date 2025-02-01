@@ -10,6 +10,11 @@ namespace WealthTrack.Business.Services.Implementations
     {
         public async Task<Guid> CreateAsync(GoalUpsertBusinessModel model)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;

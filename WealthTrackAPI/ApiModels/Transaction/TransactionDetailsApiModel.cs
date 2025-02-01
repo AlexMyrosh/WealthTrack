@@ -8,7 +8,7 @@ namespace WealthTrack.API.ApiModels.Transaction
 
         public decimal Amount { get; set; }
 
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         public DateTimeOffset TransactionDate { get; set; }
 
@@ -29,7 +29,7 @@ namespace WealthTrack.API.ApiModels.Transaction
 
         public string Name { get; set; }
 
-        public string IconName { get; set; }
+        public string? IconName { get; set; }
     }
 
     public class WalletRelatedToTransactionDetailsApiModel

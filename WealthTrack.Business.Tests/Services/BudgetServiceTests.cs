@@ -3,6 +3,7 @@ using FluentAssertions;
 using Moq;
 using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.Services.Implementations;
+using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Business.Tests.TestModels;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.Repositories.Interfaces;
@@ -15,7 +16,7 @@ namespace WealthTrack.Business.Tests.Services
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
         private readonly Mock<IBudgetRepository> _budgetRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
-        private readonly BudgetService _budgetService;
+        private readonly IBudgetService _budgetService;
 
         public BudgetServiceTests()
         {
@@ -81,7 +82,7 @@ namespace WealthTrack.Business.Tests.Services
         {
             // Arrange
             var budgetId = Guid.NewGuid();
-            _budgetRepositoryMock.Setup(repo => repo.GetByIdAsync(budgetId, "")).ReturnsAsync((Budget?)null);
+            _budgetRepositoryMock.Setup(repo => repo.GetByIdAsync(budgetId, It.IsAny<string>())).ReturnsAsync((Budget?)null);
 
             // Act
             var result = await _budgetService.GetByIdAsync(budgetId);
@@ -97,7 +98,7 @@ namespace WealthTrack.Business.Tests.Services
             var testDetailsBusinessModel = TestBudgetModels.DetailsBusinessModel;
             var testDomainModel = TestBudgetModels.DomainModel;
             var budgetId = testDomainModel.Id;
-            _budgetRepositoryMock.Setup(repo => repo.GetByIdAsync(budgetId, "")).ReturnsAsync(testDomainModel);
+            _budgetRepositoryMock.Setup(repo => repo.GetByIdAsync(budgetId, It.IsAny<string>())).ReturnsAsync(testDomainModel);
             _mapperMock.Setup(m => m.Map<BudgetDetailsBusinessModel>(testDomainModel)).Returns(testDetailsBusinessModel);
 
             // Act
@@ -113,7 +114,7 @@ namespace WealthTrack.Business.Tests.Services
         {
             // Arrange
             var emptyBudgetsList = new List<Budget>();
-            _budgetRepositoryMock.Setup(repo => repo.GetAllAsync("")).ReturnsAsync(emptyBudgetsList);
+            _budgetRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(emptyBudgetsList);
             _mapperMock.Setup(m => m.Map<List<BudgetDetailsBusinessModel>>(emptyBudgetsList)).Returns(new List<BudgetDetailsBusinessModel>());
 
             // Act
@@ -133,7 +134,7 @@ namespace WealthTrack.Business.Tests.Services
                 TestBudgetModels.DetailsBusinessModel
             };
 
-            _budgetRepositoryMock.Setup(repo => repo.GetAllAsync("")).ReturnsAsync(budgets);
+            _budgetRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(budgets);
             _mapperMock.Setup(m => m.Map<List<BudgetDetailsBusinessModel>>(budgets)).Returns(expectedBusinessModels);
 
             // Act
@@ -165,7 +166,7 @@ namespace WealthTrack.Business.Tests.Services
             // Arrange
             var testUpsertBusinessModel = TestBudgetModels.UpsertBusinessModel;
             var id = Guid.NewGuid();
-            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, "")).ReturnsAsync((Budget?)null);
+            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Budget?)null);
 
             // Act
             Func<Task> act = async () => await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
@@ -181,7 +182,7 @@ namespace WealthTrack.Business.Tests.Services
             var testUpsertBusinessModel = TestBudgetModels.UpsertBusinessModel;
             var testDomainModel = TestBudgetModels.DomainModel;
             var id = testDomainModel.Id;
-            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, "")).ReturnsAsync(testDomainModel);
+            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
             _mapperMock.Setup(m => m.Map(testUpsertBusinessModel, testDomainModel));
 
             // Act

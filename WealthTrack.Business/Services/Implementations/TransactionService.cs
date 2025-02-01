@@ -16,6 +16,11 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
@@ -31,6 +36,11 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(TransferTransactionUpsertBusinessModel model)
         {
+            if (model is null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             // TODO: Add event handlers to update wallet and budget balances after this transaction
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CategoryId = new Guid(_transferCategoryId);
@@ -111,13 +121,13 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
-            if ((domainModelToDelete.Type == TransactionType.Income || domainModelToDelete.Type == TransactionType.Expense) &&
-                domainModelToDelete.WalletId.HasValue)
+            if ((domainModelToDelete.Type == TransactionType.Income || domainModelToDelete.Type == TransactionType.Expense) && domainModelToDelete.WalletId.HasValue)
             {
                 TransactionDeletedEvent transactionEvent = new(domainModelToDelete.Type, domainModelToDelete.Amount, domainModelToDelete.WalletId.Value, domainModelToDelete.CategoryId, domainModelToDelete.TransactionDate);
                 await eventPublisher.PublishAsync(transactionEvent);
             }
 
+            unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
             await unitOfWork.SaveAsync();
             return true;
         }
