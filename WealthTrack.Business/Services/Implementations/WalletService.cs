@@ -21,12 +21,16 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
 
-            // TODO: Add here observer for creating wallet with not 0 amount of money
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
             domainModel.Status = WalletStatus.Active;
             var createdEntityId = await unitOfWork.WalletRepository.CreateAsync(domainModel);
+            await eventPublisher.PublishAsync(new WalletCreatedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -35,7 +39,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModel = await unitOfWork.WalletRepository.GetByIdAsync(id, include);
@@ -54,7 +58,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.WalletRepository.GetByIdAsync(id);
@@ -63,49 +67,50 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
 
-            if ((model.Balance.HasValue && model.Balance != originalModel.Balance) ||
-                (model.IsPartOfGeneralBalance.HasValue && model.IsPartOfGeneralBalance != originalModel.IsPartOfGeneralBalance) ||
-                (model.BudgetId.HasValue && model.BudgetId != originalModel.BudgetId))
+            if (model.Balance.HasValue && model.Balance != originalModel.Balance)
             {
-                if (model.Balance.HasValue && model.Balance != originalModel.Balance)
+                await unitOfWork.TransactionRepository.CreateAsync(new Transaction
                 {
-                    await unitOfWork.TransactionRepository.CreateAsync(new Transaction
-                    {
-                        Amount = decimal.Abs(originalModel.Balance - model.Balance.Value),
-                        Description = "Balance correction",
-                        CreatedDate = DateTimeOffset.Now,
-                        CategoryId = new Guid(_balanceCorrectionCategoryId),
-                        Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
-                        WalletId = id
-                    });
-                }
-
-                var walletBalanceChangedEvent = new WalletBalanceChangedEvent(id, originalModel.BudgetId, model.BudgetId, originalModel.Balance, model.Balance, originalModel.IsPartOfGeneralBalance, model.IsPartOfGeneralBalance);
-                await eventPublisher.PublishAsync(walletBalanceChangedEvent);
+                    Amount = decimal.Abs(originalModel.Balance - model.Balance.Value),
+                    Description = "Balance correction",
+                    CreatedDate = DateTimeOffset.Now,
+                    CategoryId = new Guid(_balanceCorrectionCategoryId),
+                    Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
+                    WalletId = id
+                });
             }
 
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.WalletRepository.Update(originalModel);
+            await eventPublisher.PublishAsync(new WalletUpdatedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
         }
 
-        public async Task<bool> HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id)
         {
-            // TODO: Add event handler for wallet deletion, to update budget balance
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.WalletRepository.HardDeleteAsync(id);
-            if (deletedDomainModel is null)
+            var domainModelToDelete = await unitOfWork.WalletRepository.GetByIdAsync(id);
+            if (domainModelToDelete is null)
             {
-                return false;
+                throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
+
+            unitOfWork.WalletRepository.HardDelete(domainModelToDelete);
+            await eventPublisher.PublishAsync(new WalletDeletedEvent
+            {
+
+            });
 
             await unitOfWork.SaveAsync();
-            return true;
         }
     }
 }

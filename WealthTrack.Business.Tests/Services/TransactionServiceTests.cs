@@ -40,7 +40,7 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_Transaction_ShouldCreateSuccessfully()
+        public async Task CreateAsync_WhenModelIsNotNull_ShouldCreateTransactionSuccessfully()
         {
             // Arrange
             var testDomainModel = TestTransactionModels.TransactionDomainModel;
@@ -57,28 +57,29 @@ namespace WealthTrack.Business.Tests.Services
             _mapperMock.Verify(m => m.Map<Transaction>(testUpsertBusinessModel), Times.Once);
             _transactionRepositoryMock.Verify(r => r.CreateAsync(It.Is<Transaction>(b => b.Equals(testDomainModel))), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
-            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionAddedEvent>()), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionCreatedEvent>()), Times.Once);
+            Assert.InRange(testDomainModel.CreatedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
         }
 
         [Fact]
-        public async Task CreateAsync_Transaction_ShouldThrowException_WhenModelIsNull()
+        public async Task CreateAsync_WhenTransactionIsNull_ShouldThrowArgumentNullException()
         {
             // Arrange
             TransactionUpsertBusinessModel? model = null;
 
             // Act
-            Func<Task> act = async () => await _transactionService.CreateAsync(model!);
+            var act = async () => await _transactionService.CreateAsync(model!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
             _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransactionUpsertBusinessModel>()), Times.Never);
             _transactionRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
-            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionAddedEvent>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionCreatedEvent>()), Times.Never);
         }
 
         [Fact]
-        public async Task CreateAsync_TransactionTransfer_ShouldCreateSuccessfully()
+        public async Task CreateAsync_WhenModelIsNotNull_ShouldCreateTransferTransactionSuccessfully()
         {
             // Arrange
             var testDomainModel = TestTransactionModels.TransferTransactionDomainModel;
@@ -94,42 +95,47 @@ namespace WealthTrack.Business.Tests.Services
             result.Should().Be(expectedId);
             Assert.Equal(testDomainModel.Type, TransactionType.Transfer);
             Assert.Equal(testDomainModel.CategoryId, _testTransferCategoryId);
+            Assert.InRange(testDomainModel.CreatedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
             _mapperMock.Verify(m => m.Map<Transaction>(testUpsertBusinessModel), Times.Once);
             _transactionRepositoryMock.Verify(r => r.CreateAsync(It.Is<Transaction>(b => b.Equals(testDomainModel))), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionCreatedEvent>()), Times.Once);
         }
 
         [Fact]
-        public async Task CreateAsync_TransactionTransfer_ShouldThrowException_WhenModelIsNull()
+        public async Task CreateAsync_WhenTransferTransactionIsNull_ShouldThrowArgumentNullException()
         {
             // Arrange
             TransferTransactionUpsertBusinessModel? model = null;
 
             // Act
-            Func<Task> act = async () => await _transactionService.CreateAsync(model!);
+            var act = async () => await _transactionService.CreateAsync(model!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
             _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransactionUpsertBusinessModel>()), Times.Never);
             _transactionRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionCreatedEvent>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldThrowArgumentNullException_WhenIdIsEmpty()
+        public async Task GetByIdAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var emptyId = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _transactionService.GetByIdAsync(emptyId);
+            var act = async () => await _transactionService.GetByIdAsync(emptyId);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
+            _mapperMock.Verify(m => m.Map<TransactionDetailsBusinessModel>(It.IsAny<Transaction>()), Times.Never);
+            _transactionRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnNull_WhenTransactionNotFound()
+        public async Task GetByIdAsync_WhenTransactionNotFound_ShouldReturnNull()
         {
             // Arrange
             var transactionId = Guid.NewGuid();
@@ -140,10 +146,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeNull();
+            _mapperMock.Verify(m => m.Map<TransactionDetailsBusinessModel>(It.IsAny<Transaction>()), Times.Once);
+            _transactionRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnMappedTransaction_WhenTransactionExists()
+        public async Task GetByIdAsync_WhenTransactionFound_ShouldReturnMappedTransaction()
         {
             // Arrange
             var testDetailsBusinessModel = TestTransactionModels.DetailsBusinessModel;
@@ -158,10 +166,12 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().BeEquivalentTo(testDetailsBusinessModel);
+            _mapperMock.Verify(m => m.Map<TransactionDetailsBusinessModel>(It.IsAny<Transaction>()), Times.Once);
+            _transactionRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoTransactionsExist()
+        public async Task GetAllAsync_WhenNoTransactionsFound_ShouldReturnEmptyList()
         {
             // Arrange
             var emptyTransactionsList = new List<Transaction>();
@@ -173,10 +183,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeEmpty();
+            _mapperMock.Verify(m => m.Map<List<TransactionDetailsBusinessModel>>(emptyTransactionsList), Times.Once);
+            _transactionRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnMappedTransactions_WhenTransactionsExist()
+        public async Task GetAllAsync_WhenTransactionsFound_ShouldReturnMappedTransactions()
         {
             // Arrange
             var transactions = new List<Transaction> { TestTransactionModels.TransactionDomainModel };
@@ -184,6 +196,7 @@ namespace WealthTrack.Business.Tests.Services
             {
                 TestTransactionModels.DetailsBusinessModel
             };
+            var expectedSize = expectedBusinessModels.Count;
 
             _transactionRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(transactions);
             _mapperMock.Setup(m => m.Map<List<TransactionDetailsBusinessModel>>(transactions)).Returns(expectedBusinessModels);
@@ -193,22 +206,24 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
+            result.Should().HaveCount(expectedSize);
             result.Should().BeEquivalentTo(expectedBusinessModels);
+            _mapperMock.Verify(m => m.Map<List<TransactionDetailsBusinessModel>>(transactions), Times.Once);
+            _transactionRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateAsync_TransactionModel_WhenIdIsEmpty_ShouldThrowArgumentNullException()
+        public async Task UpdateAsync_TransactionModel_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var testUpsertBusinessModel = TestTransactionModels.UpsertTransactionBusinessModel;
             var id = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
             _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransactionUpsertBusinessModel>()), Times.Never);
             _transactionRepositoryMock.Verify(r => r.Update(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
@@ -224,7 +239,7 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Transaction?)null);
 
             // Act
-            Func<Task> act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
@@ -235,14 +250,34 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateAsync_WhenTransactionExists_ShouldUpdateSuccessfully()
+        public async Task UpdateAsync_WhenTransactionHasWrongType_ShouldThrowInvalidOperationException()
+        {
+            // Arrange
+            var testUpsertBusinessModel = TestTransactionModels.UpsertTransactionBusinessModel;
+            var testDomainModel = TestTransactionModels.TransactionDomainModel;
+            testDomainModel.Type = TransactionType.Transfer;
+            var id = Guid.NewGuid();
+            _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
+
+            // Act
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+
+            // Assert
+            await act.Should().ThrowAsync<InvalidOperationException>();
+            _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransactionUpsertBusinessModel>()), Times.Never);
+            _transactionRepositoryMock.Verify(r => r.Update(It.IsAny<Transaction>()), Times.Never);
+            _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionUpdatedEvent>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenTransactionFound_ShouldUpdateSuccessfully()
         {
             // Arrange
             var testUpsertBusinessModel = TestTransactionModels.UpsertTransactionBusinessModel;
             var testDomainModel = TestTransactionModels.TransactionDomainModel;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
-            _mapperMock.Setup(m => m.Map(testUpsertBusinessModel, testDomainModel));
 
             // Act
             await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
@@ -255,20 +290,21 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task UpdateAsync_TransactionTransferModel_WhenIdIsEmpty_ShouldThrowArgumentNullException()
+        public async Task UpdateAsync_TransferTransactionModel_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var testUpsertBusinessModel = TestTransactionModels.UpsertTransferTransactionBusinessModel;
             var id = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
             _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransferTransactionUpsertBusinessModel>()), Times.Never);
             _transactionRepositoryMock.Verify(r => r.Update(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionUpdatedEvent>()), Times.Never);
         }
 
         [Fact]
@@ -280,24 +316,45 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Transaction?)null);
 
             // Act
-            Func<Task> act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
             _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransferTransactionUpsertBusinessModel>()), Times.Never);
             _transactionRepositoryMock.Verify(r => r.Update(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionUpdatedEvent>()), Times.Never);
         }
 
         [Fact]
-        public async Task UpdateAsync_WhenTransferTransactionExists_ShouldUpdateSuccessfully()
+        public async Task UpdateAsync_WhenTransferTransactionHasWrongType_ShouldThrowInvalidOperationException()
         {
             // Arrange
             var testUpsertBusinessModel = TestTransactionModels.UpsertTransferTransactionBusinessModel;
-            var testDomainModel = TestTransactionModels.TransactionDomainModel;
+            var testDomainModel = TestTransactionModels.TransferTransactionDomainModel;
+            testDomainModel.Type = TransactionType.Income;
+            var id = Guid.NewGuid();
+            _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
+
+            // Act
+            var act = async () => await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
+
+            // Assert
+            await act.Should().ThrowAsync<InvalidOperationException>();
+            _mapperMock.Verify(m => m.Map<Transaction>(It.IsAny<TransferTransactionUpsertBusinessModel>()), Times.Never);
+            _transactionRepositoryMock.Verify(r => r.Update(It.IsAny<Transaction>()), Times.Never);
+            _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionUpdatedEvent>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_WhenTransferTransactionFound_ShouldUpdateSuccessfully()
+        {
+            // Arrange
+            var testUpsertBusinessModel = TestTransactionModels.UpsertTransferTransactionBusinessModel;
+            var testDomainModel = TestTransactionModels.TransferTransactionDomainModel;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
-            _mapperMock.Setup(m => m.Map(testUpsertBusinessModel, testDomainModel));
 
             // Act
             await _transactionService.UpdateAsync(id, testUpsertBusinessModel);
@@ -306,22 +363,24 @@ namespace WealthTrack.Business.Tests.Services
             _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.TransactionRepository.Update(testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionUpdatedEvent>()), Times.Once);
         }
 
         [Fact]
-        public async Task HardDeleteAsync_WhenIdIsEmpty_ShouldThrowArgumentNullException()
+        public async Task HardDeleteAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var id = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _transactionService.HardDeleteAsync(id);
+            var act = async () => await _transactionService.HardDeleteAsync(id);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
             _transactionRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionDeletedEvent>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionDeletedEvent>()), Times.Never);
         }
 
         [Fact]
@@ -332,31 +391,51 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Transaction?)null);
 
             // Act
-            Func<Task> act = async () => await _transactionService.HardDeleteAsync(id);
+            var act = async () => await _transactionService.HardDeleteAsync(id);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
             _transactionRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Transaction>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionDeletedEvent>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionDeletedEvent>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionDeletedEvent>()), Times.Never);
         }
 
         [Fact]
-        public async Task HardDeleteAsync_WhenTransactionExists_ShouldReturnTrueAndSaveChanges()
+        public async Task HardDeleteAsync_WhenTransactionFound_ShouldDeleteBudgetAndSaveChanges()
         {
             // Arrange
             var testDomainModel = TestTransactionModels.TransactionDomainModel;
+            testDomainModel.Type = TransactionType.Income;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
 
             // Act
-            var result = await _transactionService.HardDeleteAsync(id);
+            await _transactionService.HardDeleteAsync(id);
 
             // Assert
-            Assert.True(result);
+            _transactionRepositoryMock.Verify(u => u.HardDelete(It.IsAny<Transaction>()), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransactionDeletedEvent>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task HardDeleteAsync_WhenTransferTransactionFound_ShouldDeleteBudgetAndSaveChanges()
+        {
+            // Arrange
+            var testDomainModel = TestTransactionModels.TransactionDomainModel;
+            testDomainModel.Type = TransactionType.Transfer;
+            var id = testDomainModel.Id;
+            _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
+
+            // Act
+            await _transactionService.HardDeleteAsync(id);
+
+            // Assert
             _transactionRepositoryMock.Verify(u => u.HardDelete(It.IsAny<Transaction>()), Times.Once);
+            _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<TransferTransactionDeletedEvent>()), Times.Once);
         }
 
         public void Dispose()

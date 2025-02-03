@@ -193,7 +193,7 @@ namespace WealthTrack.Business.Seeders
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}latest?api-key={Api_key}");
             var response = await client.SendAsync(requestMessage);
             var content = await response.Content.ReadAsStringAsync();
-            var rates = JsonConvert.DeserializeObject<Rates>(content).rates;
+            var rates = JsonConvert.DeserializeObject<Rates>(content)?.rates;
             if (rates is null)
             {
                 throw new JsonException($"Unable to cast JSON response to {nameof(Rates)} model");

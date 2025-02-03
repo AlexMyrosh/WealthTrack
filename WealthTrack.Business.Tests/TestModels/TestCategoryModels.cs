@@ -78,8 +78,8 @@ namespace WealthTrack.Business.Tests.TestModels
                     Name = "Test category domain model",
                     IconName = "Test category icon name",
                     Type = CategoryType.Income,
-                    CreatedDate = DateTimeOffset.Now,
-                    ModifiedDate = DateTimeOffset.Now,
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    ModifiedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     Status = CategoryStatus.Active
                 };
             }

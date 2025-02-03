@@ -18,7 +18,6 @@ namespace WealthTrack.Business.Tests.TestModels
                 model.Transactions = [TestTransactionModels.DomainModelWithoutDetails];
                 model.IncomeTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
                 model.OutgoingTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
-                model.Goals = [TestGoalModels.DomainModelWithoutDetails];
                 return model;
             }
         }
@@ -94,8 +93,8 @@ namespace WealthTrack.Business.Tests.TestModels
                     Name = "Test wallet name",
                     Balance = 200.123M,
                     IsPartOfGeneralBalance = true,
-                    CreatedDate = DateTimeOffset.Now,
-                    ModifiedDate = DateTimeOffset.Now,
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    ModifiedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     Status = WalletStatus.Active,
                     Type = WalletType.Cash,
                 };

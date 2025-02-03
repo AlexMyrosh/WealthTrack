@@ -23,7 +23,5 @@ namespace WealthTrack.Data.DomainModels
         public DateTimeOffset ModifiedDate { get; set; }
 
         public List<Category> Categories { get; set; }
-
-        public List<Wallet> Wallets { get; set; }
     }
 }

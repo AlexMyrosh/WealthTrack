@@ -29,20 +29,21 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldThrowArgumentNullException_WhenIdIsEmpty()
+        public async Task GetByIdAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var emptyId = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _currencyService.GetByIdAsync(emptyId);
+            var act = async () => await _currencyService.GetByIdAsync(emptyId);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
+            _currencyRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnNull_WhenCurrencyNotFound()
+        public async Task GetByIdAsync_WhenCurrencyNotFound_ShouldReturnNull()
         {
             // Arrange
             var currencyId = Guid.NewGuid();
@@ -53,10 +54,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeNull();
+            _currencyRepositoryMock.Verify(r=>r.GetByIdAsync(currencyId, It.IsAny<string>()), Times.Once);
+            _mapperMock.Verify(m=>m.Map<CurrencyDetailsBusinessModel>(null), Times.Once);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnMappedCurrency_WhenCurrencyExists()
+        public async Task GetByIdAsync_WhenCurrencyFound_ShouldReturnMappedCurrency()
         {
             // Arrange
             var testDetailsBusinessModel = TestCurrencyModels.DetailsBusinessModel;
@@ -71,10 +74,12 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().BeEquivalentTo(testDetailsBusinessModel);
+            _currencyRepositoryMock.Verify(r => r.GetByIdAsync(currencyId, It.IsAny<string>()), Times.Once);
+            _mapperMock.Verify(m => m.Map<CurrencyDetailsBusinessModel>(testDomainModel), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoCurrenciesExist()
+        public async Task GetAllAsync_WhenNoCurrenciesFound_ShouldReturnEmptyList()
         {
             // Arrange
             var emptyCurrenciesList = new List<Currency>();
@@ -86,10 +91,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeEmpty();
+            _currencyRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
+            _mapperMock.Verify(m => m.Map<List<CurrencyDetailsBusinessModel>>(emptyCurrenciesList), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnMappedCurrencies_WhenCurrenciesExist()
+        public async Task GetAllAsync_WhenCurrenciesFound_ShouldReturnMappedCurrencies()
         {
             // Arrange
             var currencies = new List<Currency> { TestCurrencyModels.DomainModel };
@@ -97,6 +104,7 @@ namespace WealthTrack.Business.Tests.Services
             {
                 TestCurrencyModels.DetailsBusinessModel
             };
+            var expectedSize = expectedBusinessModels.Count;
 
             _currencyRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(currencies);
             _mapperMock.Setup(m => m.Map<List<CurrencyDetailsBusinessModel>>(currencies)).Returns(expectedBusinessModels);
@@ -106,8 +114,10 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
+            result.Should().HaveCount(expectedSize);
             result.Should().BeEquivalentTo(expectedBusinessModels);
+            _mapperMock.Verify(m => m.Map<List<CurrencyDetailsBusinessModel>>(currencies), Times.Once);
+            _currencyRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
         }
 
         public void Dispose()

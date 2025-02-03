@@ -238,14 +238,6 @@ namespace WealthTrack.Data.Context
                         j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId"),
                         j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
                     );
-
-                entity.HasMany(s => s.Wallets)
-                    .WithMany(c => c.Goals)
-                    .UsingEntity<Dictionary<string, object>>(
-                        "GoalWallet",
-                        j => j.HasOne<Wallet>().WithMany().HasForeignKey("WalletId"),
-                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
-                    );
             });
         }
     }

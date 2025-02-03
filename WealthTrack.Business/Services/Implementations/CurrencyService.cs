@@ -11,7 +11,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModel = await unitOfWork.CurrencyRepository.GetByIdAsync(id, include);

@@ -8,6 +8,7 @@ using WealthTrack.Business.Tests.TestModels;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.Repositories.Interfaces;
 using WealthTrack.Data.UnitOfWork;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Tests.Services
 {
@@ -29,7 +30,7 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task CreateAsync_ShouldCreateBudgetSuccessfully()
+        public async Task CreateAsync_WhenModelIsNotNull_ShouldCreateBudgetSuccessfully()
         {
             // Arrange
             var testDomainModel = TestBudgetModels.DomainModel;
@@ -46,16 +47,19 @@ namespace WealthTrack.Business.Tests.Services
             _mapperMock.Verify(m => m.Map<Budget>(testUpsertBusinessModel), Times.Once);
             _budgetRepositoryMock.Verify(r => r.CreateAsync(It.Is<Budget>(b => b.Equals(testDomainModel))), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
+            Assert.InRange(testDomainModel.CreatedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
+            Assert.InRange(testDomainModel.ModifiedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
+            Assert.Equal(testDomainModel.Status, BudgetStatus.Active);
         }
 
         [Fact]
-        public async Task CreateAsync_ShouldThrowException_WhenModelIsNull()
+        public async Task CreateAsync_WhenModelIsNull_ShouldThrowArgumentNullException()
         {
             // Arrange
             BudgetUpsertBusinessModel? model = null;
 
             // Act
-            Func<Task> act = async () => await _budgetService.CreateAsync(model!);
+            var act = async () => await _budgetService.CreateAsync(model!);
 
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
@@ -65,20 +69,22 @@ namespace WealthTrack.Business.Tests.Services
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldThrowArgumentNullException_WhenIdIsEmpty()
+        public async Task GetByIdAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var emptyId = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _budgetService.GetByIdAsync(emptyId);
+            var act = async () => await _budgetService.GetByIdAsync(emptyId);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
+            _mapperMock.Verify(m => m.Map<BudgetDetailsBusinessModel>(It.IsAny<Budget>()), Times.Never);
+            _budgetRepositoryMock.Verify(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnNull_WhenBudgetNotFound()
+        public async Task GetByIdAsync_WhenBudgetNotFound_ShouldReturnNull()
         {
             // Arrange
             var budgetId = Guid.NewGuid();
@@ -89,10 +95,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeNull();
+            _mapperMock.Verify(m => m.Map<BudgetDetailsBusinessModel>(It.IsAny<Budget>()), Times.Once);
+            _budgetRepositoryMock.Verify(r => r.GetByIdAsync(budgetId, It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetByIdAsync_ShouldReturnMappedBudget_WhenBudgetExists()
+        public async Task GetByIdAsync_WhenBudgetFound_ShouldReturnMappedBudget()
         {
             // Arrange
             var testDetailsBusinessModel = TestBudgetModels.DetailsBusinessModel;
@@ -107,10 +115,12 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             result.Should().NotBeNull();
             result.Should().BeEquivalentTo(testDetailsBusinessModel);
+            _mapperMock.Verify(m => m.Map<BudgetDetailsBusinessModel>(testDomainModel), Times.Once);
+            _budgetRepositoryMock.Verify(r => r.GetByIdAsync(budgetId, It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnEmptyList_WhenNoBudgetsExist()
+        public async Task GetAllAsync_WhenNoBudgetsFound_ShouldReturnEmptyList()
         {
             // Arrange
             var emptyBudgetsList = new List<Budget>();
@@ -122,10 +132,12 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().BeEmpty();
+            _mapperMock.Verify(m => m.Map<List<BudgetDetailsBusinessModel>>(emptyBudgetsList), Times.Once);
+            _budgetRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task GetAllAsync_ShouldReturnMappedBudgets_WhenBudgetsExist()
+        public async Task GetAllAsync_WhenBudgetsFound_ShouldReturnMappedBudgets()
         {
             // Arrange
             var budgets = new List<Budget> { TestBudgetModels.DomainModel };
@@ -133,6 +145,7 @@ namespace WealthTrack.Business.Tests.Services
             {
                 TestBudgetModels.DetailsBusinessModel
             };
+            var expectedSize = expectedBusinessModels.Count;
 
             _budgetRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(budgets);
             _mapperMock.Setup(m => m.Map<List<BudgetDetailsBusinessModel>>(budgets)).Returns(expectedBusinessModels);
@@ -142,22 +155,27 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             result.Should().NotBeNull();
-            result.Should().HaveCount(1);
+            result.Should().HaveCount(expectedSize);
             result.Should().BeEquivalentTo(expectedBusinessModels);
+            _mapperMock.Verify(m => m.Map<List<BudgetDetailsBusinessModel>>(budgets), Times.Once);
+            _budgetRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
-        public async Task UpdateAsync_WhenIdIsEmpty_ShouldThrowArgumentNullException()
+        public async Task UpdateAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var testUpsertBusinessModel = TestBudgetModels.UpsertBusinessModel;
             var id = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
+            _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, It.IsAny<Budget>()), Times.Never);
+            _unitOfWorkMock.Verify(uow => uow.BudgetRepository.Update(It.IsAny<Budget>()), Times.Never);
+            _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Never);
         }
 
         [Fact]
@@ -169,21 +187,23 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Budget?)null);
 
             // Act
-            Func<Task> act = async () => await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
+            var act = async () => await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
+            _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, It.IsAny<Budget>()), Times.Never);
+            _unitOfWorkMock.Verify(uow => uow.BudgetRepository.Update(It.IsAny<Budget>()), Times.Never);
+            _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Never);
         }
 
         [Fact]
-        public async Task UpdateAsync_WhenBudgetExists_ShouldUpdateSuccessfully()
+        public async Task UpdateAsync_WhenBudgetFound_ShouldUpdateSuccessfully()
         {
             // Arrange
             var testUpsertBusinessModel = TestBudgetModels.UpsertBusinessModel;
             var testDomainModel = TestBudgetModels.DomainModel;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
-            _mapperMock.Setup(m => m.Map(testUpsertBusinessModel, testDomainModel));
 
             // Act
             await _budgetService.UpdateAsync(id, testUpsertBusinessModel);
@@ -192,49 +212,52 @@ namespace WealthTrack.Business.Tests.Services
             _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.BudgetRepository.Update(testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
+            Assert.InRange(testDomainModel.ModifiedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
         }
 
         [Fact]
-        public async Task HardDeleteAsync_WhenIdIsEmpty_ShouldThrowArgumentNullException()
+        public async Task HardDeleteAsync_WhenIdIsEmpty_ShouldThrowArgumentException()
         {
             // Arrange
             var id = Guid.Empty;
 
             // Act
-            Func<Task> act = async () => await _budgetService.HardDeleteAsync(id);
+            var act = async () => await _budgetService.HardDeleteAsync(id);
 
             // Assert
-            await act.Should().ThrowAsync<ArgumentNullException>();
+            await act.Should().ThrowAsync<ArgumentException>();
+            _budgetRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Budget>()), Times.Never);
+            _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
         }
 
         [Fact]
-        public async Task HardDeleteAsync_WhenBudgetNotFound_ShouldReturnFalse()
+        public async Task HardDeleteAsync_WhenBudgetNotFound_ShouldThrowKeyNotFoundException()
         {
             // Arrange
             var id = Guid.NewGuid();
-            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.HardDeleteAsync(id)).ReturnsAsync((Budget?)null);
+            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync((Budget?)null);
 
             // Act
-            var result = await _budgetService.HardDeleteAsync(id);
+            var act = async () => await _budgetService.HardDeleteAsync(id);
 
             // Assert
-            Assert.False(result);
-            _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Never);
+            await act.Should().ThrowAsync<KeyNotFoundException>();
+            _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
         }
 
         [Fact]
-        public async Task HardDeleteAsync_WhenBudgetExists_ShouldReturnTrueAndSaveChanges()
+        public async Task HardDeleteAsync_WhenBudgetFound_ShouldDeleteBudgetAndSaveChanges()
         {
             // Arrange
             var testDomainModel = TestBudgetModels.DomainModel;
             var id = testDomainModel.Id;
-            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.HardDeleteAsync(id)).ReturnsAsync(testDomainModel);
+            _unitOfWorkMock.Setup(uow => uow.BudgetRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
 
             // Act
-            var result = await _budgetService.HardDeleteAsync(id);
+            await _budgetService.HardDeleteAsync(id);
 
             // Assert
-            Assert.True(result);
+            _unitOfWorkMock.Verify(uow => uow.BudgetRepository.HardDelete(testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
         }
 

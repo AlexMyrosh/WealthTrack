@@ -10,10 +10,8 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task<List<Wallet>> GetAllAsync(string include = "");
 
-        public Wallet Update(Wallet model);
+        public void Update(Wallet model);
 
-        public Task<Wallet?> HardDeleteAsync(Guid id);
-
-        public Wallet HardDelete(Wallet model);
+        public void HardDelete(Wallet model);
     }
 }

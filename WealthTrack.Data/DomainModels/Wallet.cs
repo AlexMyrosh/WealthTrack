@@ -33,7 +33,5 @@ namespace WealthTrack.Data.DomainModels
         public List<Transaction> IncomeTransferTransactions { get; set; }
 
         public List<Transaction> OutgoingTransferTransactions { get; set; }
-
-        public List<Goal> Goals { get; set; }
     }
 }

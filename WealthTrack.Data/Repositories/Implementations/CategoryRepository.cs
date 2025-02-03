@@ -58,28 +58,14 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public Category Update(Category model)
+        public void Update(Category model)
         {
-            var result = context.Categories.Update(model);
-            return result.Entity;
+            context.Categories.Update(model);
         }
 
-        public async Task<Category?> HardDeleteAsync(Guid id)
+        public void HardDelete(Category model)
         {
-            var model = await context.Categories.FindAsync(id);
-            if (model is null)
-            {
-                return null;
-            }
-
-            var result = context.Categories.Remove(model);
-            return result.Entity;
-        }
-
-        public Category HardDelete(Category model)
-        {
-            var result = context.Categories.Remove(model);
-            return result.Entity;
+            context.Categories.Remove(model);
         }
     }
 }

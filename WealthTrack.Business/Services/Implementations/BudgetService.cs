@@ -29,7 +29,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModel = await unitOfWork.BudgetRepository.GetByIdAsync(id, include);
@@ -48,7 +48,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.BudgetRepository.GetByIdAsync(id);
@@ -63,21 +63,21 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task<bool> HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id)
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.BudgetRepository.HardDeleteAsync(id);
-            if (deletedDomainModel is null)
+            var domainModelToDelete = await unitOfWork.BudgetRepository.GetByIdAsync(id);
+            if (domainModelToDelete is null)
             {
-                return false;
+                throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
             }
 
+            unitOfWork.BudgetRepository.HardDelete(domainModelToDelete);
             await unitOfWork.SaveAsync();
-            return true;
         }
     }
 }

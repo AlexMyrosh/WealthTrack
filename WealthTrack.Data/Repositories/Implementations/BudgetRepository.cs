@@ -49,28 +49,14 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public Budget Update(Budget model)
+        public void Update(Budget model)
         {
-            var result = context.Budgets.Update(model);
-            return result.Entity;
+            context.Budgets.Update(model);
         }
 
-        public async Task<Budget?> HardDeleteAsync(Guid id)
+        public void HardDelete(Budget model)
         {
-            var model = await context.Budgets.FindAsync(id);
-            if (model is null)
-            {
-                return null;
-            }
-
-            var result = context.Budgets.Remove(model);
-            return result.Entity;
-        }
-
-        public Budget HardDelete(Budget model)
-        {
-            var result = context.Budgets.Remove(model);
-            return result.Entity;
+            context.Budgets.Remove(model);
         }
     }
 }

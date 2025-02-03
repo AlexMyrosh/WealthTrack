@@ -16,6 +16,7 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
+            // TODO: Need to add check that model is not for transfer
             if (model is null)
             {
                 throw new ArgumentNullException(nameof(model));
@@ -24,11 +25,10 @@ namespace WealthTrack.Business.Services.Implementations
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
-            if (model.WalletId.HasValue && model.Type.HasValue && model.Amount.HasValue && model.TransactionDate.HasValue)
+            await eventPublisher.PublishAsync(new TransactionCreatedEvent
             {
-                TransactionAddedEvent transactionEvent = new(model.Type.Value, model.Amount.Value, model.WalletId.Value, model.CategoryId, model.TransactionDate.Value);
-                await eventPublisher.PublishAsync(transactionEvent);
-            }
+
+            });
 
             await unitOfWork.SaveAsync();
             return createdEntityId;
@@ -36,17 +36,22 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(TransferTransactionUpsertBusinessModel model)
         {
+            // TODO: Need to add check that model is not for regular transaction
             if (model is null)
             {
                 throw new ArgumentNullException(nameof(model));
             }
 
-            // TODO: Add event handlers to update wallet and budget balances after this transaction
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CategoryId = new Guid(_transferCategoryId);
             domainModel.Type = TransactionType.Transfer;
             domainModel.CreatedDate = DateTimeOffset.Now;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
+            await eventPublisher.PublishAsync(new TransferTransactionCreatedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -74,7 +79,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, "Wallet");
@@ -83,10 +88,18 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
-            TransactionUpdatedEvent transactionEvent = new(originalModel.CategoryId, model.CategoryId, originalModel.Type, model.Type, originalModel.WalletId.Value, model.WalletId, originalModel.Amount, model.Amount, originalModel.TransactionDate, model.TransactionDate);
-            await eventPublisher.PublishAsync(transactionEvent);
+            if (originalModel.Type == TransactionType.Transfer)
+            {
+                throw new InvalidOperationException("Unable to update transaction as its type is transfer");
+            }
+
             mapper.Map(model, originalModel);
             unitOfWork.TransactionRepository.Update(originalModel);
+            await eventPublisher.PublishAsync(new TransactionUpdatedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
         }
 
@@ -94,7 +107,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id);
@@ -103,16 +116,26 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
+            if (originalModel.Type != TransactionType.Transfer)
+            {
+                throw new InvalidOperationException("Unable to update transaction as its type is not transfer");
+            }
+
             mapper.Map(model, originalModel);
             unitOfWork.TransactionRepository.Update(originalModel);
+            await eventPublisher.PublishAsync(new TransferTransactionUpdatedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
         }
 
-        public async Task<bool> HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id)
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModelToDelete = await unitOfWork.TransactionRepository.GetByIdAsync(id);
@@ -121,15 +144,23 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
 
-            if ((domainModelToDelete.Type == TransactionType.Income || domainModelToDelete.Type == TransactionType.Expense) && domainModelToDelete.WalletId.HasValue)
+            unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
+            if (domainModelToDelete.Type == TransactionType.Transfer)
             {
-                TransactionDeletedEvent transactionEvent = new(domainModelToDelete.Type, domainModelToDelete.Amount, domainModelToDelete.WalletId.Value, domainModelToDelete.CategoryId, domainModelToDelete.TransactionDate);
-                await eventPublisher.PublishAsync(transactionEvent);
+                await eventPublisher.PublishAsync(new TransferTransactionDeletedEvent
+                {
+
+                });
+            }
+            else
+            {
+                await eventPublisher.PublishAsync(new TransactionDeletedEvent
+                {
+
+                });
             }
 
-            unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
             await unitOfWork.SaveAsync();
-            return true;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
 
+            // TODO: add calculating of initial balance
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
@@ -28,7 +29,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModel = await unitOfWork.GoalRepository.GetByIdAsync(id, include);
@@ -47,7 +48,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, "Categories,Wallets");
@@ -56,6 +57,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
+            // TODO: add recalculation of balance
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
@@ -63,21 +65,22 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task<bool> HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id)
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.GoalRepository.HardDeleteAsync(id);
-            if (deletedDomainModel is null)
+            var domainModelToDelete = await unitOfWork.GoalRepository.GetByIdAsync(id);
+            if (domainModelToDelete is null)
             {
-                return false;
+                throw new KeyNotFoundException($"Unable to get goal from database by id - {id.ToString()}");
             }
+
+            unitOfWork.GoalRepository.HardDelete(domainModelToDelete);
 
             await unitOfWork.SaveAsync();
-            return true;
         }
 
         private async Task LoadRelatedEntitiesByIdsAsync(List<Guid>? categoryIds, List<Guid>? walletIds, Goal domainModel)
@@ -90,18 +93,6 @@ namespace WealthTrack.Business.Services.Implementations
                     if (category != null)
                     {
                         domainModel.Categories.Add(category);
-                    }
-                }
-            }
-
-            if (walletIds != null)
-            {
-                foreach (var walletId in walletIds)
-                {
-                    var wallet = await unitOfWork.WalletRepository.GetByIdAsync(walletId);
-                    if (wallet != null)
-                    {
-                        domainModel.Wallets.Add(wallet);
                     }
                 }
             }

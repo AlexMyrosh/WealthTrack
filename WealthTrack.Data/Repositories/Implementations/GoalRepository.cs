@@ -49,28 +49,14 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public Goal Update(Goal model)
+        public void Update(Goal model)
         {
-            var result = context.Goals.Update(model);
-            return result.Entity;
+            context.Goals.Update(model);
         }
 
-        public async Task<Goal?> HardDeleteAsync(Guid id)
+        public void HardDelete(Goal model)
         {
-            var model = await context.Goals.FindAsync(id);
-            if (model is null)
-            {
-                return null;
-            }
-
-            var result = context.Goals.Remove(model);
-            return result.Entity;
-        }
-
-        public Goal HardDelete(Goal model)
-        {
-            var result = context.Goals.Remove(model);
-            return result.Entity;
+            context.Goals.Remove(model);
         }
     }
 }

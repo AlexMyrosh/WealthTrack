@@ -12,10 +12,8 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task<List<Category>> GetAllSystemOwnedAsync();
 
-        public Category Update(Category model);
+        public void Update(Category model);
 
-        public Task<Category?> HardDeleteAsync(Guid id);
-
-        public Category HardDelete(Category model);
+        public void HardDelete(Category model);
     }
 }

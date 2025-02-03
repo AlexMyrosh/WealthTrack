@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using WealthTrack.Business.BusinessModels.Category;
+using WealthTrack.Business.Events.Interfaces;
+using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
@@ -7,7 +9,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class CategoryService(IUnitOfWork unitOfWork, IMapper mapper) : ICategoryService
+    public class CategoryService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher) : ICategoryService
     {
         public async Task<Guid> CreateAsync(CategoryUpsertBusinessModel model)
         {
@@ -29,7 +31,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var domainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, include);
@@ -48,7 +50,7 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
             var originalModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
@@ -57,27 +59,37 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
+            if (model.Type.HasValue && model.Type != originalModel.Type)
+            {
+                throw new InvalidOperationException("Category type cannot be changed");
+            }
+
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.CategoryRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
 
-        public async Task<bool> HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id)
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.CategoryRepository.HardDeleteAsync(id);
+            var deletedDomainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
             if (deletedDomainModel is null)
             {
-                return false;
+                throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
+            unitOfWork.CategoryRepository.HardDelete(deletedDomainModel);
+            await eventPublisher.PublishAsync(new CategoryDeletedEvent
+            {
+
+            });
+
             await unitOfWork.SaveAsync();
-            return true;
         }
     }
 }

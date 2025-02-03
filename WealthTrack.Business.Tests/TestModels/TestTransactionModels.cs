@@ -24,6 +24,7 @@ namespace WealthTrack.Business.Tests.TestModels
             get
             {
                 var model = DomainModelWithoutDetails;
+                model.Type = TransactionType.Transfer;
                 model.Category = TestCategoryModels.DomainModelWithoutDetails;
                 model.CategoryId = model.Category.Id;
                 model.SourceWallet = TestWalletModels.DomainModelWithoutDetails;
@@ -111,8 +112,8 @@ namespace WealthTrack.Business.Tests.TestModels
                     Id = Guid.NewGuid(),
                     Amount = 50.123M,
                     Description = "Test transaction",
-                    TransactionDate = new DateTime(2025, 1, 15),
-                    CreatedDate = DateTimeOffset.Now,
+                    TransactionDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero),
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     Type = TransactionType.Income
                 };
             }

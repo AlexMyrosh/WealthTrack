@@ -37,21 +37,6 @@ namespace WealthTrack.Data.Migrations
                     b.ToTable("GoalCategory");
                 });
 
-            modelBuilder.Entity("GoalWallet", b =>
-                {
-                    b.Property<Guid>("GoalId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("WalletId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("GoalId", "WalletId");
-
-                    b.HasIndex("WalletId");
-
-                    b.ToTable("GoalWallet");
-                });
-
             modelBuilder.Entity("WealthTrack.Data.DomainModels.Budget", b =>
                 {
                     b.Property<Guid>("Id")
@@ -310,21 +295,6 @@ namespace WealthTrack.Data.Migrations
                     b.HasOne("WealthTrack.Data.DomainModels.Goal", null)
                         .WithMany()
                         .HasForeignKey("GoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GoalWallet", b =>
-                {
-                    b.HasOne("WealthTrack.Data.DomainModels.Goal", null)
-                        .WithMany()
-                        .HasForeignKey("GoalId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WealthTrack.Data.DomainModels.Wallet", null)
-                        .WithMany()
-                        .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

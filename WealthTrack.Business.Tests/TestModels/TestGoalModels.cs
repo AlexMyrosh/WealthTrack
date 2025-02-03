@@ -12,7 +12,6 @@ namespace WealthTrack.Business.Tests.TestModels
             {
                 var model = DomainModelWithoutDetails;
                 model.Categories = [TestCategoryModels.DomainModelWithoutDetails];
-                model.Wallets = [TestWalletModels.DomainModelWithoutDetails];
                 return model;
             }
         }
@@ -28,8 +27,7 @@ namespace WealthTrack.Business.Tests.TestModels
                     Type = DomainModel.Type,
                     StartDate = DomainModel.StartDate,
                     EndDate = DomainModel.EndDate,
-                    CategoryIds = DomainModel.Categories.Select(x => x.Id).ToList(),
-                    WalletIds = DomainModel.Wallets.Select(x => x.Id).ToList()
+                    CategoryIds = DomainModel.Categories.Select(x => x.Id).ToList()
                 };
 
                 return model;
@@ -84,10 +82,10 @@ namespace WealthTrack.Business.Tests.TestModels
                     PlannedMoneyAmount = 400.123M,
                     ActualMoneyAmount = 300.123M,
                     Type = GoalType.Income,
-                    StartDate = new DateTime(2025, 1, 1),
-                    EndDate = new DateTime(2025, 1, 31),
-                    CreatedDate = DateTimeOffset.Now,
-                    ModifiedDate = DateTimeOffset.Now
+                    StartDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    EndDate = new DateTimeOffset(2025, 1, 31, 12, 0, 0, TimeSpan.Zero),
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    ModifiedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero)
                 };
             }
         }

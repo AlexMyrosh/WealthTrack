@@ -55,13 +55,8 @@ namespace WealthTrack.API.Controllers
         [HttpDelete("hard_delete/{id}")]
         public async Task<ActionResult> HardDelete(Guid id)
         {
-            var result = await budgetService.HardDeleteAsync(id);
-            if (result)
-            {
-                return NoContent();
-            }
-
-            return BadRequest();
+            await budgetService.HardDeleteAsync(id);
+            return Accepted();
         }
     }
 }

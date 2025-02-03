@@ -12,6 +12,6 @@ namespace WealthTrack.Business.Services.Interfaces
 
         public Task UpdateAsync(Guid id, WalletUpsertBusinessModel model);
 
-        public Task<bool> HardDeleteAsync(Guid id);
+        public Task HardDeleteAsync(Guid id);
     }
 }

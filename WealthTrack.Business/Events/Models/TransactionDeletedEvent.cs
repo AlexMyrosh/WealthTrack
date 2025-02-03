@@ -2,16 +2,16 @@
 
 namespace WealthTrack.Business.Events.Models
 {
-    public class TransactionDeletedEvent(TransactionType transactionType, decimal amount, Guid walletId, Guid? categoryId, DateTimeOffset transactionDate)
+    public class TransactionDeletedEvent
     {
-        public TransactionType TransactionType { get; } = transactionType;
+        public TransactionType TransactionType { get; set; }
 
-        public decimal Amount { get; } = amount;
+        public decimal Amount { get; set; }
 
-        public Guid WalletId { get; } = walletId;
+        public Guid WalletId { get; set; }
 
-        public Guid? CategoryId { get; } = categoryId;
+        public Guid? CategoryId { get; set; }
 
-        public DateTimeOffset TransactionDate { get; } = transactionDate;
+        public DateTimeOffset TransactionDate { get; set; }
     }
 }

@@ -10,10 +10,8 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task<List<Budget>> GetAllAsync(string include = "");
 
-        public Budget Update(Budget model);
+        public void Update(Budget model);
 
-        public Task<Budget?> HardDeleteAsync(Guid id);
-
-        public Budget HardDelete(Budget model);
+        public void HardDelete(Budget model);
     }
 }
