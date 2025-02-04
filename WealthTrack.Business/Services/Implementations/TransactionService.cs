@@ -25,11 +25,8 @@ namespace WealthTrack.Business.Services.Implementations
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
-            await eventPublisher.PublishAsync(new TransactionCreatedEvent
-            {
-
-            });
-
+            var transactionCreatedEventModel = mapper.Map<TransactionCreatedEvent>(domainModel);
+            await eventPublisher.PublishAsync(transactionCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -47,11 +44,8 @@ namespace WealthTrack.Business.Services.Implementations
             domainModel.Type = TransactionType.Transfer;
             domainModel.CreatedDate = DateTimeOffset.Now;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
-            await eventPublisher.PublishAsync(new TransferTransactionCreatedEvent
-            {
-
-            });
-
+            var transferTransactionCreatedEventModel = mapper.Map<TransferTransactionCreatedEvent>(domainModel);
+            await eventPublisher.PublishAsync(transferTransactionCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -147,17 +141,13 @@ namespace WealthTrack.Business.Services.Implementations
             unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
             if (domainModelToDelete.Type == TransactionType.Transfer)
             {
-                await eventPublisher.PublishAsync(new TransferTransactionDeletedEvent
-                {
-
-                });
+                var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
             }
             else
             {
-                await eventPublisher.PublishAsync(new TransactionDeletedEvent
-                {
-
-                });
+                var transactionDeletedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(transactionDeletedEventModel);
             }
 
             await unitOfWork.SaveAsync();

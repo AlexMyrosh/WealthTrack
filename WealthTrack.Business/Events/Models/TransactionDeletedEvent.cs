@@ -4,7 +4,7 @@ namespace WealthTrack.Business.Events.Models
 {
     public class TransactionDeletedEvent
     {
-        public TransactionType TransactionType { get; set; }
+        public TransactionType Type { get; set; }
 
         public decimal Amount { get; set; }
 

@@ -84,11 +84,8 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             unitOfWork.CategoryRepository.HardDelete(deletedDomainModel);
-            await eventPublisher.PublishAsync(new CategoryDeletedEvent
-            {
-
-            });
-
+            var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(deletedDomainModel);
+            await eventPublisher.PublishAsync(categoryDeletedEventModel);
             await unitOfWork.SaveAsync();
         }
     }

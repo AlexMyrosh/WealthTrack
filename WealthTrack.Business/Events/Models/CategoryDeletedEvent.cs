@@ -2,6 +2,6 @@
 {
     public class CategoryDeletedEvent
     {
-
+        public Guid CategoryId { get; set; }
     }
 }

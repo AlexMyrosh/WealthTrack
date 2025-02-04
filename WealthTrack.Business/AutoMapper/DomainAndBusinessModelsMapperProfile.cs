@@ -5,8 +5,8 @@ using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Goal;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.BusinessModels.Wallet;
+using WealthTrack.Business.Events.Models;
 using WealthTrack.Data.DomainModels;
-using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.AutoMapper
 {
@@ -23,6 +23,7 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Category, CategoryDetailsBusinessModel>();
             CreateMap<Category, ParentCategoryDetailsBusinessModel>();
             CreateMap<Category, ChildCategoryDetailsBusinessModel>();
+            CreateMap<Category, CategoryDeletedEvent>();
 
             // Transaction
             CreateMap<TransactionUpsertBusinessModel, Transaction>()
@@ -45,6 +46,10 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();
+            CreateMap<Transaction, TransactionCreatedEvent>();
+            CreateMap<Transaction, TransactionDeletedEvent>();
+            CreateMap<Transaction, TransferTransactionCreatedEvent>();
+            CreateMap<Transaction, TransferTransactionDeletedEvent>();
 
             // Wallet
             CreateMap<WalletUpsertBusinessModel, Wallet>()
@@ -58,6 +63,8 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
             CreateMap<Budget, BudgetRelatedToWalletDetailsBusinessModel>();
             CreateMap<Transaction, TransactionRelatedToWalletDetailsBusinessModel>();
+            CreateMap<Wallet, WalletCreatedEvent>();
+            CreateMap<Wallet, WalletDeletedEvent>();
 
             // Currencies
             CreateMap<Currency, CurrencyDetailsBusinessModel>();

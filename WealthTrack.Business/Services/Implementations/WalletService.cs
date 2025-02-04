@@ -26,11 +26,8 @@ namespace WealthTrack.Business.Services.Implementations
             domainModel.ModifiedDate = DateTimeOffset.Now;
             domainModel.Status = WalletStatus.Active;
             var createdEntityId = await unitOfWork.WalletRepository.CreateAsync(domainModel);
-            await eventPublisher.PublishAsync(new WalletCreatedEvent
-            {
-
-            });
-
+            var walletCreatedEventModel = mapper.Map<WalletCreatedEvent>(domainModel);
+            await eventPublisher.PublishAsync(walletCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -105,11 +102,8 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             unitOfWork.WalletRepository.HardDelete(domainModelToDelete);
-            await eventPublisher.PublishAsync(new WalletDeletedEvent
-            {
-
-            });
-
+            var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
+            await eventPublisher.PublishAsync(walletDeletedEventModel);
             await unitOfWork.SaveAsync();
         }
     }
