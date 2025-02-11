@@ -10,6 +10,11 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
     {
         public async Task Handle(TransactionCreatedEvent eventMessage)
         {
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
             // In future it will be taking goals of specific user
             var goals = await unitOfWork.GoalRepository.GetAllAsync();
             if (goals.Count == 0)
@@ -29,8 +34,8 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
         private bool isTransactionMeetsGoal(Goal goal, TransactionCreatedEvent transaction)
         {
             return goal.Categories.Any(c => c.Id == transaction.CategoryId) &&
-                    (goal.Type == GoalType.Income && transaction.TransactionType == TransactionType.Income ||
-                     goal.Type == GoalType.Expense && transaction.TransactionType == TransactionType.Expense) &&
+                    (goal.Type == GoalType.Income && transaction.Type == TransactionType.Income ||
+                     goal.Type == GoalType.Expense && transaction.Type == TransactionType.Expense) &&
                     transaction.TransactionDate >= goal.StartDate && transaction.TransactionDate <= goal.EndDate;
         }
     }

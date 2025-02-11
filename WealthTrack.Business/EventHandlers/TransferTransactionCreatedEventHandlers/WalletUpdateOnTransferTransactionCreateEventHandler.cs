@@ -8,7 +8,12 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionCreatedEventHand
     {
         public async Task Handle(TransferTransactionCreatedEvent eventMessage)
         {
-            if(eventMessage.Amount == 0)
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
+            if (eventMessage.Amount == 0)
             {
                 return;
             }
@@ -25,16 +30,24 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionCreatedEventHand
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.TargetWalletId.ToString()}");
             }
 
+            var sourceWalletBalanceBeforeUpdate = sourceWalletEntity.Balance;
+            var targetWalletBalanceBeforeUpdate = targetWalletEntity.Balance;
             sourceWalletEntity.Balance -= eventMessage.Amount;
             targetWalletEntity.Balance += eventMessage.Amount;
             await eventPublisher.PublishAsync(new WalletUpdatedEvent
             {
-                // Source
+                WalletId = sourceWalletEntity.Id,
+                BudgetId_Old = sourceWalletEntity.BudgetId,
+                Balance_Old = sourceWalletBalanceBeforeUpdate,
+                IsPartOfGeneralBalance_Old = sourceWalletEntity.IsPartOfGeneralBalance
             });
 
             await eventPublisher.PublishAsync(new WalletUpdatedEvent
             {
-                // Target
+                WalletId = targetWalletEntity.Id,
+                BudgetId_Old = targetWalletEntity.BudgetId,
+                Balance_Old = targetWalletBalanceBeforeUpdate,
+                IsPartOfGeneralBalance_Old = targetWalletEntity.IsPartOfGeneralBalance
             });
         }
     }

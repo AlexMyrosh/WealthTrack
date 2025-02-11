@@ -10,92 +10,122 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
     {
         public async Task Handle(TransactionUpdatedEvent eventMessage)
         {
-            //if (eventMessage.NewCategoryId == null && eventMessage.NewTransactionType == null && eventMessage.NewWalletId == null && eventMessage.NewAmount == null ||
-            //    eventMessage.OldCategoryId == eventMessage.NewCategoryId &&
-            //     eventMessage.OldTransactionType == eventMessage.NewTransactionType &&
-            //     eventMessage.OldWalletId == eventMessage.NewWalletId &&
-            //    eventMessage.OldAmount == eventMessage.NewAmount)
-            //{
-            //    return;
-            //}
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
 
-            //Wallet wallet;
-            //var oldWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.OldWalletId);
-            //if (oldWallet == null)
-            //{
-            //    throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.OldWalletId.ToString()}");
-            //}
+            if (eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
+                eventMessage.WalletId_New is null || eventMessage.WalletId_New == eventMessage.WalletId_Old &&
+                eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old)
+            {
+                return;
+            }
 
-            //if (eventMessage.NewWalletId.HasValue)
-            //{
-            //    var newWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.NewWalletId.Value);
-            //    if (newWallet == null)
-            //    {
-            //        throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.NewWalletId.ToString()}");
-            //    }
+            Wallet wallet;
+            var oldWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_Old);
+            if (oldWallet == null)
+            {
+                throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId_Old.ToString()}");
+            }
 
-            //    switch (eventMessage.OldTransactionType)
-            //    {
-            //        case TransactionType.Income:
-            //            oldWallet.Balance -= eventMessage.OldAmount;
-            //            break;
-            //        case TransactionType.Expense:
-            //            oldWallet.Balance += eventMessage.OldAmount;
-            //            break;
-            //        default:
-            //            throw new NotSupportedException($"Transaction type \"{eventMessage.OldTransactionType.ToString()}\" is not supported");
-            //    }
+            // Case 1. Wallet was changed
+            decimal walletBalanceBeforeUpdate = 0;
+            if (eventMessage.WalletId_New.HasValue && eventMessage.WalletId_New != eventMessage.WalletId_Old)
+            {
+                var newWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_New.Value);
+                if (newWallet == null)
+                {
+                    throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId_New.ToString()}");
+                }
 
-            //    wallet = newWallet;
-            //}
-            //else
-            //{
-            //    wallet = oldWallet;
-            //}
+                walletBalanceBeforeUpdate = newWallet.Balance;
+                switch (eventMessage.TransactionType_Old)
+                {
+                    case TransactionType.Income:
+                        oldWallet.Balance -= eventMessage.Amount_Old;
+                        break;
+                    case TransactionType.Expense:
+                        oldWallet.Balance += eventMessage.Amount_Old;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Transaction type \"{eventMessage.TransactionType_Old.ToString()}\" is not supported");
+                }
 
-            //if (eventMessage.NewTransactionType.HasValue && eventMessage.NewTransactionType.Value != eventMessage.OldTransactionType)
-            //{
-            //    switch (eventMessage.NewTransactionType)
-            //    {
-            //        case TransactionType.Income:
-            //            wallet.Balance += eventMessage.OldAmount * 2;
-            //            break;
-            //        case TransactionType.Expense:
-            //            wallet.Balance -= eventMessage.OldAmount * 2;
-            //            break;
-            //        default:
-            //            throw new NotSupportedException($"Transaction type \"{eventMessage.OldTransactionType.ToString()}\" is not supported");
-            //    }
-            //}
+                wallet = newWallet;
+            }
+            else
+            {
+                wallet = oldWallet;
+            }
 
-            //if (eventMessage.NewAmount.HasValue)
-            //{
-            //    var type = eventMessage.NewTransactionType ?? eventMessage.OldTransactionType;
-            //    switch (type)
-            //    {
-            //        case TransactionType.Income:
-            //            wallet.Balance += decimal.Abs(eventMessage.OldAmount - eventMessage.NewAmount.Value);
-            //            break;
-            //        case TransactionType.Expense:
-            //            wallet.Balance -= decimal.Abs(eventMessage.OldAmount - eventMessage.NewAmount.Value);
-            //            break;
-            //        default:
-            //            throw new NotSupportedException($"Transaction type \"{eventMessage.OldTransactionType.ToString()}\" is not supported");
-            //    }
-            //}
+            // Case 2. Transaction type was changed
+            if (eventMessage.TransactionType_New.HasValue && eventMessage.TransactionType_New.Value != eventMessage.TransactionType_Old)
+            {
+                if (eventMessage.TransactionType_New.Value == TransactionType.Transfer || eventMessage.TransactionType_Old == TransactionType.Transfer)
+                {
+                    throw new ArgumentException("Transfer transaction is not supported here");
+                }
 
-            //if (eventMessage.NewWalletId.HasValue)
-            //{
-            //    var newWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.NewWalletId.Value);
-            //    if (newWallet == null)
-            //    {
-            //        throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.NewWalletId.ToString()}");
-            //    }
+                switch (eventMessage.TransactionType_New)
+                {
+                    // Expense -> Income
+                    case TransactionType.Income:
+                        wallet.Balance += eventMessage.Amount_Old * 2;
+                        break;
+                    // Income -> Expense
+                    case TransactionType.Expense:
+                        wallet.Balance -= eventMessage.Amount_Old * 2;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Transaction type \"{eventMessage.TransactionType_New.ToString()}\" is not supported");
+                }
+            }
 
-            //    await eventPublisher.PublishAsync(new WalletBalanceChangedEvent(eventMessage.NewWalletId.Value, oldWallet.BudgetId, null, oldWallet.Balance, newWallet.Balance, oldWallet.IsPartOfGeneralBalance, null));
-            //}
+            // Case 3. Amount was changed
+            if (eventMessage.Amount_New.HasValue && eventMessage.Amount_New != eventMessage.Amount_Old)
+            {
+                var transactionType = eventMessage.TransactionType_New ?? eventMessage.TransactionType_Old;
+                if (transactionType == TransactionType.Transfer)
+                {
+                    throw new ArgumentException("Transfer transaction is not supported here");
+                }
 
-            //await eventPublisher.PublishAsync(new WalletBalanceChangedEvent(eventMessage.OldWalletId, oldWallet.BudgetId, null, oldWallet.Balance, null, oldWallet.IsPartOfGeneralBalance, null));
+                var difference = eventMessage.Amount_New.Value - eventMessage.Amount_Old;
+                switch (transactionType)
+                {
+                    case TransactionType.Income:
+                        wallet.Balance -= eventMessage.Amount_Old - eventMessage.Amount_New.Value;
+                        break;
+                    case TransactionType.Expense:
+                        wallet.Balance += eventMessage.Amount_Old - eventMessage.Amount_New.Value;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Transaction type \"{transactionType.ToString()}\" is not supported");
+                }
+            }
+
+            // Send event notification that new wallet was updated
+            if (eventMessage.WalletId_New.HasValue)
+            {
+                await eventPublisher.PublishAsync(new WalletUpdatedEvent
+                {
+                    WalletId = wallet.Id,
+                    BudgetId_Old = wallet.BudgetId,
+                    Balance_Old = walletBalanceBeforeUpdate,
+                    Balance_New = wallet.Balance,
+                    IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
+                });
+            }
+
+            // Send event notification that old wallet was updated
+            await eventPublisher.PublishAsync(new WalletUpdatedEvent
+            {
+                WalletId = eventMessage.WalletId_Old,
+                BudgetId_Old = oldWallet.BudgetId,
+                Balance_Old = oldWallet.Balance,
+                IsPartOfGeneralBalance_Old = oldWallet.IsPartOfGeneralBalance
+            });
         }
     }
 }

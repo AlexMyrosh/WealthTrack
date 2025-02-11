@@ -10,6 +10,11 @@ namespace WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers
     {
         public async Task Handle(CategoryDeletedEvent eventMessage)
         {
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
             var categoryEntity = await unitOfWork.CategoryRepository.GetByIdAsync(eventMessage.CategoryId, "Transactions");
             if(categoryEntity == null)
             {

@@ -8,7 +8,12 @@ namespace WealthTrack.Business.EventHandlers.WalletCreatedEventHandlers
     {
         public async Task Handle(WalletCreatedEvent eventMessage)
         {
-            if(!eventMessage.IsPartOfGeneralBalance || eventMessage.Balance == 0)
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
+            if (!eventMessage.IsPartOfGeneralBalance || eventMessage.Balance == 0)
             {
                 return;
             }

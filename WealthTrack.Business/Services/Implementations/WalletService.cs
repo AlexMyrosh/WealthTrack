@@ -77,14 +77,20 @@ namespace WealthTrack.Business.Services.Implementations
                 });
             }
 
+            await eventPublisher.PublishAsync(new WalletUpdatedEvent
+            {
+                WalletId = id,
+                BudgetId_Old = originalModel.BudgetId,
+                BudgetId_New = model.BudgetId,
+                Balance_Old = originalModel.Balance,
+                Balance_New = model.Balance,
+                IsPartOfGeneralBalance_Old = originalModel.IsPartOfGeneralBalance,
+                IsPartOfGeneralBalance_New = model.IsPartOfGeneralBalance,
+            });
+
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.WalletRepository.Update(originalModel);
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-
-            });
-
             await unitOfWork.SaveAsync();
         }
 

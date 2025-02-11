@@ -8,6 +8,11 @@ namespace WealthTrack.Business.EventHandlers.WalletDeletedEventHandlers
     {
         public async Task Handle(WalletDeletedEvent eventMessage)
         {
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
             if (!eventMessage.IsPartOfGeneralBalance || eventMessage.Balance == 0)
             {
                 return;

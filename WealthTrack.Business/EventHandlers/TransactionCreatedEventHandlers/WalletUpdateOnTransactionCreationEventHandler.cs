@@ -9,7 +9,12 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
     {
         public async Task Handle(TransactionCreatedEvent eventMessage)
         {
-            if(eventMessage.Amount == 0)
+            if (eventMessage is null)
+            {
+                throw new ArgumentException(nameof(eventMessage));
+            }
+
+            if (eventMessage.Amount == 0)
             {
                 return;
             }
@@ -20,8 +25,8 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId.ToString()}");
             }
 
-            var oldBalance = wallet.Balance;
-            switch (eventMessage.TransactionType)
+            var walletBalanceBeforeUpdate = wallet.Balance;
+            switch (eventMessage.Type)
             {
                 case TransactionType.Expense:
                     wallet.Balance -= eventMessage.Amount;
@@ -30,12 +35,15 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
                     wallet.Balance += eventMessage.Amount;
                     break;
                 default:
-                    throw new NotSupportedException($"Transaction type \"{eventMessage.TransactionType.ToString()}\" is not supported");
+                    throw new NotSupportedException($"Transaction type \"{eventMessage.Type.ToString()}\" is not supported");
             }
 
             await eventPublisher.PublishAsync(new WalletUpdatedEvent
             {
-
+                WalletId = wallet.Id,
+                BudgetId_Old = wallet.BudgetId,
+                Balance_Old = walletBalanceBeforeUpdate,
+                IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
             });
         }
     }

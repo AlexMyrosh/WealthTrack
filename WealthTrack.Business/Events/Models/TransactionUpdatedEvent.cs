@@ -4,24 +4,24 @@ namespace WealthTrack.Business.Events.Models
 {
     public class TransactionUpdatedEvent
     {
-        public Guid? OldCategoryId { get; set; }
+        public Guid? CategoryId_Old { get; set; }
 
-        public Guid? NewCategoryId { get; set; }
+        public Guid? CategoryId_New { get; set; }
 
-        public TransactionType OldTransactionType { get; set; }
+        public TransactionType TransactionType_Old { get; set; }
 
-        public TransactionType? NewTransactionType { get; set; }
+        public TransactionType? TransactionType_New { get; set; }
 
-        public Guid OldWalletId { get; set; }
+        public Guid WalletId_Old { get; set; }
 
-        public Guid? NewWalletId { get; set; }
+        public Guid? WalletId_New { get; set; }
 
-        public decimal OldAmount { get; set; }
+        public decimal Amount_Old { get; set; }
 
-        public decimal? NewAmount { get; set; }
+        public decimal? Amount_New { get; set; }
 
-        public DateTimeOffset OldTransactionDate { get; set; }
+        public DateTimeOffset TransactionDate_Old { get; set; }
 
-        public DateTimeOffset? NewTransactionDate { get; set; }
+        public DateTimeOffset? TransactionDate_New { get; set; }
     }
 }
