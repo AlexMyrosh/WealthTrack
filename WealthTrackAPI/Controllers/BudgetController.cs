@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.Services.Interfaces;
@@ -37,18 +38,32 @@ namespace WealthTrack.API.Controllers
         [HttpPost("create")]
         public async Task<ActionResult> Create([FromBody] BudgetUpsertApiModel model)
         {
-            var businessModel = mapper.Map<BudgetUpsertBusinessModel>(model);
-            var createdEntityId = await budgetService.CreateAsync(businessModel);
-            return Ok(createdEntityId);
+            try
+            {
+                var businessModel = mapper.Map<BudgetUpsertBusinessModel>(model);
+                var createdEntityId = await budgetService.CreateAsync(businessModel);
+                return Ok(createdEntityId);
+            }
+            catch (ArgumentNullException)
+            {
+                return BadRequest();
+            }
         }
 
         // PUT api/budget/update/{id}
         [HttpPut("update/{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] BudgetUpsertApiModel model)
         {
-            var businessModel = mapper.Map<BudgetUpsertBusinessModel>(model);
-            await budgetService.UpdateAsync(id, businessModel);
-            return Accepted();
+            try
+            {
+                var businessModel = mapper.Map<BudgetUpsertBusinessModel>(model);
+                await budgetService.UpdateAsync(id, businessModel);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // DELETE api/budget/hard_delete

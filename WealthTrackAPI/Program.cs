@@ -31,23 +31,18 @@ namespace WealthTrack.API
             ConfigureServices(builder.Services, builder.Configuration);
             var app = builder.Build();
 
-            app.UseMiddleware<ApiKeyValidationMiddleware>();
+            ConfigureMiddleware(app);
 
-            await using (var scope = app.Services.CreateAsyncScope())
+            if (!app.Environment.IsEnvironment("Testing"))
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await dbContext.Database.EnsureCreatedAsync();
+                await EnsureDatabaseCreatedAndSeededAsync(app.Services);
             }
 
-            await using (var scope = app.Services.CreateAsyncScope())
-            {
-                var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrenciesSeeder>();
-                await currencySeeder.SeedAsync();
+            app.Run();
+        }
 
-                var categorySeeder = scope.ServiceProvider.GetRequiredService<SystemCategoriesSeeder>();
-                await categorySeeder.SeedAsync();
-            }
-
+        private static void ConfigureMiddleware(WebApplication app)
+        {
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -56,7 +51,6 @@ namespace WealthTrack.API
             app.UseHttpsRedirection();
             app.UseAuthorization();
             app.MapControllers();
-            app.Run();
         }
 
         private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -67,8 +61,11 @@ namespace WealthTrack.API
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
-            services.AddAutoMapper(typeof(DomainAndBusinessModelsMapperProfile));
-            services.AddAutoMapper(typeof(BusinessAndApiModelsMapperProfile));
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<DomainAndBusinessModelsMapperProfile>();
+                cfg.AddProfile<BusinessAndApiModelsMapperProfile>();
+            });
 
             services.AddTransient<ApiKeyValidationMiddleware>();
 
@@ -104,6 +101,19 @@ namespace WealthTrack.API
             services.AddScoped<IEventHandler<CategoryDeletedEvent>, GoalUpdateOnCategoryDeletionEventHandler>();
 
             services.AddScoped<IEventPublisher, EventPublisher>();
+        }
+
+        private static async Task EnsureDatabaseCreatedAndSeededAsync(IServiceProvider services)
+        {
+            await using var scope = services.CreateAsyncScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await dbContext.Database.EnsureCreatedAsync();
+
+            var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrenciesSeeder>();
+            await currencySeeder.SeedAsync();
+
+            var categorySeeder = scope.ServiceProvider.GetRequiredService<SystemCategoriesSeeder>();
+            await categorySeeder.SeedAsync();
         }
     }
 }

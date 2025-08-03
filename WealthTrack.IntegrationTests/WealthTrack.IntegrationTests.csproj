@@ -13,8 +13,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="8.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.3">
       <PrivateAssets>all</PrivateAssets>
@@ -23,8 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
-    <ProjectReference Include="..\WealthTrack.Shared\WealthTrack.Shared.csproj" />
+    <ProjectReference Include="..\WealthTrackAPI\WealthTrack.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="EventHandlers\" />
+    <Folder Include="TestModels\" />
   </ItemGroup>
 
 </Project>

@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Business.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Shared", "WealthTrack.Shared\WealthTrack.Shared.csproj", "{B014B161-3F0A-4717-83D3-158D4A8883CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.IntegrationTests", "WealthTrack.IntegrationTests\WealthTrack.IntegrationTests.csproj", "{2761C4EC-8136-459A-831B-F11EE636E70E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2761C4EC-8136-459A-831B-F11EE636E70E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2761C4EC-8136-459A-831B-F11EE636E70E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2761C4EC-8136-459A-831B-F11EE636E70E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2761C4EC-8136-459A-831B-F11EE636E70E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
