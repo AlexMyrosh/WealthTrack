@@ -269,7 +269,7 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>();
-            _walletRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Wallet>()), Times.Never);
+            _walletRepositoryMock.Verify(r => r.HardDeleteAsync(It.IsAny<Wallet>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<WalletDeletedEvent>()), Times.Never);
         }
@@ -286,7 +286,7 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
-            _walletRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Wallet>()), Times.Never);
+            _walletRepositoryMock.Verify(r => r.HardDeleteAsync(It.IsAny<Wallet>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<WalletDeletedEvent>()), Times.Never);
         }
@@ -303,7 +303,7 @@ namespace WealthTrack.Business.Tests.Services
             await _walletService.HardDeleteAsync(id);
 
             // Assert
-            _walletRepositoryMock.Verify(r => r.HardDelete(testDomainModel), Times.Once);
+            _walletRepositoryMock.Verify(r => r.HardDeleteAsync(testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
             _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<WalletDeletedEvent>()), Times.Once);
         }

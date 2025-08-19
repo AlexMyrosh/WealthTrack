@@ -27,10 +27,6 @@ namespace WealthTrack.Business.Tests.TestModels
                 model.Type = TransactionType.Transfer;
                 model.Category = TestCategoryModels.DomainModelWithoutDetails;
                 model.CategoryId = model.Category.Id;
-                model.SourceWallet = TestWalletModels.DomainModelWithoutDetails;
-                model.SourceWalletId = model.SourceWallet.Id;
-                model.TargetWallet = TestWalletModels.DomainModelWithoutDetails;
-                model.TargetWalletId = model.TargetWallet.Id;
                 return model;
             }
         }
@@ -95,8 +91,6 @@ namespace WealthTrack.Business.Tests.TestModels
                     Amount = TransferTransactionDomainModel.Amount,
                     Description = TransferTransactionDomainModel.Description,
                     TransactionDate = TransferTransactionDomainModel.TransactionDate,
-                    SourceWalletId = TransferTransactionDomainModel.SourceWalletId,
-                    TargetWalletId = TransferTransactionDomainModel.TargetWalletId
                 };
 
                 return model;

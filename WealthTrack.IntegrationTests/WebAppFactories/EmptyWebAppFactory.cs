@@ -7,7 +7,7 @@ namespace WealthTrack.IntegrationTests.WebAppFactories
     {
         public override async Task InitializeAsync()
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = Services.CreateScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             await dbContext.Database.EnsureCreatedAsync();
         }

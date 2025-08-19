@@ -8,6 +8,7 @@ namespace WealthTrack.Data.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<TransferTransaction> TransferTransactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Goal> Goals { get; set; }
@@ -110,12 +111,12 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.Currency)
                     .WithMany(e => e.Wallets)
                     .HasForeignKey(e => e.CurrencyId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.Budget)
                     .WithMany(e => e.Wallets)
                     .HasForeignKey(e => e.BudgetId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<Transaction>(entity =>
@@ -147,14 +148,38 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Transactions)
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TransferTransaction>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.Amount)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+
+                entity.Property(e => e.Description)
+                    .HasMaxLength(1000);
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+
+                entity.Property(e => e.TransactionDate)
+                    .IsRequired();
+
+                entity.Property(e => e.SourceWalletId)
+                    .IsRequired();
+
+                entity.Property(e => e.TargetWalletId)
+                    .IsRequired();
 
                 entity.HasOne(e => e.SourceWallet)
-                    .WithMany(e => e.OutgoingTransferTransactions)
+                    .WithMany(w => w.OutgoingTransferTransactions)
                     .HasForeignKey(e => e.SourceWalletId)
                     .OnDelete(DeleteBehavior.ClientCascade);
 
                 entity.HasOne(e => e.TargetWallet)
-                    .WithMany(e => e.IncomeTransferTransactions)
+                    .WithMany(w => w.IncomeTransferTransactions)
                     .HasForeignKey(e => e.TargetWalletId)
                     .OnDelete(DeleteBehavior.ClientCascade);
             });
@@ -188,15 +213,10 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.CurrencyId)
                     .IsRequired();
 
-                entity.HasOne(e => e.Currency)
-                    .WithMany(e => e.Budgets)
-                    .HasForeignKey(e => e.CurrencyId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasMany(e => e.Wallets)
                     .WithOne(e => e.Budget)
                     .HasForeignKey(e => e.BudgetId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Goal>(entity =>

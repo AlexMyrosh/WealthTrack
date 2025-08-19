@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.Services.Interfaces;

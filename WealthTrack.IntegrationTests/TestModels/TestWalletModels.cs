@@ -1,4 +1,4 @@
-﻿using WealthTrack.Business.BusinessModels.Wallet;
+﻿using WealthTrack.API.ApiModels.Wallet;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Shared.Enums;
 
@@ -6,99 +6,55 @@ namespace WealthTrack.IntegrationTests.Helpers
 {
     public static class TestWalletModels
     {
-        public static readonly Guid WalletId = new("d8f37d0f-12f3-4998-bf1a-7b563a6baa3a");
+        public static readonly Guid FirstWalletId = new("d8f37d0f-12f3-4998-bf1a-7b563a6baa3a");
+        public static readonly Guid SecondWalletId = new("bee8548b-e126-40a9-a13e-dbb7f311e968");
 
-        public static Wallet DomainModel
+        public static WalletUpsertApiModel UpsertApiModel
         {
             get
             {
-                var model = DomainModelWithoutDetails;
-                model.Currency = TestCurrencyModels.DomainModelWithoutDetails;
-                model.CurrencyId = model.Currency.Id;
-                model.Budget = TestBudgetModels.DomainModelWithoutDetails;
-                model.BudgetId = model.Budget.Id;
-                model.Transactions = [TestTransactionModels.DomainModelWithoutDetails];
-                model.IncomeTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
-                model.OutgoingTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
-                return model;
-            }
-        }
-
-        public static WalletUpsertBusinessModel UpsertBusinessModel
-        {
-            get
-            {
-                var model = new WalletUpsertBusinessModel
+                return new WalletUpsertApiModel
                 {
-                    Name = DomainModel.Name,
-                    Balance = DomainModel.Balance,
-                    IsPartOfGeneralBalance = DomainModel.IsPartOfGeneralBalance,
-                    Type = DomainModel.Type,
-                    CurrencyId = DomainModel.CurrencyId,
-                    BudgetId = DomainModel.BudgetId
+                    Name = Guid.NewGuid().ToString(),
+                    Balance = 0,
+                    IsPartOfGeneralBalance = true,
+                    Type = WalletType.CreditCard
                 };
-
-                return model;
             }
         }
 
-        public static WalletDetailsBusinessModel DetailsBusinessModel
-        {
-            get
-            {
-                var model = new WalletDetailsBusinessModel
-                {
-                    Id = DomainModel.Id,
-                    Name = DomainModel.Name,
-                    Balance = DomainModel.Balance,
-                    IsPartOfGeneralBalance = DomainModel.IsPartOfGeneralBalance,
-                    Status = DomainModel.Status,
-                    Type = DomainModel.Type,
-                    Currency = new CurrencyRelatedToWalletDetailsBusinessModel
-                    {
-                        Id = TestCurrencyModels.DomainModel.Id,
-                        Code = TestCurrencyModels.DomainModel.Code,
-                        Name = TestCurrencyModels.DomainModel.Name,
-                        Symbol = TestCurrencyModels.DomainModel.Symbol,
-                        ExchangeRate = TestCurrencyModels.DomainModel.ExchangeRate
-                    },
-                    Budget = new BudgetRelatedToWalletDetailsBusinessModel
-                    {
-                        Id = TestBudgetModels.DomainModel.Id,
-                        Name = TestBudgetModels.DomainModel.Name,
-                        OverallBalance = TestBudgetModels.DomainModel.OverallBalance
-                    },
-                    Transactions =
-                    [
-                        new()
-                        {
-                            Id = TestTransactionModels.TransactionDomainModel.Id,
-                            Amount = TestTransactionModels.TransactionDomainModel.Amount,
-                            Description = TestTransactionModels.TransactionDomainModel.Description,
-                            TransactionDate = TestTransactionModels.TransactionDomainModel.TransactionDate,
-                            Type = TestTransactionModels.TransactionDomainModel.Type
-                        }
-                    ]
-                };
-
-                return model;
-            }
-        }
-
-        public static Wallet DomainModelWithoutDetails
+        public static Wallet FirstDomainModelWithoutDetails
         {
             get
             {
                 return new Wallet
                 {
-                    Id = WalletId,
-                    Name = "Test wallet name",
-                    Balance = 200.123M,
+                    Id = FirstWalletId,
+                    Name = "Test wallet name 1",
+                    Balance = 0,
                     IsPartOfGeneralBalance = true,
                     CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     ModifiedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     Status = WalletStatus.Active,
                     Type = WalletType.Cash,
+                };
+            }
+        }
+
+        public static Wallet SecondDomainModelWithoutDetails
+        {
+            get
+            {
+                return new Wallet
+                {
+                    Id = SecondWalletId,
+                    Name = "Test wallet name 2",
+                    Balance = 0,
+                    IsPartOfGeneralBalance = true,
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    ModifiedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
+                    Status = WalletStatus.Active,
+                    Type = WalletType.CreditCard,
                 };
             }
         }

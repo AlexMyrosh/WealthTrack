@@ -76,7 +76,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
             }
 
-            unitOfWork.BudgetRepository.HardDelete(domainModelToDelete);
+            await unitOfWork.BudgetRepository.HardDeleteAsync(domainModelToDelete);
             await unitOfWork.SaveAsync();
         }
     }

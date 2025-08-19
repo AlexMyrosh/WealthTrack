@@ -5,17 +5,17 @@ using WealthTrack.Data.Repositories.Interfaces;
 
 namespace WealthTrack.Data.Repositories.Implementations
 {
-    public class WalletRepository(AppDbContext context) : IWalletRepository
+    public class TransferTransactionRepository(AppDbContext context) : ITransferTransactionRepository
     {
-        public async Task<Guid> CreateAsync(Wallet model)
+        public async Task<Guid> CreateAsync(TransferTransaction model)
         {
-            var result = await context.Wallets.AddAsync(model);
+            var result = await context.TransferTransactions.AddAsync(model);
             return result.Entity.Id;
         }
 
-        public async Task<Wallet?> GetByIdAsync(Guid id, string include = "")
+        public async Task<TransferTransaction?> GetByIdAsync(Guid id, string include = "")
         {
-            var query = context.Wallets.AsQueryable();
+            var query = context.TransferTransactions.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -31,9 +31,9 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public async Task<List<Wallet>> GetAllAsync(string include = "")
+        public async Task<List<TransferTransaction>> GetAllAsync(string include = "")
         {
-            var query = context.Wallets.AsQueryable();
+            var query = context.TransferTransactions.AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -49,18 +49,14 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public void Update(Wallet model)
+        public void Update(TransferTransaction model)
         {
-            context.Wallets.Update(model);
+            context.TransferTransactions.Update(model);
         }
 
-        public async Task HardDeleteAsync(Wallet model)
+        public void HardDelete(TransferTransaction model)
         {
-            await context.TransferTransactions
-                .Where(t => t.SourceWalletId == model.Id || t.TargetWalletId == model.Id)
-                .ExecuteDeleteAsync();
-
-            context.Wallets.Remove(model);
+            context.TransferTransactions.Remove(model);
         }
     }
 }

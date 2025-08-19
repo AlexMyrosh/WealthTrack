@@ -54,9 +54,27 @@ namespace WealthTrack.Data.Repositories.Implementations
             context.Budgets.Update(model);
         }
 
-        public void HardDelete(Budget model)
+        public async Task HardDeleteAsync(Budget budget)
         {
-            context.Budgets.Remove(model);
+            var walletIds = await context.Wallets
+                .Where(w => w.BudgetId == budget.Id)
+                .Select(w => w.Id)
+                .ToListAsync();
+
+            if (walletIds.Any())
+            {
+                await context.Transactions
+                    .Where(t => walletIds.Contains(t.WalletId))
+                    .ExecuteDeleteAsync();
+
+                await context.TransferTransactions
+                    .Where(tt => walletIds.Contains(tt.SourceWalletId) || walletIds.Contains(tt.TargetWalletId))
+                    .ExecuteDeleteAsync();
+            }
+
+            context.Budgets.Remove(budget);
+            await context.SaveChangesAsync();
         }
+
     }
 }

@@ -64,6 +64,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
 
+            // Move this logic to Event handlers
             if (model.Balance.HasValue && model.Balance != originalModel.Balance)
             {
                 await unitOfWork.TransactionRepository.CreateAsync(new Transaction
@@ -107,7 +108,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
 
-            unitOfWork.WalletRepository.HardDelete(domainModelToDelete);
+            await unitOfWork.WalletRepository.HardDeleteAsync(domainModelToDelete);
             var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
             await eventPublisher.PublishAsync(walletDeletedEventModel);
             await unitOfWork.SaveAsync();

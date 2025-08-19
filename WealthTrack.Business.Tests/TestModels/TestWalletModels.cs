@@ -16,8 +16,6 @@ namespace WealthTrack.Business.Tests.TestModels
                 model.Budget = TestBudgetModels.DomainModelWithoutDetails;
                 model.BudgetId = model.Budget.Id;
                 model.Transactions = [TestTransactionModels.DomainModelWithoutDetails];
-                model.IncomeTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
-                model.OutgoingTransferTransactions = [TestTransactionModels.DomainModelWithoutDetails];
                 return model;
             }
         }

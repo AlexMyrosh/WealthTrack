@@ -30,8 +30,8 @@ namespace WealthTrack.Data.DomainModels
 
         public List<Transaction> Transactions { get; set; }
 
-        public List<Transaction> IncomeTransferTransactions { get; set; }
+        public List<TransferTransaction> IncomeTransferTransactions { get; set; }
 
-        public List<Transaction> OutgoingTransferTransactions { get; set; }
+        public List<TransferTransaction> OutgoingTransferTransactions { get; set; }
     }
 }

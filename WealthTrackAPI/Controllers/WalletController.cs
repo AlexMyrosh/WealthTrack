@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WealthTrack.API.ApiModels.Wallet;
+using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Wallet;
+using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
 
 namespace WealthTrack.API.Controllers
@@ -46,9 +48,16 @@ namespace WealthTrack.API.Controllers
         [HttpPut("update/{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] WalletUpsertApiModel model)
         {
-            var businessModel = mapper.Map<WalletUpsertBusinessModel>(model);
-            await walletService.UpdateAsync(id, businessModel);
-            return Accepted();
+            try
+            {
+                var businessModel = mapper.Map<WalletUpsertBusinessModel>(model);
+                await walletService.UpdateAsync(id, businessModel);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // DELETE api/wallet/hard_delete

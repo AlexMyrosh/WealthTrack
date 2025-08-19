@@ -8,8 +8,7 @@ using WealthTrack.Data.Context;
 
 public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
 {
-    protected IConfiguration _configuration = default!;
-    protected IServiceProvider _serviceProvider = default!;
+    public IConfiguration configuration = default!;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -18,12 +17,11 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration((context, configBuilder) =>
         {
             configBuilder.AddJsonFile("appsettings.Development.json", optional: true);
-            _configuration = configBuilder.Build();
+            configuration = configBuilder.Build();
         });
 
         builder.ConfigureServices(services =>
         {
-            // Перерегистрировать DbContext
             var descriptor = services.SingleOrDefault(d =>
                 d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
@@ -31,11 +29,9 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
 
             services.AddDbContext<AppDbContext>(options =>
             {
-                var conn = _configuration.GetConnectionString("IntegrationTestsConnection");
+                var conn = configuration.GetConnectionString("IntegrationTestsConnection");
                 options.UseSqlServer(conn);
             });
-
-            _serviceProvider = services.BuildServiceProvider();
         });
     }
 
@@ -46,9 +42,10 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
 
     public override async ValueTask DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.EnsureDeletedAsync();
         await base.DisposeAsync();
     }
+
 }

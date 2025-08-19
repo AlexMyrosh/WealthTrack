@@ -87,18 +87,13 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new InvalidOperationException("Unable to update transaction as its type is transfer");
             }
 
-            if (!originalModel.WalletId.HasValue)
-            {
-                throw new InvalidOperationException("Transaction is incomplete");
-            }
-
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
             {
                 CategoryId_Old = originalModel.CategoryId,
                 CategoryId_New = model.CategoryId,
                 TransactionType_Old = originalModel.Type,
                 TransactionType_New = model.Type,
-                WalletId_Old = originalModel.WalletId.Value,
+                WalletId_Old = originalModel.WalletId,
                 WalletId_New = model.WalletId,
                 Amount_Old = originalModel.Amount,
                 Amount_New = model.Amount,
@@ -117,20 +112,10 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id);
+            var originalModel = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
-            }
-
-            if (originalModel.Type != TransactionType.Transfer)
-            {
-                throw new InvalidOperationException("Unable to update transaction as its type is not transfer");
-            }
-
-            if(!originalModel.SourceWalletId.HasValue || !originalModel.TargetWalletId.HasValue)
-            {
-                throw new InvalidOperationException("Transfer transaction is incomplete");
             }
 
             await eventPublisher.PublishAsync(new TransferTransactionUpdatedEvent
@@ -138,12 +123,12 @@ namespace WealthTrack.Business.Services.Implementations
                 Amount_New = model.Amount,
                 Amount_Old = originalModel.Amount,
                 SourceWalletId_New = model.SourceWalletId,
-                SourceWalletId_Old = originalModel.SourceWalletId.Value,
+                SourceWalletId_Old = originalModel.SourceWalletId,
                 TargetWalletId_New = model.TargetWalletId,
-                TargetWalletId_Old = originalModel.TargetWalletId.Value,
+                TargetWalletId_Old = originalModel.TargetWalletId,
             });
             mapper.Map(model, originalModel);
-            unitOfWork.TransactionRepository.Update(originalModel);
+            unitOfWork.TransferTransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
 

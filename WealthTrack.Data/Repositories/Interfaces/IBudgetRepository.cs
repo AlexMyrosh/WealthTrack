@@ -12,6 +12,6 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public void Update(Budget model);
 
-        public void HardDelete(Budget model);
+        public Task HardDeleteAsync(Budget budget);
     }
 }

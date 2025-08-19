@@ -12,6 +12,6 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public void Update(Wallet model);
 
-        public void HardDelete(Wallet model);
+        public Task HardDeleteAsync(Wallet model);
     }
 }
