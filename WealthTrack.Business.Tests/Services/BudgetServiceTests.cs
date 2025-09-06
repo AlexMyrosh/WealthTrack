@@ -226,7 +226,7 @@ namespace WealthTrack.Business.Tests.Services
 
             // Assert
             await act.Should().ThrowAsync<ArgumentException>();
-            _budgetRepositoryMock.Verify(r => r.HardDelete(It.IsAny<Budget>()), Times.Never);
+            _budgetRepositoryMock.Verify(r => r.HardDeleteAsync(It.IsAny<Budget>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
         }
 
@@ -257,7 +257,7 @@ namespace WealthTrack.Business.Tests.Services
             await _budgetService.HardDeleteAsync(id);
 
             // Assert
-            _unitOfWorkMock.Verify(uow => uow.BudgetRepository.HardDelete(testDomainModel), Times.Once);
+            _unitOfWorkMock.Verify(uow => uow.BudgetRepository.HardDeleteAsync(testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
         }
 

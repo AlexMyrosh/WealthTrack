@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # Exclude sensitive information
 appsettings.Development.json
+appsettings.json

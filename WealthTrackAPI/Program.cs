@@ -111,7 +111,7 @@ namespace WealthTrack.API
 
             var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrenciesSeeder>();
             await currencySeeder.SeedAsync();
-
+            
             var categorySeeder = scope.ServiceProvider.GetRequiredService<SystemCategoriesSeeder>();
             await categorySeeder.SeedAsync();
         }
