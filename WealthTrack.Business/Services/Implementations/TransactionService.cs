@@ -4,16 +4,14 @@ using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
+using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
-using WealthTrack.Shared.Enums;
 using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations
 {
     public class TransactionService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : ITransactionService
     {
-        private readonly string _transferCategoryId = configuration["SystemCategories:TransferId"] ?? throw new InvalidOperationException("Unable to get transfer category id from configuration");
-
         public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
             // TODO: Need to add check that model is not for transfer
@@ -33,17 +31,14 @@ namespace WealthTrack.Business.Services.Implementations
 
         public async Task<Guid> CreateAsync(TransferTransactionUpsertBusinessModel model)
         {
-            // TODO: Need to add check that model is not for regular transaction
             if (model is null)
             {
                 throw new ArgumentNullException(nameof(model));
             }
 
-            var domainModel = mapper.Map<Transaction>(model);
-            domainModel.CategoryId = new Guid(_transferCategoryId);
-            domainModel.Type = TransactionType.Transfer;
+            var domainModel = mapper.Map<TransferTransaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
+            var createdEntityId = await unitOfWork.TransferTransactionRepository.CreateAsync(domainModel);
             var transferTransactionCreatedEventModel = mapper.Map<TransferTransactionCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(transferTransactionCreatedEventModel);
             await unitOfWork.SaveAsync();
@@ -80,11 +75,6 @@ namespace WealthTrack.Business.Services.Implementations
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
-            }
-
-            if (originalModel.Type == TransactionType.Transfer)
-            {
-                throw new InvalidOperationException("Unable to update transaction as its type is transfer");
             }
 
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
@@ -140,23 +130,27 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var domainModelToDelete = await unitOfWork.TransactionRepository.GetByIdAsync(id);
-            if (domainModelToDelete is null)
+            if (domainModelToDelete is not null)
             {
-                throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
-            }
-
-            unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
-            if (domainModelToDelete.Type == TransactionType.Transfer)
-            {
-                var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToDelete);
-                await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
-            }
-            else
-            {
+                unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
                 var transactionDeletedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToDelete);
                 await eventPublisher.PublishAsync(transactionDeletedEventModel);
             }
-
+            else
+            {
+                var transferTransactionDomainModelToDelete = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
+                if (transferTransactionDomainModelToDelete is not null)
+                {
+                    unitOfWork.TransferTransactionRepository.HardDelete(transferTransactionDomainModelToDelete);
+                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToDelete);
+                    await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
+                }
+                else
+                {
+                    throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+                }
+            }
+            
             await unitOfWork.SaveAsync();
         }
     }

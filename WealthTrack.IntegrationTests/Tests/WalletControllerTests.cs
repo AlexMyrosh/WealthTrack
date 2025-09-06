@@ -15,7 +15,6 @@ namespace WealthTrack.IntegrationTests.Tests
     public class WalletControllerTests(SeededWebAppFactory factory) : IClassFixture<SeededWebAppFactory>, IAsyncLifetime
     {
         private readonly HttpClient _client = factory.CreateClient();
-        private readonly SeededWebAppFactory _factory = factory;
 
         private IServiceScope _scope = null!;
         private AppDbContext _db = null!;
@@ -24,9 +23,9 @@ namespace WealthTrack.IntegrationTests.Tests
 
         public async Task InitializeAsync()
         {
-            await _factory.InitializeAsync();
+            await factory.InitializeAsync();
 
-            _scope = _factory.Services.CreateScope();
+            _scope = factory.Services.CreateScope();
             _db = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             var currencyEntity = TestCurrencyModels.FirstDomainModelWithoutDetails;
@@ -45,7 +44,7 @@ namespace WealthTrack.IntegrationTests.Tests
         {
             _scope?.Dispose();
 
-            using var scope = _factory.Services.CreateScope();
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             db.Goals.RemoveRange(db.Goals);

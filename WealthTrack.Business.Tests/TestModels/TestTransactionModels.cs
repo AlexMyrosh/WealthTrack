@@ -19,14 +19,12 @@ namespace WealthTrack.Business.Tests.TestModels
             }
         }
 
-        public static Transaction TransferTransactionDomainModel
+        public static TransferTransaction TransferTransactionDomainModel
         {
             get
             {
-                var model = DomainModelWithoutDetails;
-                model.Type = TransactionType.Transfer;
-                model.Category = TestCategoryModels.DomainModelWithoutDetails;
-                model.CategoryId = model.Category.Id;
+                var model = TransferTransactionDomainModelWithoutDetails;
+                // TODO: add related items data
                 return model;
             }
         }
@@ -55,29 +53,19 @@ namespace WealthTrack.Business.Tests.TestModels
             {
                 var model = new TransactionDetailsBusinessModel
                 {
-                    Id = TransferTransactionDomainModel.Id,
-                    Amount = TransferTransactionDomainModel.Amount,
-                    Description = TransferTransactionDomainModel.Description,
-                    TransactionDate = TransferTransactionDomainModel.TransactionDate,
-                    Type = TransferTransactionDomainModel.Type,
+                    Id = TransactionDomainModel.Id,
+                    Amount = TransactionDomainModel.Amount,
+                    Description = TransactionDomainModel.Description,
+                    TransactionDate = TransactionDomainModel.TransactionDate,
+                    Type = TransactionDomainModel.Type,
                     Category = new CategoryRelatedToTransactionDetailsBusinessModel
                     {
                         Id = TestCategoryModels.DomainModel.Id,
                         Name = TestCategoryModels.DomainModel.Name,
                         IconName = TestCategoryModels.DomainModel.IconName,
-                    },
-                    SourceWallet = new WalletRelatedToTransactionDetailsBusinessModel
-                    {
-                        Id = TestWalletModels.DomainModelWithoutDetails.Id,
-                        Name = TestWalletModels.DomainModel.Name
-                    },
-                    TargetWallet = new WalletRelatedToTransactionDetailsBusinessModel
-                    {
-                        Id = TestWalletModels.DomainModelWithoutDetails.Id,
-                        Name = TestWalletModels.DomainModel.Name
                     }
                 };
-
+        
                 return model;
             }
         }
@@ -109,6 +97,21 @@ namespace WealthTrack.Business.Tests.TestModels
                     TransactionDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero),
                     CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     Type = TransactionType.Income
+                };
+            }
+        }
+
+        public static TransferTransaction TransferTransactionDomainModelWithoutDetails
+        {
+            get
+            {
+                return new TransferTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    Amount = 50.123M,
+                    Description = "Test transfer transaction",
+                    TransactionDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero),
+                    CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero)
                 };
             }
         }

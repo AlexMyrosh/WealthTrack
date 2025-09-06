@@ -62,11 +62,6 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             // Case 2. Transaction type was changed
             if (eventMessage.TransactionType_New.HasValue && eventMessage.TransactionType_New.Value != eventMessage.TransactionType_Old)
             {
-                if (eventMessage.TransactionType_New.Value == TransactionType.Transfer || eventMessage.TransactionType_Old == TransactionType.Transfer)
-                {
-                    throw new ArgumentException("Transfer transaction is not supported here");
-                }
-
                 switch (eventMessage.TransactionType_New)
                 {
                     // Expense -> Income
@@ -86,12 +81,6 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             if (eventMessage.Amount_New.HasValue && eventMessage.Amount_New != eventMessage.Amount_Old)
             {
                 var transactionType = eventMessage.TransactionType_New ?? eventMessage.TransactionType_Old;
-                if (transactionType == TransactionType.Transfer)
-                {
-                    throw new ArgumentException("Transfer transaction is not supported here");
-                }
-
-                var difference = eventMessage.Amount_New.Value - eventMessage.Amount_Old;
                 switch (transactionType)
                 {
                     case TransactionType.Income:

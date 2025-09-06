@@ -3,5 +3,5 @@
 namespace WealthTrack.IntegrationTests.TestCollections
 {
     [CollectionDefinition("WalletTests", DisableParallelization = true)]
-    public class WalletTestCollection : ICollectionFixture<EmptyWebAppFactory> { }
+    public class WalletTestCollection : ICollectionFixture<SeededWebAppFactory> { }
 }
