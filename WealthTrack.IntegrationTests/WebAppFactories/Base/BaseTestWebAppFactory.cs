@@ -16,7 +16,7 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
 
         builder.ConfigureAppConfiguration((context, configBuilder) =>
         {
-            configBuilder.AddJsonFile("appsettings.Development.json", optional: true);
+            configBuilder.AddJsonFile("appsettings.Development.json", optional: false);
             configuration = configBuilder.Build();
         });
 

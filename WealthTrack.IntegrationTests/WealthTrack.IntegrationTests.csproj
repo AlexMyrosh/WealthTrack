@@ -31,4 +31,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="TestData\BudgetBaseIntegrationTest.cs" />
+    <Compile Remove="TestData\BudgetTestDataFactory.cs" />
+  </ItemGroup>
+
 </Project>

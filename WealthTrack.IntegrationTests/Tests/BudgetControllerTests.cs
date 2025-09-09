@@ -1,91 +1,40 @@
-﻿using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http.Json;
-using System.Net;
-using WealthTrack.API.ApiModels.Budget;
-using WealthTrack.Data.Context;
-using WealthTrack.IntegrationTests.WebAppFactories;
-using WealthTrack.IntegrationTests.Helpers;
-using WealthTrack.Data.DomainModels;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
+using System.Net.Http.Json;
+using WealthTrack.API.ApiModels.Budget;
+using WealthTrack.Data.DomainModels;
+using WealthTrack.IntegrationTests.TestData;
+using WealthTrack.IntegrationTests.WebAppFactories;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.IntegrationTests.Tests
 {
     [Collection("BudgetTests")]
-    public class BudgetControllerTests(EmptyWebAppFactory factory) : IClassFixture<EmptyWebAppFactory>, IAsyncLifetime
+    public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTestBase(factory)
     {
-        private readonly HttpClient _client = factory.CreateClient();
-
-        private IServiceScope _scope = null!;
-        private AppDbContext _db = null!;
-
-        public async Task InitializeAsync()
-        {
-            await factory.InitializeAsync();
-
-            _scope = factory.Services.CreateScope();
-            _db = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            var currencyEntity = TestCurrencyModels.FirstDomainModelWithoutDetails;
-            _db.Currencies.Add(currencyEntity);
-
-            await _db.SaveChangesAsync();
-        }
-
-        public async Task DisposeAsync()
-        {
-            _scope?.Dispose();
-
-            using var scope = factory.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-            db.Goals.RemoveRange(db.Goals);
-            db.Currencies.RemoveRange(db.Currencies);
-            db.Categories.RemoveRange(db.Categories);
-            db.Budgets.RemoveRange(db.Budgets);
-            db.Wallets.RemoveRange(db.Wallets);
-            db.Transactions.RemoveRange(db.Transactions);
-            db.TransferTransactions.RemoveRange(db.TransferTransactions);
-
-            await db.SaveChangesAsync();
-        }
-
         // GET ALL tests
 
         [Fact]
         public async Task GetAll_WithoutInclude_ReturnsAllBudgetsWithoutRelatedEntities()
         {
             // Arrange
-            var firstBudgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            firstBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondBudgetToAdd = TestBudgetModels.SecondDomainModelWithoutDetails;
-            secondBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var budgetsToAdd = new List<Budget>
-            {
-                firstBudgetToAdd,
-                secondBudgetToAdd
-            };
-            var firstWalletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            firstWalletToAdd.BudgetId = firstBudgetToAdd.Id;
-            firstWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondWalletToAdd = TestWalletModels.SecondDomainModelWithoutDetails;
-            secondWalletToAdd.BudgetId = secondBudgetToAdd.Id;
-            secondWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddRangeAsync(budgetsToAdd);
-            await _db.Wallets.AddRangeAsync([firstWalletToAdd, secondWalletToAdd]);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateMultiBudgetsScenario(budgetCount: 2, walletCount: 2);
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.AddRange(scenario.budgets);
+            DbContext.Wallets.AddRange(scenario.wallets);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget");
+            var response = await Client.GetAsync("/api/budget");
             var allBudgets = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             allBudgets.Should().NotBeNullOrEmpty();
-            allBudgets.Should().HaveCount(budgetsToAdd.Count);
-            allBudgets.Should().ContainSingle(budget => budget.Id == firstBudgetToAdd.Id);
-            allBudgets.Should().ContainSingle(budget => budget.Id == secondBudgetToAdd.Id);
+            allBudgets.Should().HaveCount(2);
+            allBudgets.Should().Contain(budget =>budget.Id == scenario.budgets[0].Id);
+            allBudgets.Should().Contain(budget => budget.Id == scenario.budgets[1].Id);
             allBudgets.Should().AllSatisfy(budget => budget.Currency.Should().BeNull());
             allBudgets.Should().AllSatisfy(budget => budget.Wallets.Should().BeNullOrEmpty());
         }
@@ -94,36 +43,22 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task GetAll_WithIncludeCurrency_ReturnsAllBudgetsWithCurrencyOnly()
         {
             // Arrange
-            var firstBudgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            firstBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondBudgetToAdd = TestBudgetModels.SecondDomainModelWithoutDetails;
-            secondBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var budgetsToAdd = new List<Budget>
-            {
-                firstBudgetToAdd,
-                secondBudgetToAdd
-            };
-            var firstWalletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            firstWalletToAdd.BudgetId = firstBudgetToAdd.Id;
-            firstWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondWalletToAdd = TestWalletModels.SecondDomainModelWithoutDetails;
-            secondWalletToAdd.BudgetId = secondBudgetToAdd.Id;
-            secondWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddRangeAsync(budgetsToAdd);
-            await _db.Wallets.AddRangeAsync([firstWalletToAdd, secondWalletToAdd]);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateMultiBudgetsScenario(budgetCount: 2, walletCount: 2);
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.AddRange(scenario.budgets);
+            DbContext.Wallets.AddRange(scenario.wallets);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget?include={nameof(Budget.Currency)}");
+            var response = await Client.GetAsync($"/api/budget?include={nameof(Budget.Currency)}");
             var allBudgets = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             allBudgets.Should().NotBeNullOrEmpty();
-            allBudgets.Should().HaveCount(budgetsToAdd.Count);
-            allBudgets.Should().ContainSingle(budget => budget.Id == firstBudgetToAdd.Id);
-            allBudgets.Should().ContainSingle(budget => budget.Id == secondBudgetToAdd.Id);
+            allBudgets.Should().HaveCount(2);
+            allBudgets.Should().Contain(budget =>budget.Id == scenario.budgets[0].Id);
+            allBudgets.Should().Contain(budget => budget.Id == scenario.budgets[1].Id);
             allBudgets.Should().AllSatisfy(budget => budget.Currency.Should().NotBeNull());
             allBudgets.Should().AllSatisfy(budget => budget.Wallets.Should().BeNullOrEmpty());
         }
@@ -132,38 +67,25 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task GetAll_WithIncludeAllRelatedEntities_ReturnsAllBudgetsWithAllRelatedEntities()
         {
             // Arrange
-            var firstBudgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            firstBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondBudgetToAdd = TestBudgetModels.SecondDomainModelWithoutDetails;
-            secondBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var budgetsToAdd = new List<Budget>
-            {
-                firstBudgetToAdd,
-                secondBudgetToAdd
-            };
-            var firstWalletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            firstWalletToAdd.BudgetId = firstBudgetToAdd.Id;
-            firstWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondWalletToAdd = TestWalletModels.SecondDomainModelWithoutDetails;
-            secondWalletToAdd.BudgetId = secondBudgetToAdd.Id;
-            secondWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddRangeAsync(budgetsToAdd);
-            await _db.Wallets.AddRangeAsync([firstWalletToAdd, secondWalletToAdd]);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateMultiBudgetsScenario(budgetCount: 2, walletCount: 2);
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.AddRange(scenario.budgets);
+            DbContext.Wallets.AddRange(scenario.wallets);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget?include={nameof(Budget.Currency)},{nameof(Budget.Wallets)}");
+            var response = await Client.GetAsync($"/api/budget?include={nameof(Budget.Currency)},{nameof(Budget.Wallets)}");
             var allBudgets = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             allBudgets.Should().NotBeNullOrEmpty();
-            allBudgets.Should().HaveCount(budgetsToAdd.Count);
-            allBudgets.Should().ContainSingle(budget => budget.Id == firstBudgetToAdd.Id);
-            allBudgets.Should().ContainSingle(budget => budget.Id == secondBudgetToAdd.Id);
+            allBudgets.Should().HaveCount(2);
+            allBudgets.Should().Contain(budget =>budget.Id == scenario.budgets[0].Id);
+            allBudgets.Should().Contain(budget => budget.Id == scenario.budgets[1].Id);
             allBudgets.Should().AllSatisfy(budget => budget.Currency.Should().NotBeNull());
             allBudgets.Should().AllSatisfy(budget => budget.Wallets.Should().NotBeNullOrEmpty());
+            allBudgets.Should().AllSatisfy(budget => budget.Wallets.Should().HaveCount(2));
         }
 
         // GET BY ID tests
@@ -172,24 +94,20 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task GetById_WithoutInclude_ReturnsBudgetWithoutRelatedEntities()
         {
             // Arrange
-            var budgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            budgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var walletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            walletToAdd.BudgetId = budgetToAdd.Id;
-            walletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddAsync(budgetToAdd);
-            await _db.Wallets.AddAsync(walletToAdd);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateSingleBudgetScenario();
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.Add(scenario.budget);
+            DbContext.Wallets.Add(scenario.wallet);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget/{budgetToAdd.Id}");
+            var response = await Client.GetAsync($"/api/budget/{scenario.budget.Id}");
             var budget = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             budget.Should().NotBeNull();
-            budget.Id.Should().Be(budgetToAdd.Id);
+            budget.Id.Should().Be(scenario.budget.Id);
             budget.Currency.Should().BeNull();
             budget.Wallets.Should().BeNullOrEmpty();
         }
@@ -198,26 +116,22 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task GetById_WithIncludeCurrency_ReturnsBudgetWithCurrencyOnly()
         {
             // Arrange
-            var budgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            budgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var walletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            walletToAdd.BudgetId = budgetToAdd.Id;
-            walletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddAsync(budgetToAdd);
-            await _db.Wallets.AddAsync(walletToAdd);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateSingleBudgetScenario();
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.Add(scenario.budget);
+            DbContext.Wallets.Add(scenario.wallet);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget/{budgetToAdd.Id}?include={nameof(Budget.Currency)}");
+            var response = await Client.GetAsync($"/api/budget/{scenario.budget.Id}?include={nameof(Budget.Currency)}");
             var budget = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             budget.Should().NotBeNull();
-            budget.Id.Should().Be(budgetToAdd.Id);
+            budget.Id.Should().Be(scenario.budget.Id);
             budget.Currency.Should().NotBeNull();
-            budget.Currency.Id.Should().Be(budgetToAdd.CurrencyId);
+            budget.Currency.Id.Should().Be(scenario.budget.CurrencyId);
             budget.Wallets.Should().BeNullOrEmpty();
         }
 
@@ -225,35 +139,32 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task GetById_WithIncludeAllRelatedEntities_ReturnsBudgetWithAllRelatedEntities()
         {
             // Arrange
-            var budgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            budgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var walletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            walletToAdd.BudgetId = budgetToAdd.Id;
-            walletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-
-            await _db.Budgets.AddAsync(budgetToAdd);
-            await _db.Wallets.AddAsync(walletToAdd);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateMultiBudgetsScenario(budgetCount: 1, walletCount: 2);
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.Add(scenario.budgets[0]);
+            DbContext.Wallets.AddRange(scenario.wallets);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var response = await _client.GetAsync($"/api/budget/{budgetToAdd.Id}?include={nameof(Budget.Currency)},{nameof(Budget.Wallets)}");
+            var response = await Client.GetAsync($"/api/budget/{scenario.budgets[0].Id}?include={nameof(Budget.Currency)},{nameof(Budget.Wallets)}");
             var budget = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             budget.Should().NotBeNull();
-            budget.Id.Should().Be(budgetToAdd.Id);
+            budget.Id.Should().Be(scenario.budgets[0].Id);
             budget.Currency.Should().NotBeNull();
-            budget.Currency.Id.Should().Be(budgetToAdd.CurrencyId);
+            budget.Currency.Id.Should().Be(scenario.budgets[0].CurrencyId);
             budget.Wallets.Should().NotBeEmpty();
-            budget.Wallets.Should().OnlyContain(wallet => wallet.Id == walletToAdd.Id);
+            budget.Wallets.Should().HaveCount(2);
+            budget.Wallets.Should().AllSatisfy(wallet => scenario.wallets.Any(w => w.Id == wallet.Id));
         }
 
         [Fact]
         public async Task GetById_WithWrongId_ReturnsNotFoundResult()
         {
             // Act
-            var response = await _client.GetAsync($"/api/budget/{Guid.NewGuid()}");
+            var response = await Client.GetAsync($"/api/budget/{Guid.NewGuid()}");
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -265,20 +176,24 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Create_CreatesBudget()
         {
             // Arrange
+            var currency = DataFactory.CreateCurrency();
+            DbContext.Currencies.Add(currency);
+            await DbContext.SaveChangesAsync();
+
             var budgetToCreate = new BudgetUpsertApiModel
             {
-                Name = Guid.NewGuid().ToString(),
-                CurrencyId = TestCurrencyModels.FirstCurrencyId
+                Name = "Test Budget",
+                CurrencyId = currency.Id
             };
 
             // Act
-            var response = await _client.PostAsJsonAsync("/api/budget/create", budgetToCreate);
+            var response = await Client.PostAsJsonAsync("/api/budget/create", budgetToCreate);
             var createdId = await response.Content.ReadFromJsonAsync<Guid>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             createdId.Should().NotBe(Guid.Empty);
-            var createdBudget = await _db.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == createdId);
+            var createdBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == createdId);
             createdBudget.Should().NotBeNull();
             createdBudget.Name.Should().Be(budgetToCreate.Name);
             createdBudget.CurrencyId.Should().Be(budgetToCreate.CurrencyId!.Value);
@@ -288,7 +203,7 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Create_WithNullBody_ReturnsBadRequest()
         {
             // Act
-            var response = await _client.PostAsJsonAsync("/api/budget/create", (BudgetUpsertApiModel)null!);
+            var response = await Client.PostAsJsonAsync("/api/budget/create", (BudgetUpsertApiModel)null!);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -300,41 +215,38 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Update_UpdatesBudgetName()
         {
             // Arrange
-            var budgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            budgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            await _db.Budgets.AddAsync(budgetToAdd);
-            await _db.SaveChangesAsync();
+            var scenario = DataFactory.CreateSingleBudgetScenario();
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.Add(scenario.budget);
+            DbContext.Wallets.Add(scenario.wallet);
+            await DbContext.SaveChangesAsync();
             var modelToUpdate = new BudgetUpsertApiModel
             {
-                Name = Guid.NewGuid().ToString()
+                Name = "Updated Budget Name"
             };
 
             // Act
-            var response = await _client.PutAsJsonAsync($"/api/budget/update/{budgetToAdd.Id}", modelToUpdate);
+            var response = await Client.PutAsJsonAsync($"/api/budget/update/{scenario.budget.Id}", modelToUpdate);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-            var updatedBudget = await _db.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == budgetToAdd.Id);
+            var updatedBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == scenario.budget.Id);
             updatedBudget.Should().NotBeNull();
             updatedBudget.Name.Should().Be(modelToUpdate.Name);
-            updatedBudget.CurrencyId.Should().NotBeEmpty();
+            updatedBudget.CurrencyId.Should().Be(scenario.budget.CurrencyId);
         }
 
         [Fact]
         public async Task Update_WithIncorrectId_ReturnsNotFoundResult()
         {
             // Arrange
-            var budgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            budgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            await _db.Budgets.AddAsync(budgetToAdd);
-            await _db.SaveChangesAsync();
             var modelToUpdate = new BudgetUpsertApiModel
             {
-                Name = Guid.NewGuid().ToString()
+                Name = "Updated Budget Name"
             };
 
             // Act
-            var response = await _client.PutAsJsonAsync($"/api/budget/update/{Guid.NewGuid()}", modelToUpdate);
+            var response = await Client.PutAsJsonAsync($"/api/budget/update/{Guid.NewGuid()}", modelToUpdate);
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -345,57 +257,46 @@ namespace WealthTrack.IntegrationTests.Tests
         [Fact]
         public async Task HardDelete_DeletesBudgetAndAllRelatedData()
         {
-            // Arrange
-            var firstBudgetToAdd = TestBudgetModels.FirstDomainModelWithoutDetails;
-            firstBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondBudgetToAdd = TestBudgetModels.SecondDomainModelWithoutDetails;
-            secondBudgetToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var firstWalletToAdd = TestWalletModels.FirstDomainModelWithoutDetails;
-            firstWalletToAdd.BudgetId = firstBudgetToAdd.Id;
-            firstWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var secondWalletToAdd = TestWalletModels.SecondDomainModelWithoutDetails;
-            secondWalletToAdd.BudgetId = secondBudgetToAdd.Id;
-            secondWalletToAdd.CurrencyId = TestCurrencyModels.FirstCurrencyId;
-            var transactionToAdd = TestTransactionModels.FirstDomainModelWithoutDetails;
-            transactionToAdd.WalletId = firstWalletToAdd.Id;
-            var firstTransferTransactionToAdd = TestTransferTransactionModels.FirstDomainModelWithoutDetails;
-            firstTransferTransactionToAdd.SourceWalletId = firstWalletToAdd.Id;
-            firstTransferTransactionToAdd.TargetWalletId = secondWalletToAdd.Id;
-            var secondTransferTransactionToAdd = TestTransferTransactionModels.SecondDomainModelWithoutDetails;
-            secondTransferTransactionToAdd.SourceWalletId = secondWalletToAdd.Id;
-            secondTransferTransactionToAdd.TargetWalletId = firstWalletToAdd.Id;
-
-            await _db.Budgets.AddAsync(firstBudgetToAdd);
-            await _db.Budgets.AddAsync(secondBudgetToAdd);
-            await _db.Wallets.AddAsync(firstWalletToAdd);
-            await _db.Wallets.AddAsync(secondWalletToAdd);
-            await _db.Transactions.AddAsync(transactionToAdd);
-            await _db.TransferTransactions.AddAsync(firstTransferTransactionToAdd);
-            await _db.TransferTransactions.AddAsync(secondTransferTransactionToAdd);
-            await _db.SaveChangesAsync();
+            // Arrange - Create a complex scenario with wallets, transactions, and transfers
+            var scenario = DataFactory.CreateBudgetWithTransferScenario();
+            DbContext.Currencies.Add(scenario.currency);
+            DbContext.Budgets.Add(scenario.budget);
+            DbContext.Wallets.AddRange([scenario.sourceWallet, scenario.targetWallet]);
+            DbContext.TransferTransactions.Add(scenario.transfer);
+            await DbContext.SaveChangesAsync();
+            
+            // Add some additional transactions to the source wallet
+            var additionalTransaction = DataFactory.CreateTransaction(t => 
+            {
+                t.WalletId = scenario.sourceWallet.Id;
+                t.Amount = 100M;
+                t.Type = TransactionType.Income;
+            });
+            DbContext.Transactions.Add(additionalTransaction);
+            await DbContext.SaveChangesAsync();
 
             // Act
-            var deleteResponse = await _client.DeleteAsync($"/api/budget/hard_delete/{firstBudgetToAdd.Id}");
+            var deleteResponse = await Client.DeleteAsync($"/api/budget/hard_delete/{scenario.budget.Id}");
 
             // Assert
             deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-            var deletedBudget = await _db.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == firstBudgetToAdd.Id);
-            var deletedFirstWallet = await _db.Wallets.AsNoTracking().FirstOrDefaultAsync(wallet => wallet.Id == firstWalletToAdd.Id);
-            var deletedTransaction = await _db.Transactions.AsNoTracking().FirstOrDefaultAsync(transaction => transaction.Id == transactionToAdd.Id);
-            var deletedFirstTransferTransaction = await _db.TransferTransactions.AsNoTracking().FirstOrDefaultAsync(transaction => transaction.Id == firstTransferTransactionToAdd.Id);
-            var deletedSecondTransferTransaction = await _db.TransferTransactions.AsNoTracking().FirstOrDefaultAsync(transaction => transaction.Id == secondTransferTransactionToAdd.Id);
-            var existedBudget = await _db.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == secondBudgetToAdd.Id);
-            var existedSecondWallet = await _db.Wallets.AsNoTracking().FirstOrDefaultAsync(wallet => wallet.Id == secondWalletToAdd.Id);
-            var existedCurrency = await _db.Currencies.AsNoTracking().FirstOrDefaultAsync(currency => currency.Id == TestCurrencyModels.FirstCurrencyId);
+            
+            // Verify budget and related data are deleted
+            var deletedBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(budget => budget.Id == scenario.budget.Id);
+            var deletedSourceWallet = await DbContext.Wallets.AsNoTracking().FirstOrDefaultAsync(wallet => wallet.Id == scenario.sourceWallet.Id);
+            var deletedTargetWallet = await DbContext.Wallets.AsNoTracking().FirstOrDefaultAsync(wallet => wallet.Id == scenario.targetWallet.Id);
+            var deletedTransferTransaction = await DbContext.TransferTransactions.AsNoTracking().FirstOrDefaultAsync(transaction => transaction.Id == scenario.transfer.Id);
+            var deletedTransaction = await DbContext.Transactions.AsNoTracking().FirstOrDefaultAsync(transaction => transaction.Id == additionalTransaction.Id);
+            
+            // Verify currency still exists (not deleted)
+            var existingCurrency = await DbContext.Currencies.AsNoTracking().FirstOrDefaultAsync(currency => currency.Id == scenario.currency.Id);
 
             deletedBudget.Should().BeNull();
-            deletedFirstWallet.Should().BeNull();
+            deletedSourceWallet.Should().BeNull();
+            deletedTargetWallet.Should().BeNull();
+            deletedTransferTransaction.Should().BeNull();
             deletedTransaction.Should().BeNull();
-            deletedFirstTransferTransaction.Should().BeNull();
-            deletedSecondTransferTransaction.Should().BeNull();
-            existedBudget.Should().NotBeNull();
-            existedSecondWallet.Should().NotBeNull();
-            existedCurrency.Should().NotBeNull();
+            existingCurrency.Should().NotBeNull();
         }
     }
 }

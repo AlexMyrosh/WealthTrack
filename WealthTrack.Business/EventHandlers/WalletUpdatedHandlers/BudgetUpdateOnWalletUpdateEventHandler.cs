@@ -14,7 +14,8 @@ namespace WealthTrack.Business.EventHandlers.WalletUpdatedHandlers
                 throw new ArgumentException(nameof(eventMessage));
             }
 
-            if (eventMessage.IsPartOfGeneralBalance_New is null || eventMessage.IsPartOfGeneralBalance_New == eventMessage.IsPartOfGeneralBalance_Old &&
+            if (eventMessage.IsPartOfGeneralBalance_New is null && eventMessage.IsPartOfGeneralBalance_Old == false || 
+                eventMessage.IsPartOfGeneralBalance_New == eventMessage.IsPartOfGeneralBalance_Old &&
                 eventMessage.BudgetId_New is null || eventMessage.BudgetId_New == eventMessage.BudgetId_Old &&
                 eventMessage.Balance_New is null || eventMessage.Balance_New == eventMessage.Balance_Old)
             {
