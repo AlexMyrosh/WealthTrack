@@ -19,8 +19,6 @@ namespace WealthTrack.API.ApiModels.Goal
         public DateTimeOffset EndDate { get; set; }
 
         public List<CategoryRelatedToGoalDetailsApiModel> Categories { get; set; }
-
-        public List<WalletRelatedToGoalDetailsApiModel> Wallets { get; set; }
     }
 
     public class CategoryRelatedToGoalDetailsApiModel
@@ -32,12 +30,5 @@ namespace WealthTrack.API.ApiModels.Goal
         public string? IconName { get; set; }
 
         public CategoryType Type { get; set; }
-    }
-
-    public class WalletRelatedToGoalDetailsApiModel
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
     }
 }

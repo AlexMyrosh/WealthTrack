@@ -10,11 +10,10 @@ using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class TransactionService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : ITransactionService
+    public class TransactionService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher) : ITransactionService
     {
         public async Task<Guid> CreateAsync(TransactionUpsertBusinessModel model)
         {
-            // TODO: Need to add check that model is not for transfer
             if (model is null)
             {
                 throw new ArgumentNullException(nameof(model));
@@ -142,7 +141,7 @@ namespace WealthTrack.Business.Services.Implementations
                 if (transferTransactionDomainModelToDelete is not null)
                 {
                     unitOfWork.TransferTransactionRepository.HardDelete(transferTransactionDomainModelToDelete);
-                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToDelete);
+                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToDelete);
                     await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
                 }
                 else

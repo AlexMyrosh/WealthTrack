@@ -130,6 +130,133 @@ namespace WealthTrack.IntegrationTests.TestData
             return (currency, budget, sourceWallet, targetWallet, transfer);
         }
 
+        // Category scenarios
+        public (Category parent, List<Category> children) CreateCategoryHierarchyScenario(int childrenCount = 2)
+        {
+            var parent = new Category
+            {
+                Id = Guid.NewGuid(),
+                Name = "Parent Category",
+                IconName = "parent",
+                Type = CategoryType.Expense,
+                Status = CategoryStatus.Active,
+                CreatedDate = DateTimeOffset.UtcNow,
+                ModifiedDate = DateTimeOffset.UtcNow
+            };
+
+            var children = Enumerable.Range(0, childrenCount).Select(i => new Category
+            {
+                Id = Guid.NewGuid(),
+                Name = $"Child {i + 1}",
+                IconName = "child",
+                Type = CategoryType.Expense,
+                Status = CategoryStatus.Active,
+                CreatedDate = DateTimeOffset.UtcNow,
+                ModifiedDate = DateTimeOffset.UtcNow,
+                ParentCategoryId = parent.Id
+            }).ToList();
+
+            return (parent, children);
+        }
+
+        // Goal scenarios
+        public (Currency currency, Budget budget, Category category, Wallet wallet, Goal goal, List<Transaction> applicable, List<Transaction> nonApplicable) CreateGoalWithTransactionsScenario()
+        {
+            var currency = CreateCurrency();
+            var budget = CreateBudget(b => b.CurrencyId = currency.Id);
+            var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+            var category = new Category
+            {
+                Id = Guid.NewGuid(),
+                Name = "Goal Category",
+                IconName = "goal",
+                Type = CategoryType.Expense,
+                Status = CategoryStatus.Active,
+                CreatedDate = DateTimeOffset.UtcNow,
+                ModifiedDate = DateTimeOffset.UtcNow
+            };
+            var goal = new Goal
+            {
+                Id = Guid.NewGuid(),
+                Name = "My Goal",
+                PlannedMoneyAmount = 1000M,
+                ActualMoneyAmount = 0M,
+                StartDate = DateTimeOffset.UtcNow.AddDays(-10),
+                EndDate = DateTimeOffset.UtcNow.AddDays(-5),
+                Type = GoalType.Expense,
+                Categories = [category],
+                CreatedDate = DateTimeOffset.UtcNow,
+                ModifiedDate = DateTimeOffset.UtcNow
+            };
+
+            var applicable = new List<Transaction>
+            {
+                CreateTransaction(t =>
+                {
+                    t.WalletId = wallet.Id;
+                    t.CategoryId = category.Id;
+                    t.Amount = 100M;
+                    t.Type = TransactionType.Expense;
+                    t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-9);
+                }),
+                CreateTransaction(t =>
+                {
+                    t.WalletId = wallet.Id;
+                    t.CategoryId = category.Id;
+                    t.Amount = 50M;
+                    t.Type = TransactionType.Expense;
+                    t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-6);
+                })
+            };
+            var nonApplicable = new List<Transaction>
+            {
+                CreateTransaction(t =>
+                {
+                    t.WalletId = wallet.Id;
+                    t.CategoryId = category.Id;
+                    t.Amount = 25M;
+                    t.Type = TransactionType.Expense;
+                    t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-4);
+                }),
+                CreateTransaction(t =>
+                {
+                    t.WalletId = wallet.Id;
+                    t.CategoryId = category.Id;
+                    t.Amount = 25M;
+                    t.Type = TransactionType.Expense;
+                    t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-15);
+                })
+            };
+
+            goal.ActualMoneyAmount += applicable.Sum(t => t.Amount);
+            return (currency, budget, category, wallet, goal, applicable, nonApplicable);
+        }
+
+        // Transaction scenarios
+        public (Currency currency, Budget budget, Wallet wallet, Category category, Transaction transaction) CreateTransactionScenario()
+        {
+            var currency = CreateCurrency();
+            var budget = CreateBudget(b => b.CurrencyId = currency.Id);
+            var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+            var category = new Category
+            {
+                Id = Guid.NewGuid(),
+                Name = "Food",
+                IconName = "food",
+                Type = CategoryType.Expense,
+                Status = CategoryStatus.Active,
+                CreatedDate = DateTimeOffset.UtcNow,
+                ModifiedDate = DateTimeOffset.UtcNow
+            };
+            var tx = CreateTransaction(t => { t.WalletId = wallet.Id; t.CategoryId = category.Id; t.Amount = 42.5M; t.Type = TransactionType.Expense; });
+            return (currency, budget, wallet, category, tx);
+        }
+
+        public (Currency currency, Budget budget, Wallet source, Wallet target, TransferTransaction transfer) CreateTransferScenario()
+        {
+            return CreateBudgetWithTransferScenario();
+        }
+
         // Currency scenarios
         public List<Currency> CreateCurrenciesScenario(int count)
         {

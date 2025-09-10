@@ -51,7 +51,6 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<GoalUpsertApiModel, GoalUpsertBusinessModel>();
             CreateMap<GoalDetailsBusinessModel, GoalDetailsApiModel>();
             CreateMap<CategoryRelatedToGoalDetailsBusinessModel, CategoryRelatedToGoalDetailsApiModel>();
-            CreateMap<WalletRelatedToGoalDetailsBusinessModel, WalletRelatedToGoalDetailsApiModel>();
         }
     }
 }

@@ -2,6 +2,8 @@
 using FluentAssertions;
 using Moq;
 using WealthTrack.Business.BusinessModels.Goal;
+using WealthTrack.Business.Events.Interfaces;
+using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Business.Tests.TestModels;
@@ -17,6 +19,7 @@ namespace WealthTrack.Business.Tests.Services
         private readonly Mock<IGoalRepository> _goalRepositoryMock;
         private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
+        private readonly Mock<IEventPublisher> _eventPublisherMock;
         private readonly IGoalService _goalService;
 
         public GoalServiceTests()
@@ -24,11 +27,12 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock = new Mock<IUnitOfWork>();
             _goalRepositoryMock = new Mock<IGoalRepository>();
             _categoryRepositoryMock = new Mock<ICategoryRepository>();
+            _eventPublisherMock = new Mock<IEventPublisher>();
             _mapperMock = new Mock<IMapper>();
 
             _unitOfWorkMock.Setup(u => u.GoalRepository).Returns(_goalRepositoryMock.Object);
             _unitOfWorkMock.Setup(u => u.CategoryRepository).Returns(_categoryRepositoryMock.Object);
-            _goalService = new GoalService(_unitOfWorkMock.Object, _mapperMock.Object);
+            _goalService = new GoalService(_unitOfWorkMock.Object, _mapperMock.Object, _eventPublisherMock.Object);
         }
 
         [Fact]
@@ -50,6 +54,7 @@ namespace WealthTrack.Business.Tests.Services
             result.Should().Be(expectedId);
             Assert.Contains(testCategoryDomainModel, testDomainModel.Categories);
             _mapperMock.Verify(m => m.Map<Goal>(testUpsertBusinessModel), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<GoalCreatedEvent>()), Times.Once);
             _goalRepositoryMock.Verify(r => r.CreateAsync(It.Is<Goal>(b => b.Equals(testDomainModel))), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
             Assert.InRange(testDomainModel.CreatedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
@@ -68,6 +73,7 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             await act.Should().ThrowAsync<ArgumentNullException>();
             _mapperMock.Verify(m => m.Map<Goal>(It.IsAny<GoalUpsertBusinessModel>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<GoalCreatedEvent>()), Times.Never);
             _goalRepositoryMock.Verify(r => r.CreateAsync(It.IsAny<Goal>()), Times.Never);
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Never);
         }
@@ -178,6 +184,7 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             await act.Should().ThrowAsync<ArgumentException>();
             _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, It.IsAny<Goal>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<GoalUpdatedEvent>()), Times.Never);
             _unitOfWorkMock.Verify(uow => uow.GoalRepository.Update(It.IsAny<Goal>()), Times.Never);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Never);
         }
@@ -196,6 +203,7 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             await act.Should().ThrowAsync<KeyNotFoundException>();
             _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, It.IsAny<Goal>()), Times.Never);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<GoalUpdatedEvent>()), Times.Never);
             _unitOfWorkMock.Verify(uow => uow.GoalRepository.Update(It.IsAny<Goal>()), Times.Never);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Never);
         }
@@ -218,6 +226,7 @@ namespace WealthTrack.Business.Tests.Services
             Assert.Contains(testCategoryDomainModel, testDomainModel.Categories);
             _mapperMock.Verify(m => m.Map(testUpsertBusinessModel, testDomainModel), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.GoalRepository.Update(testDomainModel), Times.Once);
+            _eventPublisherMock.Verify(u => u.PublishAsync(It.IsAny<GoalUpdatedEvent>()), Times.Once);
             _unitOfWorkMock.Verify(uow => uow.SaveAsync(), Times.Once);
             Assert.InRange(testDomainModel.ModifiedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
         }

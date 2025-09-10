@@ -15,12 +15,12 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 throw new ArgumentException(nameof(eventMessage));
             }
 
-            if (eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
-                eventMessage.WalletId_New is null || eventMessage.WalletId_New == eventMessage.WalletId_Old &&
-                eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old)
-            {
-                return;
-            }
+            // if (eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
+            //     eventMessage.WalletId_New is null || eventMessage.WalletId_New == eventMessage.WalletId_Old &&
+            //     eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old)
+            // {
+            //     return;
+            // }
 
             Wallet wallet;
             var oldWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_Old);
@@ -30,7 +30,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             }
 
             // Case 1. Wallet was changed
-            decimal walletBalanceBeforeUpdate = 0;
+            decimal walletBalanceBeforeUpdate = oldWallet.Balance;
             if (eventMessage.WalletId_New.HasValue && eventMessage.WalletId_New != eventMessage.WalletId_Old)
             {
                 var newWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_New.Value);
@@ -95,24 +95,25 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             }
 
             // Send event notification that new wallet was updated
-            if (eventMessage.WalletId_New.HasValue)
-            {
-                await eventPublisher.PublishAsync(new WalletUpdatedEvent
-                {
-                    WalletId = wallet.Id,
-                    BudgetId_Old = wallet.BudgetId,
-                    Balance_Old = walletBalanceBeforeUpdate,
-                    Balance_New = wallet.Balance,
-                    IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
-                });
-            }
+            // if (eventMessage.WalletId_New.HasValue)
+            // {
+            //     await eventPublisher.PublishAsync(new WalletUpdatedEvent
+            //     {
+            //         WalletId = wallet.Id,
+            //         BudgetId_Old = wallet.BudgetId,
+            //         Balance_Old = walletBalanceBeforeUpdate,
+            //         Balance_New = wallet.Balance,
+            //         IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
+            //     });
+            // }
 
             // Send event notification that old wallet was updated
             await eventPublisher.PublishAsync(new WalletUpdatedEvent
             {
                 WalletId = eventMessage.WalletId_Old,
                 BudgetId_Old = oldWallet.BudgetId,
-                Balance_Old = oldWallet.Balance,
+                Balance_Old = walletBalanceBeforeUpdate,
+                Balance_New = wallet.Balance,
                 IsPartOfGeneralBalance_Old = oldWallet.IsPartOfGeneralBalance
             });
         }

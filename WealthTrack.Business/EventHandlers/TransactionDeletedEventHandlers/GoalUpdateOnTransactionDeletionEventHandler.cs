@@ -16,7 +16,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
             }
 
             // In future it will be taking goals of specific user
-            var goals = await unitOfWork.GoalRepository.GetAllAsync();
+            var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
             if (goals.Count == 0)
             {
                 return;
@@ -26,7 +26,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
             {
                 if (isTransactionMeetsGoal(goal, eventMessage))
                 {
-                    goal.ActualMoneyAmount += eventMessage.Amount;
+                    goal.ActualMoneyAmount -= eventMessage.Amount;
                 }
             }
         }

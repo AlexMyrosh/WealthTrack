@@ -43,6 +43,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
                 WalletId = wallet.Id,
                 BudgetId_Old = wallet.BudgetId,
                 Balance_Old = walletBalanceBeforeUpdate,
+                Balance_New = wallet.Balance,
                 IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
             });
         }

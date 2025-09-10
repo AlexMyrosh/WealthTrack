@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using WealthTrack.Business.BusinessModels.Goal;
+using WealthTrack.Business.Events.Interfaces;
+using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class GoalService(IUnitOfWork unitOfWork, IMapper mapper) : IGoalService
+    public class GoalService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher) : IGoalService
     {
         public async Task<Guid> CreateAsync(GoalUpsertBusinessModel model)
         {
@@ -14,13 +16,14 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentNullException(nameof(model));
             }
-
-            // TODO: add calculating of initial balance
+            
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, domainModel);
             var createdEntityId = await unitOfWork.GoalRepository.CreateAsync(domainModel);
+            var goalCreatedEventModel = mapper.Map<GoalCreatedEvent>(domainModel);
+            await eventPublisher.PublishAsync(goalCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -51,16 +54,17 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, "Categories,Wallets");
+            var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, $"{nameof(Goal.Categories)}");
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
-
-            // TODO: add recalculation of balance
+            
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
+            var goalCreatedEventModel = mapper.Map<GoalUpdatedEvent>(originalModel);
+            await eventPublisher.PublishAsync(goalCreatedEventModel);
             unitOfWork.GoalRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }

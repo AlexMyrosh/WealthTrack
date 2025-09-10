@@ -15,15 +15,15 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 throw new ArgumentException(nameof(eventMessage));
             }
 
-            if (eventMessage.CategoryId_New is null || eventMessage.CategoryId_New == eventMessage.CategoryId_Old &&
-                eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
-                eventMessage.TransactionDate_New is null || eventMessage.TransactionDate_New == eventMessage.TransactionDate_Old)
-            {
-                return;
-            }
+            // if (eventMessage.CategoryId_New is null || eventMessage.CategoryId_New == eventMessage.CategoryId_Old &&
+            //     eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
+            //     eventMessage.TransactionDate_New is null || eventMessage.TransactionDate_New == eventMessage.TransactionDate_Old)
+            // {
+            //     return;
+            // }
 
             // In future it will be taking goals of specific user
-            var goals = await unitOfWork.GoalRepository.GetAllAsync();
+            var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
             if (goals.Count == 0)
             {
                 return;

@@ -46,9 +46,16 @@ namespace WealthTrack.API.Controllers
         [HttpPut("update/{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] GoalUpsertApiModel model)
         {
-            var businessModel = mapper.Map<GoalUpsertBusinessModel>(model);
-            await goalService.UpdateAsync(id, businessModel);
-            return Accepted();
+            try
+            {
+                var businessModel = mapper.Map<GoalUpsertBusinessModel>(model);
+                await goalService.UpdateAsync(id, businessModel);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // DELETE api/goal/hard_delete

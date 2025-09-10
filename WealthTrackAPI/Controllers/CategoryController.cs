@@ -12,9 +12,9 @@ namespace WealthTrack.API.Controllers
     {
         // GET: api/category
         [HttpGet]
-        public async Task<ActionResult<List<CategoryDetailsApiModel>>> GetAll([FromQuery] string include = "")
+        public async Task<ActionResult<List<CategoryDetailsApiModel>>> GetAll()
         {
-            var businessModels = await categoryService.GetAllAsync(include);
+            var businessModels = await categoryService.GetAllAsync();
             var apiModels = mapper.Map<List<CategoryDetailsApiModel>>(businessModels);
             return Ok(apiModels);
         }
@@ -46,9 +46,16 @@ namespace WealthTrack.API.Controllers
         [HttpPut("update/{id}")]
         public async Task<ActionResult> Update(Guid id, [FromBody] CategoryUpsertApiModel model)
         {
-            var businessModel = mapper.Map<CategoryUpsertBusinessModel>(model);
-            await categoryService.UpdateAsync(id, businessModel);
-            return Accepted();
+            try
+            {
+                var businessModel = mapper.Map<CategoryUpsertBusinessModel>(model);
+                await categoryService.UpdateAsync(id, businessModel);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         // DELETE api/category/hard_delete/{id}

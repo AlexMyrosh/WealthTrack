@@ -77,12 +77,13 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
+            var deletedDomainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, $"{nameof(Category.ChildCategories)}");
             if (deletedDomainModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
+            deletedDomainModel.ChildCategories.ForEach(cc => unitOfWork.CategoryRepository.HardDelete(cc));
             unitOfWork.CategoryRepository.HardDelete(deletedDomainModel);
             var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(deletedDomainModel);
             await eventPublisher.PublishAsync(categoryDeletedEventModel);

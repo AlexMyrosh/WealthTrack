@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Moq;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
@@ -21,7 +20,6 @@ namespace WealthTrack.Business.Tests.Services
         private readonly Mock<ITransactionRepository> _transactionRepositoryMock;
         private readonly Mock<ITransferTransactionRepository> _transferTransactionRepositoryMock;
         private readonly Mock<IMapper> _mapperMock;
-        private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<IEventPublisher> _eventPublisherMock;
         private readonly ITransactionService _transactionService;
 
@@ -31,12 +29,11 @@ namespace WealthTrack.Business.Tests.Services
             _transactionRepositoryMock = new Mock<ITransactionRepository>();
             _transferTransactionRepositoryMock = new Mock<ITransferTransactionRepository>();
             _mapperMock = new Mock<IMapper>();
-            _configurationMock = new Mock<IConfiguration>();
             _eventPublisherMock = new Mock<IEventPublisher>();
 
             _unitOfWorkMock.Setup(u => u.TransactionRepository).Returns(_transactionRepositoryMock.Object);
             _unitOfWorkMock.Setup(u => u.TransferTransactionRepository).Returns(_transferTransactionRepositoryMock.Object);
-            _transactionService = new TransactionService(_unitOfWorkMock.Object, _mapperMock.Object, _eventPublisherMock.Object, _configurationMock.Object);
+            _transactionService = new TransactionService(_unitOfWorkMock.Object, _mapperMock.Object, _eventPublisherMock.Object);
         }
 
         [Fact]
@@ -404,7 +401,6 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Reset();
             _transactionRepositoryMock.Reset();
             _transferTransactionRepositoryMock.Reset();
-            _configurationMock.Reset();
             _eventPublisherMock.Reset();
         }
     }

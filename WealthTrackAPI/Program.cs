@@ -3,6 +3,8 @@ using WealthTrack.API.AutoMapper;
 using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers;
+using WealthTrack.Business.EventHandlers.GoalCreatedEventHandlers;
+using WealthTrack.Business.EventHandlers.GoalUpdatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers;
@@ -11,7 +13,7 @@ using WealthTrack.Business.EventHandlers.TransferTransactionDeletedEventHandlers
 using WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHandlers;
 using WealthTrack.Business.EventHandlers.WalletCreatedEventHandlers;
 using WealthTrack.Business.EventHandlers.WalletDeletedEventHandlers;
-using WealthTrack.Business.EventHandlers.WalletUpdatedHandlers;
+using WealthTrack.Business.EventHandlers.WalletUpdatedEventHandlers;
 using WealthTrack.Business.Events;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -97,6 +99,9 @@ namespace WealthTrack.API
             services.AddScoped<IEventHandler<WalletCreatedEvent>, BudgetUpdateOnWalletCreationEventHandler>();
             services.AddScoped<IEventHandler<WalletUpdatedEvent>, BudgetUpdateOnWalletUpdateEventHandler>();
             services.AddScoped<IEventHandler<WalletDeletedEvent>, BudgetUpdateOnWalletDeletionEventHandler>();
+            
+            services.AddScoped<IEventHandler<GoalUpdatedEvent>, GoalUpdateOnGoalUpdateEventHandler>();
+            services.AddScoped<IEventHandler<GoalCreatedEvent>, GoalUpdateOnGoalCreationEventHandler>();
 
             services.AddScoped<IEventHandler<CategoryDeletedEvent>, GoalUpdateOnCategoryDeletionEventHandler>();
 

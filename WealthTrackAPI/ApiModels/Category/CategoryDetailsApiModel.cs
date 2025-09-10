@@ -12,7 +12,7 @@ namespace WealthTrack.API.ApiModels.Category
 
         public CategoryType Type { get; set; }
 
-        public ParentCategoryDetailsApiModel ParentCategory { get; set; }
+        public ParentCategoryDetailsApiModel? ParentCategory { get; set; }
 
         public List<ChildCategoryDetailsApiModel> ChildCategories { get; set; }
     }

@@ -45,7 +45,7 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.ParentCategory)
                     .WithMany(e => e.ChildCategories)
                     .HasForeignKey(e => e.ParentCategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<Currency>(entity =>

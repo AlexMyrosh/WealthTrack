@@ -39,6 +39,7 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionDeletedEventHand
                 WalletId = sourceWalletEntity.Id,
                 BudgetId_Old = sourceWalletEntity.BudgetId,
                 Balance_Old = sourceWalletBalanceBeforeUpdate,
+                Balance_New = sourceWalletEntity.Balance,
                 IsPartOfGeneralBalance_Old = sourceWalletEntity.IsPartOfGeneralBalance
             });
 
@@ -47,6 +48,7 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionDeletedEventHand
                 WalletId = targetWalletEntity.Id,
                 BudgetId_Old = targetWalletEntity.BudgetId,
                 Balance_Old = targetWalletBalanceBeforeUpdate,
+                Balance_New = targetWalletEntity.Balance,
                 IsPartOfGeneralBalance_Old = targetWalletEntity.IsPartOfGeneralBalance
             });
         }

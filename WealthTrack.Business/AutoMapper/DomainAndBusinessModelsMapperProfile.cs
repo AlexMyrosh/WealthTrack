@@ -23,7 +23,8 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Category, CategoryDetailsBusinessModel>();
             CreateMap<Category, ParentCategoryDetailsBusinessModel>();
             CreateMap<Category, ChildCategoryDetailsBusinessModel>();
-            CreateMap<Category, CategoryDeletedEvent>();
+            CreateMap<Category, CategoryDeletedEvent>()
+                .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(src => src.Id));
 
             // Transaction
             CreateMap<TransactionUpsertBusinessModel, Transaction>()
@@ -37,7 +38,9 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<TransferTransactionUpsertBusinessModel, TransferTransaction>()
                 .ForMember(dest => dest.Amount, opt => opt.Condition(src => src.Amount.HasValue))
                 .ForMember(dest => dest.Description, opt => opt.Condition(src => src.Description != null))
-                .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue));
+                .ForMember(dest => dest.TransactionDate, opt => opt.Condition(src => src.TransactionDate.HasValue))
+                .ForMember(dest => dest.SourceWalletId, opt => opt.Condition(src => src.SourceWalletId.HasValue))
+                .ForMember(dest => dest.TargetWalletId, opt => opt.Condition(src => src.TargetWalletId.HasValue));
 
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
@@ -89,6 +92,14 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Goal, GoalDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToGoalDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToGoalDetailsBusinessModel>();
+            
+            CreateMap<Goal, GoalCreatedEvent>()
+                .ForMember(dest => dest.CategoryIds, opt => opt.MapFrom(src => src.Categories.Select(c => c.Id)))
+                .ForMember(dest => dest.GoalModel, opt => opt.MapFrom(src => src));
+            
+            CreateMap<Goal, GoalUpdatedEvent>()
+                .ForMember(dest => dest.CategoryIds, opt => opt.MapFrom(src => src.Categories.Select(c => c.Id)))
+                .ForMember(dest => dest.GoalModel, opt => opt.MapFrom(src => src));
         }
     }
 }

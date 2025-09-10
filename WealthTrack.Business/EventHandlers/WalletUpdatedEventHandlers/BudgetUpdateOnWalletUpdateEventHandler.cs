@@ -3,7 +3,7 @@ using WealthTrack.Business.Events.Models;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 
-namespace WealthTrack.Business.EventHandlers.WalletUpdatedHandlers
+namespace WealthTrack.Business.EventHandlers.WalletUpdatedEventHandlers
 {
     public class BudgetUpdateOnWalletUpdateEventHandler(IUnitOfWork unitOfWork) : IEventHandler<WalletUpdatedEvent>
     {
@@ -14,13 +14,13 @@ namespace WealthTrack.Business.EventHandlers.WalletUpdatedHandlers
                 throw new ArgumentException(nameof(eventMessage));
             }
 
-            if (eventMessage.IsPartOfGeneralBalance_New is null && eventMessage.IsPartOfGeneralBalance_Old == false || 
-                eventMessage.IsPartOfGeneralBalance_New == eventMessage.IsPartOfGeneralBalance_Old &&
-                eventMessage.BudgetId_New is null || eventMessage.BudgetId_New == eventMessage.BudgetId_Old &&
-                eventMessage.Balance_New is null || eventMessage.Balance_New == eventMessage.Balance_Old)
-            {
-                return;
-            }
+            // if (eventMessage.IsPartOfGeneralBalance_New is null && eventMessage.IsPartOfGeneralBalance_Old == false || 
+            //     eventMessage.IsPartOfGeneralBalance_New == eventMessage.IsPartOfGeneralBalance_Old &&
+            //     eventMessage.BudgetId_New is null || eventMessage.BudgetId_New == eventMessage.BudgetId_Old &&
+            //     eventMessage.Balance_New is null || eventMessage.Balance_New == eventMessage.Balance_Old)
+            // {
+            //     return;
+            // }
 
             var oldBudget = await unitOfWork.BudgetRepository.GetByIdAsync(eventMessage.BudgetId_Old);
             if (oldBudget == null)
