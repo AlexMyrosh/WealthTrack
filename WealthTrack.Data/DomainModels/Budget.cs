@@ -5,7 +5,7 @@ namespace WealthTrack.Data.DomainModels
     public class Budget
     {
         public Guid Id { get; set; }
-
+        
         public string Name { get; set; }
 
         public decimal OverallBalance { get; set; }

@@ -45,7 +45,13 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.ParentCategory)
                     .WithMany(e => e.ChildCategories)
                     .HasForeignKey(e => e.ParentCategoryId)
-                    .OnDelete(DeleteBehavior.NoAction);
+                    .OnDelete(DeleteBehavior.ClientCascade);
+                
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Category_Name_NotEmpty", $"LEN([{nameof(Category.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Category_IconName_NotEmpty", $"LEN([{nameof(Category.IconName)}]) > 0");
+                });
             });
 
             modelBuilder.Entity<Currency>(entity =>
@@ -217,6 +223,11 @@ namespace WealthTrack.Data.Context
                     .WithOne(e => e.Budget)
                     .HasForeignKey(e => e.BudgetId)
                     .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Budget_Name_NotEmpty", "LEN([Name]) > 0");
+                });
             });
 
             modelBuilder.Entity<Goal>(entity =>

@@ -8,7 +8,7 @@ namespace WealthTrack.Business.Services.Interfaces
 
         public Task<CategoryDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "");
 
-        public Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "");
+        public Task<List<CategoryDetailsBusinessModel>> GetAllAsync();
 
         public Task UpdateAsync(Guid id, CategoryUpsertBusinessModel model);
 

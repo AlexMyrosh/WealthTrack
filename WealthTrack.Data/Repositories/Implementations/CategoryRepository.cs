@@ -32,23 +32,9 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
-        public async Task<List<Category>> GetAllAsync(string include = "")
+        public async Task<List<Category>> GetAllAsync()
         {
-            var query = context.Categories.Where(c => c.Type != CategoryType.System).AsQueryable();
-            var includeProperties = include.Split(",");
-            foreach (var property in includeProperties)
-            {
-                if (string.IsNullOrWhiteSpace(property) || 
-                    string.Equals(property, "parentcategory", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(property, "childcategories", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                query = query.Include(property);
-            }
-
-            var result = await query.ToListAsync();
+            var result = await context.Categories.Where(c => c.Type != CategoryType.System).ToListAsync();
             return result;
         }
 

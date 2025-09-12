@@ -194,7 +194,7 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Create_CreatesTransferTransaction()
         {
             // Arrange
-            var (currency, budget, source, target, _) = DataFactory.CreateTransferScenario();
+            var (currency, budget, source, target, _, transaction) = DataFactory.CreateTransferScenario();
             DbContext.Currencies.Add(currency);
             DbContext.Budgets.Add(budget);
             DbContext.Wallets.Add(source);
@@ -226,7 +226,7 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Create_TransferTransaction_SourceAndTargetWalletBalancesAreUpdated()
         {
             // Arrange
-            var (currency, budget, source, target, _) = DataFactory.CreateTransferScenario();
+            var (currency, budget, source, target, _, transaction) = DataFactory.CreateTransferScenario();
             source.Balance = 1000M;
             target.Balance = 0M;
             DbContext.Currencies.Add(currency);
@@ -356,7 +356,7 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task Update_UpdateTransferTransaction_ShouldUpdateSourceAndTargetWalletBalances()
         {
             // Arrange
-            var (currency, budget, source, target, transfer) = DataFactory.CreateTransferScenario();
+            var (currency, budget, source, target, transfer, transaction) = DataFactory.CreateTransferScenario();
             source.Balance = 600M;
             target.Balance = 400M;
             transfer.Amount = 200M;
@@ -493,7 +493,7 @@ namespace WealthTrack.IntegrationTests.Tests
         public async Task HardDelete_TransferTransaction_SourceAndTargetBalancesAreUpdated()
         {
             // Arrange
-            var (currency, budget, source, target, transfer) = DataFactory.CreateTransferScenario();
+            var (currency, budget, source, target, transfer, transaction) = DataFactory.CreateTransferScenario();
             source.Balance = 600M;
             target.Balance = 400M;
             transfer.Amount = 200M;

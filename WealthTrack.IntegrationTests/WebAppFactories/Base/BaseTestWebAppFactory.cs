@@ -6,31 +6,36 @@ using Microsoft.Extensions.DependencyInjection;
 using WealthTrack.API;
 using WealthTrack.Data.Context;
 
+namespace WealthTrack.IntegrationTests.WebAppFactories.Base;
+
 public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
 {
-    public IConfiguration configuration = default!;
+    public IConfiguration Configuration = null!;
+    private const string TestEnvironmentName = "Testing";
+    private const string ConfigurationName = "appsettings.Development.json";
+    private const string ConnectionStringName = "IntegrationTestsConnection";
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.UseEnvironment("Testing");
-
-        builder.ConfigureAppConfiguration((context, configBuilder) =>
+        builder.UseEnvironment(TestEnvironmentName);
+        builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
-            configBuilder.AddJsonFile("appsettings.Development.json", optional: false);
-            configuration = configBuilder.Build();
+            configBuilder.AddJsonFile(ConfigurationName);
+            Configuration = configBuilder.Build();
         });
 
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.SingleOrDefault(d =>
-                d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor != null)
+            {
                 services.Remove(descriptor);
+            }
 
             services.AddDbContext<AppDbContext>(options =>
             {
-                var conn = configuration.GetConnectionString("IntegrationTestsConnection");
-                options.UseSqlServer(conn);
+                var connectionString = Configuration.GetConnectionString(ConnectionStringName);
+                options.UseSqlServer(connectionString);
             });
         });
     }
@@ -47,5 +52,4 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
         await db.Database.EnsureDeletedAsync();
         await base.DisposeAsync();
     }
-
 }

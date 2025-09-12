@@ -42,6 +42,7 @@ namespace WealthTrack.Business.Tests.Services
             var expectedId = testDomainModel.Id;
             _mapperMock.Setup(m => m.Map<Category>(testUpsertBusinessModel)).Returns(testDomainModel);
             _categoryRepositoryMock.Setup(r => r.CreateAsync(It.Is<Category>(x => x.Equals(testDomainModel)))).ReturnsAsync(expectedId);
+            _categoryRepositoryMock.Setup(repo => repo.GetByIdAsync(testUpsertBusinessModel.ParentCategoryId!.Value, It.IsAny<string>())).ReturnsAsync(new Category());
 
             // Act
             var result = await _categoryService.CreateAsync(testUpsertBusinessModel);
@@ -53,7 +54,7 @@ namespace WealthTrack.Business.Tests.Services
             _unitOfWorkMock.Verify(u => u.SaveAsync(), Times.Once);
             Assert.InRange(testDomainModel.CreatedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
             Assert.InRange(testDomainModel.ModifiedDate, DateTimeOffset.Now.AddMinutes(-1), DateTimeOffset.Now);
-            Assert.Equal(testDomainModel.Status, CategoryStatus.Active);
+            testDomainModel.Status.Should().Be(CategoryStatus.Active);
         }
 
         [Fact]
@@ -128,7 +129,7 @@ namespace WealthTrack.Business.Tests.Services
         {
             // Arrange
             var emptyCategoriesList = new List<Category>();
-            _categoryRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(emptyCategoriesList);
+            _categoryRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(emptyCategoriesList);
             _mapperMock.Setup(m => m.Map<List<CategoryDetailsBusinessModel>>(emptyCategoriesList)).Returns(new List<CategoryDetailsBusinessModel>());
 
             // Act
@@ -137,7 +138,7 @@ namespace WealthTrack.Business.Tests.Services
             // Assert
             result.Should().BeEmpty();
             _mapperMock.Verify(m => m.Map<List<CategoryDetailsBusinessModel>>(emptyCategoriesList), Times.Once);
-            _categoryRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
+            _categoryRepositoryMock.Verify(r => r.GetAllAsync(), Times.Once);
         }
 
         [Fact]
@@ -151,7 +152,7 @@ namespace WealthTrack.Business.Tests.Services
             };
             var expectedSize = expectedBusinessModels.Count;
 
-            _categoryRepositoryMock.Setup(repo => repo.GetAllAsync(It.IsAny<string>())).ReturnsAsync(categories);
+            _categoryRepositoryMock.Setup(repo => repo.GetAllAsync()).ReturnsAsync(categories);
             _mapperMock.Setup(m => m.Map<List<CategoryDetailsBusinessModel>>(categories)).Returns(expectedBusinessModels);
 
             // Act
@@ -162,7 +163,7 @@ namespace WealthTrack.Business.Tests.Services
             result.Should().HaveCount(expectedSize);
             result.Should().BeEquivalentTo(expectedBusinessModels);
             _mapperMock.Verify(m => m.Map<List<CategoryDetailsBusinessModel>>(categories), Times.Once);
-            _categoryRepositoryMock.Verify(r => r.GetAllAsync(It.IsAny<string>()), Times.Once);
+            _categoryRepositoryMock.Verify(r => r.GetAllAsync(), Times.Once);
         }
 
         [Fact]

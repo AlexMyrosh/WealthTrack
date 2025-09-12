@@ -14,23 +14,37 @@ namespace WealthTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<BudgetDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            var businessModels = await budgetService.GetAllAsync(include);
-            var apiModels = mapper.Map<List<BudgetDetailsApiModel>>(businessModels);
-            return Ok(apiModels);
+            try
+            {
+                var businessModels = await budgetService.GetAllAsync(include);
+                var apiModels = mapper.Map<List<BudgetDetailsApiModel>>(businessModels);
+                return Ok(apiModels);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // GET api/budget/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<BudgetDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            var businessModel = await budgetService.GetByIdAsync(id, include);
-            if (businessModel is null)
+            try
             {
-                return NotFound();
-            }
+                var businessModel = await budgetService.GetByIdAsync(id, include);
+                if (businessModel is null)
+                {
+                    return NotFound();
+                }
 
-            var apiModel = mapper.Map<BudgetDetailsApiModel>(businessModel);
-            return Ok(apiModel);
+                var apiModel = mapper.Map<BudgetDetailsApiModel>(businessModel);
+                return Ok(apiModel);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/budget/create
@@ -43,9 +57,9 @@ namespace WealthTrack.API.Controllers
                 var createdEntityId = await budgetService.CreateAsync(businessModel);
                 return Ok(createdEntityId);
             }
-            catch (ArgumentNullException)
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
@@ -63,14 +77,29 @@ namespace WealthTrack.API.Controllers
             {
                 return NotFound();
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // DELETE api/budget/hard_delete
+        // DELETE api/budget/hard_delete/{id}
         [HttpDelete("hard_delete/{id}")]
         public async Task<ActionResult> HardDelete(Guid id)
         {
-            await budgetService.HardDeleteAsync(id);
-            return Accepted();
+            try
+            {
+                await budgetService.HardDeleteAsync(id);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

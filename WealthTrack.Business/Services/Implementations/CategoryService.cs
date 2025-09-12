@@ -18,6 +18,25 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
 
+            if (model.Type == CategoryType.System)
+            {
+                throw new UnauthorizedAccessException("You are not allowed to create this type of category.");
+            }
+
+            if (model.ParentCategoryId.HasValue)
+            {
+                var parentCategory = await unitOfWork.CategoryRepository.GetByIdAsync(model.ParentCategoryId.Value);
+                if (parentCategory is null)
+                {
+                    throw new ArgumentException("Parent category not found.", nameof(model.ParentCategoryId));
+                }
+
+                if (parentCategory.Type != model.Type)
+                {
+                    throw new  ArgumentException("Parent category type not match.", nameof(model.Type));
+                }
+            }
+
             var domainModel = mapper.Map<Category>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
@@ -39,9 +58,9 @@ namespace WealthTrack.Business.Services.Implementations
             return result;
         }
 
-        public async Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "")
+        public async Task<List<CategoryDetailsBusinessModel>> GetAllAsync()
         {
-            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync(include);
+            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync();
             var result = mapper.Map<List<CategoryDetailsBusinessModel>>(domainModels);
             return result;
         }
@@ -77,15 +96,19 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var deletedDomainModel = await unitOfWork.CategoryRepository.GetByIdAsync(id, $"{nameof(Category.ChildCategories)}");
-            if (deletedDomainModel is null)
+            var domainModelToDelete = await unitOfWork.CategoryRepository.GetByIdAsync(id, $"{nameof(Category.ChildCategories)}");
+            if (domainModelToDelete is null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
-            deletedDomainModel.ChildCategories.ForEach(cc => unitOfWork.CategoryRepository.HardDelete(cc));
-            unitOfWork.CategoryRepository.HardDelete(deletedDomainModel);
-            var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(deletedDomainModel);
+            foreach (var childCategory in domainModelToDelete.ChildCategories)
+            {
+                unitOfWork.CategoryRepository.HardDelete(childCategory);
+            }
+
+            unitOfWork.CategoryRepository.HardDelete(domainModelToDelete);
+            var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(domainModelToDelete);
             await eventPublisher.PublishAsync(categoryDeletedEventModel);
             await unitOfWork.SaveAsync();
         }

@@ -21,7 +21,7 @@ namespace WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers
                 throw new KeyNotFoundException($"Unable to get category from database by id - {eventMessage.CategoryId.ToString()}");
             }
 
-            var goals = await unitOfWork.GoalRepository.GetAllAsync();
+            var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
             foreach (var goal in goals)
             {
                 if(goal.Categories.Any(g => g.Id == eventMessage.CategoryId))
