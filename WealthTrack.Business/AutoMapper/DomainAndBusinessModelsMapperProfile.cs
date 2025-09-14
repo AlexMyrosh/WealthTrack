@@ -62,8 +62,10 @@ namespace WealthTrack.Business.AutoMapper
             CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
             CreateMap<Budget, BudgetRelatedToWalletDetailsBusinessModel>();
             CreateMap<Transaction, TransactionRelatedToWalletDetailsBusinessModel>();
+            CreateMap<TransferTransaction, TransferTransactionRelatedToWalletDetailsBusinessModel>();
             CreateMap<Wallet, WalletCreatedEvent>();
-            CreateMap<Wallet, WalletDeletedEvent>();
+            CreateMap<Wallet, WalletDeletedEvent>()
+                .ForMember(dest => dest.WalletId, opt => opt.MapFrom(src => src.Id));
 
             // Currencies
             CreateMap<Currency, CurrencyDetailsBusinessModel>();

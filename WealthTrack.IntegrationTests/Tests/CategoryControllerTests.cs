@@ -198,6 +198,21 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
     
+    [Fact]
+    public async Task GetById_WithEmptyId_ReturnsBadRequest()
+    {
+        // Arrange
+        var category = DataFactory.CreateCategory();
+        DbContext.Categories.Add(category);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync($"/api/category/{Guid.Empty}");
+        
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
     // CREATE tests
     
     [Fact]
@@ -298,6 +313,29 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     }
     
     [Fact]
+    public async Task Create_WithNullType_ReturnsBadRequest()
+    {
+        // Arrange
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        DbContext.Categories.Add(parentCategory);
+        await DbContext.SaveChangesAsync();
+        
+        var upsert = new CategoryUpsertApiModel
+        {
+            Name = $"Test Category + {Guid.NewGuid()}",
+            IconName = Guid.NewGuid().ToString(),
+            Type = null,
+            ParentCategoryId = parentCategory.Id
+        };
+    
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/category/create", upsert);
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Fact]
     public async Task Create_WithSystemCategory_ReturnsBadRequest()
     {
         // Arrange
@@ -357,6 +395,24 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
             IconName = Guid.NewGuid().ToString(),
             Type = CategoryType.Expense,
             ParentCategoryId = parentCategory.Id
+        };
+    
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/category/create", upsert);
+        
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Fact]
+    public async Task Create_WithIncorrectType_ReturnsBadRequest()
+    {
+        // Arrange
+        var upsert = new CategoryUpsertApiModel
+        {
+            Name = $"Test Category + {Guid.NewGuid()}",
+            IconName = Guid.NewGuid().ToString(),
+            Type = (CategoryType)99
         };
     
         // Act
@@ -570,8 +626,9 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     
     [Theory]
     [InlineData(CategoryType.Expense)]
+    [InlineData(CategoryType.Income)]
     [InlineData(CategoryType.System)]
-    public async Task Update_WithDifferentType_ReturnsBadRequest(CategoryType categoryType)
+    public async Task Update_WithNewType_ReturnsBadRequest(CategoryType categoryType)
     {
         // Arrange
         var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);

@@ -99,6 +99,7 @@ namespace WealthTrack.API
             services.AddScoped<IEventHandler<WalletCreatedEvent>, BudgetUpdateOnWalletCreationEventHandler>();
             services.AddScoped<IEventHandler<WalletUpdatedEvent>, BudgetUpdateOnWalletUpdateEventHandler>();
             services.AddScoped<IEventHandler<WalletDeletedEvent>, BudgetUpdateOnWalletDeletionEventHandler>();
+            services.AddScoped<IEventHandler<WalletDeletedEvent>, GoalUpdateOnWalletDeletionEventHandler>();
             
             services.AddScoped<IEventHandler<GoalUpdatedEvent>, GoalUpdateOnGoalUpdateEventHandler>();
             services.AddScoped<IEventHandler<GoalCreatedEvent>, GoalUpdateOnGoalCreationEventHandler>();

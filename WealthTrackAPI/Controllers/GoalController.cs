@@ -14,32 +14,53 @@ namespace WealthTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<GoalDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            var businessModels = await goalService.GetAllAsync(include);
-            var apiModels = mapper.Map<List<GoalDetailsApiModel>>(businessModels);
-            return Ok(apiModels);
+            try
+            {
+                var businessModels = await goalService.GetAllAsync(include);
+                var apiModels = mapper.Map<List<GoalDetailsApiModel>>(businessModels);
+                return Ok(apiModels);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // GET api/goal/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<GoalDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            var businessModel = await goalService.GetByIdAsync(id, include);
-            if (businessModel is null)
+            try
             {
-                return NotFound();
-            }
+                var businessModel = await goalService.GetByIdAsync(id, include);
+                if (businessModel is null)
+                {
+                    return NotFound();
+                }
 
-            var apiModel = mapper.Map<GoalDetailsApiModel>(businessModel);
-            return Ok(apiModel);
+                var apiModel = mapper.Map<GoalDetailsApiModel>(businessModel);
+                return Ok(apiModel);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/goal/create
         [HttpPost("create")]
         public async Task<ActionResult> Create([FromBody] GoalUpsertApiModel model)
         {
-            var businessModel = mapper.Map<GoalUpsertBusinessModel>(model);
-            var createdEntityId = await goalService.CreateAsync(businessModel);
-            return Ok(createdEntityId);
+            try
+            {
+                var businessModel = mapper.Map<GoalUpsertBusinessModel>(model);
+                var createdEntityId = await goalService.CreateAsync(businessModel);
+                return Ok(createdEntityId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT api/goal/update/{id}
@@ -56,14 +77,29 @@ namespace WealthTrack.API.Controllers
             {
                 return NotFound();
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE api/goal/hard_delete
         [HttpDelete("hard_delete/{id}")]
         public async Task<ActionResult> HardDelete(Guid id)
         {
-            await goalService.HardDeleteAsync(id);
-            return Accepted();
+            try
+            {
+                await goalService.HardDeleteAsync(id);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

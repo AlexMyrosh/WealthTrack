@@ -1,9 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WealthTrack.API.ApiModels.Wallet;
-using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Wallet;
-using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
 
 namespace WealthTrack.API.Controllers
@@ -16,32 +14,53 @@ namespace WealthTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<WalletDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            var businessModels = await walletService.GetAllAsync(include);
-            var apiModels = mapper.Map<List<WalletDetailsApiModel>>(businessModels);
-            return Ok(apiModels);
+            try
+            {
+                var businessModels = await walletService.GetAllAsync(include);
+                var apiModels = mapper.Map<List<WalletDetailsApiModel>>(businessModels);
+                return Ok(apiModels);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // GET api/wallet/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<WalletDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            var businessModel = await walletService.GetByIdAsync(id, include);
-            if (businessModel is null)
+            try
             {
-                return NotFound();
-            }
+                var businessModel = await walletService.GetByIdAsync(id, include);
+                if (businessModel is null)
+                {
+                    return NotFound();
+                }
 
-            var apiModel = mapper.Map<WalletDetailsApiModel>(businessModel);
-            return Ok(apiModel);
+                var apiModel = mapper.Map<WalletDetailsApiModel>(businessModel);
+                return Ok(apiModel);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/wallet/create
         [HttpPost("create")]
         public async Task<ActionResult> Create([FromBody] WalletUpsertApiModel model)
         {
-            var businessModel = mapper.Map<WalletUpsertBusinessModel>(model);
-            var createdEntityId = await walletService.CreateAsync(businessModel);
-            return Ok(createdEntityId);
+            try
+            {
+                var businessModel = mapper.Map<WalletUpsertBusinessModel>(model);
+                var createdEntityId = await walletService.CreateAsync(businessModel);
+                return Ok(createdEntityId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT api/wallet/update/{id}
@@ -58,14 +77,29 @@ namespace WealthTrack.API.Controllers
             {
                 return NotFound();
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE api/wallet/hard_delete
         [HttpDelete("hard_delete/{id}")]
         public async Task<ActionResult> HardDelete(Guid id)
         {
-            await walletService.HardDeleteAsync(id);
-            return Accepted();
+            try
+            {
+                await walletService.HardDeleteAsync(id);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

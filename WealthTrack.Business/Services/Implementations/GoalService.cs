@@ -5,6 +5,7 @@ using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
@@ -17,10 +18,55 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
             
+            if (model.PlannedMoneyAmount is null)
+            {
+                throw new ArgumentNullException(nameof(model.PlannedMoneyAmount));
+            }
+
+            if (model.PlannedMoneyAmount < 0)
+            {
+                throw new ArgumentException("PlannedMoneyAmount must be greater than or equal to 0");
+            }
+
+            if (model.StartDate is null)
+            {
+                throw new ArgumentNullException(nameof(model.StartDate));
+            }
+            
+            if (model.EndDate is null)
+            {
+                throw new ArgumentNullException(nameof(model.EndDate));
+            }
+            
+            if (model.Type is null)
+            {
+                throw new ArgumentNullException(nameof(model.Type));
+            }
+            
+            if (!Enum.IsDefined(typeof(GoalType), model.Type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(model.Type));
+            }
+            
+            if (model.CategoryIds is null || !model.CategoryIds.Any())
+            {
+                throw new ArgumentNullException(nameof(model.CategoryIds));
+            }
+
+            if (model.EndDate < model.StartDate)
+            {
+                throw new ArgumentException("EndDate must be greater than or equal to StartDate");
+            }
+            
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, domainModel);
+            if (!IsGoalHasCategoriesWithTheSameType(model.Type.Value, domainModel.Categories))
+            {
+                throw new ArgumentException("The type of selected categories should align with goal's type");
+            }
+            
             var createdEntityId = await unitOfWork.GoalRepository.CreateAsync(domainModel);
             var goalCreatedEventModel = mapper.Map<GoalCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(goalCreatedEventModel);
@@ -53,6 +99,16 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentException(nameof(id));
             }
+            
+            if (model.Type.HasValue)
+            {
+                throw new InvalidOperationException("Goal type cannot be changed");
+            }
+            
+            if (model.PlannedMoneyAmount < 0)
+            {
+                throw new ArgumentException("PlannedMoneyAmount must be greater than or equal to 0");
+            }
 
             var originalModel = await unitOfWork.GoalRepository.GetByIdAsync(id, $"{nameof(Goal.Categories)}");
             if (originalModel is null)
@@ -61,8 +117,19 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             mapper.Map(model, originalModel);
+            
+            if (originalModel.EndDate < originalModel.StartDate)
+            {
+                throw new ArgumentException("EndDate must be greater than or equal to StartDate");
+            }
+            
             originalModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
+            if (!IsGoalHasCategoriesWithTheSameType(originalModel.Type, originalModel.Categories))
+            {
+                throw new ArgumentException("The type of selected categories should align with goal's type");
+            }
+            
             var goalCreatedEventModel = mapper.Map<GoalUpdatedEvent>(originalModel);
             await eventPublisher.PublishAsync(goalCreatedEventModel);
             unitOfWork.GoalRepository.Update(originalModel);
@@ -100,6 +167,21 @@ namespace WealthTrack.Business.Services.Implementations
                     }
                 }
             }
+        }
+
+        private bool IsGoalHasCategoriesWithTheSameType(GoalType  goalType, List<Category> categories)
+        {
+            if (goalType == GoalType.Income)
+            {
+                return !categories.Exists(c => c.Type != CategoryType.Income);
+            }
+            
+            if (goalType == GoalType.Expense)
+            {
+                return !categories.Exists(c => c.Type != CategoryType.Expense);
+            }
+
+            return false;
         }
     }
 }

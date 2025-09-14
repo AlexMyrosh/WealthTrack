@@ -21,6 +21,26 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
 
+            if (!model.Balance.HasValue)
+            {
+                throw new ArgumentException("Balance should not be null or empty");
+            }
+            
+            if (!model.IsPartOfGeneralBalance.HasValue)
+            {
+                throw new ArgumentException("IsPartOfGeneralBalance should not be null or empty");
+            }
+            
+            if (!model.Type.HasValue)
+            {
+                throw new ArgumentException("Type should not be null or empty");
+            }
+            
+            if (!Enum.IsDefined(typeof(WalletType), model.Type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(model.Type));
+            }
+
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = DateTimeOffset.Now;
@@ -56,6 +76,16 @@ namespace WealthTrack.Business.Services.Implementations
             if (id == Guid.Empty)
             {
                 throw new ArgumentException(nameof(id));
+            }
+            
+            if (model.Type.HasValue)
+            {
+                throw new ArgumentException("Type update is not allowed");
+            }
+            
+            if (model.BudgetId.HasValue)
+            {
+                throw new ArgumentException("Budget update is not allowed");
             }
 
             var originalModel = await unitOfWork.WalletRepository.GetByIdAsync(id);

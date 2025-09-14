@@ -37,6 +37,7 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<CurrencyRelatedToWalletDetailsBusinessModel, CurrencyRelatedToWalletDetailsApiModel>();
             CreateMap<BudgetRelatedToWalletDetailsBusinessModel, BudgetRelatedToWalletDetailsApiModel>();
             CreateMap<TransactionRelatedToWalletDetailsBusinessModel, TransactionRelatedToWalletDetailsApiModel>();
+            CreateMap<TransferTransactionRelatedToWalletDetailsBusinessModel, TransferTransactionRelatedToWalletDetailsApiModel>();
 
             // Currencies
             CreateMap<CurrencyDetailsBusinessModel, CurrencyDetailsApiModel>();

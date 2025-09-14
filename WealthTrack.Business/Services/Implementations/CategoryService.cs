@@ -23,6 +23,16 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new UnauthorizedAccessException("You are not allowed to create this type of category.");
             }
 
+            if (!model.Type.HasValue)
+            {
+                throw new ArgumentNullException($"{nameof(model.Type)} should not be null.");
+            }
+
+            if (!Enum.IsDefined(typeof(CategoryType), model.Type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(model.Type));
+            }
+
             if (model.ParentCategoryId.HasValue)
             {
                 var parentCategory = await unitOfWork.CategoryRepository.GetByIdAsync(model.ParentCategoryId.Value);
@@ -71,16 +81,16 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentException(nameof(id));
             }
+            
+            if (model.Type.HasValue)
+            {
+                throw new InvalidOperationException("Category type cannot be changed");
+            }
 
             var originalModel = await unitOfWork.CategoryRepository.GetByIdAsync(id);
             if (originalModel == null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
-            }
-
-            if (model.Type.HasValue && model.Type != originalModel.Type)
-            {
-                throw new InvalidOperationException("Category type cannot be changed");
             }
 
             mapper.Map(model, originalModel);

@@ -80,6 +80,13 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.Status)
                     .IsRequired()
                     .HasConversion<string>();
+                
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Currency_Name_NotEmpty", $"LEN([{nameof(Currency.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Currency_Code_NotEmpty", $"LEN([{nameof(Currency.Code)}]) > 0");
+                    t.HasCheckConstraint("CK_Currency_Symbol_NotEmpty", $"LEN([{nameof(Currency.Symbol)}]) > 0");
+                });
             });
 
             modelBuilder.Entity<Wallet>(entity =>
@@ -123,6 +130,11 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Wallets)
                     .HasForeignKey(e => e.BudgetId)
                     .OnDelete(DeleteBehavior.NoAction);
+                
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Wallet_Name_NotEmpty", $"LEN([{nameof(Wallet.Name)}]) > 0");
+                });
             });
 
             modelBuilder.Entity<Transaction>(entity =>
@@ -226,7 +238,7 @@ namespace WealthTrack.Data.Context
                 
                 entity.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Budget_Name_NotEmpty", "LEN([Name]) > 0");
+                    t.HasCheckConstraint("CK_Budget_Name_NotEmpty", $"LEN([{nameof(Budget.Name)}]) > 0");
                 });
             });
 
@@ -269,6 +281,11 @@ namespace WealthTrack.Data.Context
                         j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId"),
                         j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
                     );
+                
+                entity.ToTable(t =>
+                {
+                    t.HasCheckConstraint("CK_Goal_Name_NotEmpty", $"LEN([{nameof(Goal.Name)}]) > 0");
+                });
             });
         }
     }

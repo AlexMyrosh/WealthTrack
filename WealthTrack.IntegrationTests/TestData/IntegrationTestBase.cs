@@ -9,6 +9,7 @@ public abstract class IntegrationTestBase(BaseTestWebAppFactory factory) : IAsyn
     protected readonly HttpClient Client = factory.CreateClient();
     protected AppDbContext DbContext = null!;
     protected TestDataFactory DataFactory = null!;
+    protected readonly Random Random = new();
         
     private IServiceScope _scope = null!;
 

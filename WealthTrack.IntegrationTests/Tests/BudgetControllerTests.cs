@@ -250,10 +250,10 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
     public async Task GetById_WithIncorrectIncludeParameter_ReturnsBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateSingleBudgetWithMultipleWalletsScenario(2);
+        var scenario = DataFactory.CreateSingleBudgetScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
         // Act
@@ -267,10 +267,10 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
     public async Task GetById_WithWrongId_ReturnsNotFound()
     {
         // Arrange
-        var scenario = DataFactory.CreateSingleBudgetWithMultipleWalletsScenario(2);
+        var scenario = DataFactory.CreateSingleBudgetScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
         // Act
@@ -278,6 +278,23 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+    
+    [Fact]
+    public async Task GetById_WithEmptyId_ReturnsBadRequest()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleBudgetScenario();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync($"/api/budget/{Guid.Empty}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     // CREATE tests

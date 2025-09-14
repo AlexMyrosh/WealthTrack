@@ -21,6 +21,10 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public BudgetRelatedToWalletDetailsBusinessModel Budget { get; set; }
 
         public List<TransactionRelatedToWalletDetailsBusinessModel> Transactions { get; set; }
+        
+        public List<TransferTransactionRelatedToWalletDetailsBusinessModel> IncomeTransferTransactions { get; set; }
+
+        public List<TransferTransactionRelatedToWalletDetailsBusinessModel> OutgoingTransferTransactions { get; set; }
     }
 
     public class CurrencyRelatedToWalletDetailsBusinessModel
@@ -56,5 +60,16 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         public DateTimeOffset TransactionDate { get; set; }
 
         public TransactionType Type { get; set; }
+    }
+
+    public class TransferTransactionRelatedToWalletDetailsBusinessModel
+    {
+        public Guid Id { get; set; }
+
+        public decimal Amount { get; set; }
+
+        public string? Description { get; set; }
+
+        public DateTimeOffset TransactionDate { get; set; }
     }
 }
