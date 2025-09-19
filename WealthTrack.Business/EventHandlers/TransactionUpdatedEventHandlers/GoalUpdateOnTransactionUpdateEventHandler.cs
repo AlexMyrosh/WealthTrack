@@ -22,7 +22,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             //     return;
             // }
 
-            // In future it will be taking goals of specific user
+            // In the future it will be taking goals of specific user
             var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
             if (goals.Count == 0)
             {
@@ -32,13 +32,13 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             foreach(var goal in goals)
             {
                 // Remove old transaction data from goal
-                if (isTransactionMeetsGoal(goal, eventMessage.CategoryId_Old, eventMessage.TransactionType_Old, eventMessage.TransactionDate_Old))
+                if (IsTransactionMeetsGoal(goal, eventMessage.CategoryId_Old, eventMessage.TransactionType_Old, eventMessage.TransactionDate_Old))
                 {
                     goal.ActualMoneyAmount -= eventMessage.Amount_Old;
                 }
 
                 // Add new transaction data to goal
-                if (isTransactionMeetsGoal(goal, eventMessage.CategoryId_New ?? eventMessage.CategoryId_Old,
+                if (IsTransactionMeetsGoal(goal, eventMessage.CategoryId_New ?? eventMessage.CategoryId_Old,
                     eventMessage.TransactionType_New ?? eventMessage.TransactionType_Old, eventMessage.TransactionDate_New ?? eventMessage.TransactionDate_Old))
                 {
                     goal.ActualMoneyAmount += eventMessage.Amount_New ?? eventMessage.Amount_Old;
@@ -46,12 +46,12 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             }
         }
 
-        private bool isTransactionMeetsGoal(Goal goal, Guid? categoryId, TransactionType transactionType, DateTimeOffset transactionDate)
+        private bool IsTransactionMeetsGoal(Goal goal, Guid? categoryId, OperationType transactionType, DateTimeOffset transactionDate)
         {
             return (!categoryId.HasValue && goal.Categories.Any() || categoryId.HasValue && goal.Categories.Any(c => c.Id == categoryId)) &&
-                    (goal.Type == GoalType.Income && transactionType == TransactionType.Income ||
-                     goal.Type == GoalType.Expense && transactionType == TransactionType.Expense) &&
-                    transactionDate >= goal.StartDate && transactionDate <= goal.EndDate;
+                    goal.Type == transactionType &&
+                    transactionDate >= goal.StartDate && 
+                    transactionDate <= goal.EndDate;
         }
     }
 }

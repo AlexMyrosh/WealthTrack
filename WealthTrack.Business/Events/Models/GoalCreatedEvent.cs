@@ -6,7 +6,7 @@ namespace WealthTrack.Business.Events.Models
     public class GoalCreatedEvent
     {
         public Goal  GoalModel { get; set; }
-        public GoalType? Type { get; set; }
+        public OperationType? Type { get; set; }
 
         public DateTimeOffset? StartDate { get; set; }
 

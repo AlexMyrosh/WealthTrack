@@ -54,7 +54,7 @@ namespace WealthTrack.Business.Tests.TestModels
                             Id = TestCategoryModels.DomainModel.Id,
                             Name = TestCategoryModels.DomainModel.Name,
                             IconName = TestCategoryModels.DomainModel.IconName,
-                            Type = TestCategoryModels.DomainModel.Type
+                            //Type = TestCategoryModels.DomainModel.Type
                         }
                     ],
                     Wallets =
@@ -81,7 +81,7 @@ namespace WealthTrack.Business.Tests.TestModels
                     Name = "Test goal domain model",
                     PlannedMoneyAmount = 400.123M,
                     ActualMoneyAmount = 300.123M,
-                    Type = GoalType.Income,
+                    Type = OperationType.Income,
                     StartDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
                     EndDate = new DateTimeOffset(2025, 1, 31, 12, 0, 0, TimeSpan.Zero),
                     CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),

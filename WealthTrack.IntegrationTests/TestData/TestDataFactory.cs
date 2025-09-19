@@ -66,7 +66,7 @@ public class TestDataFactory
             Id = Guid.NewGuid(),
             Name = $"Category {_random.Next(1, 1000)}",
             IconName = Guid.NewGuid().ToString(),
-            Type = _random.GetItems([CategoryType.Income, CategoryType.Expense], 1).First(),
+            Type = _random.GetItems([OperationType.Income, OperationType.Expense], 1).First(),
             CreatedDate = DateTimeOffset.UtcNow,
             ModifiedDate = DateTimeOffset.UtcNow,
             Status = CategoryStatus.Active
@@ -84,7 +84,7 @@ public class TestDataFactory
             Amount = Math.Round((decimal)(_random.NextDouble() * 1000), 2),
             Description = $"Tx {_random.Next(1, 1000)}",
             TransactionDate = DateTimeOffset.UtcNow,
-            Type = TransactionType.Income,
+            Type = OperationType.Income,
             CreatedDate = DateTimeOffset.UtcNow
         };
 
@@ -106,6 +106,26 @@ public class TestDataFactory
         configure?.Invoke(tx);
         return tx;
     }
+
+    public List<Transaction> CreateManyTransactions(int numberOfTransactions = 1, Action<Transaction>? configure = null)
+    {
+        var transactions = Enumerable.Range(0, numberOfTransactions).Select(i =>
+            CreateTransaction(t => t.Description = $"Transaction {i}")
+        ).ToList();
+        
+        transactions.ForEach(t => configure?.Invoke(t));
+        return transactions;
+    }
+    
+    public List<TransferTransaction> CreateManyTransferTransactions(int numberOfTransactions = 1, Action<TransferTransaction>? configure = null)
+    {
+        var transactions = Enumerable.Range(0, numberOfTransactions).Select(i =>
+            CreateTransfer(t => t.Description = $"Transfer {i}")
+        ).ToList();
+        
+        transactions.ForEach(t => configure?.Invoke(t));
+        return transactions;
+    }
     
     public Goal CreateGoal(Action<Goal>? configure = null)
     {
@@ -115,7 +135,7 @@ public class TestDataFactory
             Name = $"Goal {_random.Next(1, 1000)}",
             PlannedMoneyAmount = _random.Next(1, 1000),
             ActualMoneyAmount = 0,
-            Type = GoalType.Income,
+            Type = OperationType.Income,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CreatedDate = DateTimeOffset.UtcNow,
@@ -125,7 +145,7 @@ public class TestDataFactory
         configure?.Invoke(goal);
         return goal;
     }
-
+    
     // Budget-focused scenarios
     
     public (Currency currency, Budget budget) CreateBudgetScenario(Action<Budget>? configure = null)
@@ -135,12 +155,17 @@ public class TestDataFactory
         configure?.Invoke(budget);
         return (currency, budget);
     }
-    public (Currency currency, Budget budget, Wallet wallet) CreateSingleBudgetScenario(Action<Budget>? configure = null)
+    public (Currency currency, Budget budget, Wallet wallet) CreateSingleBudgetScenario(
+        Action<Budget>? configureBudget = null, 
+        Action<Wallet>? configureWallet = null,
+        Action<Currency>? configureCurrency = null)
     {
         var currency = CreateCurrency();
         var budget = CreateBudget(b => b.CurrencyId = currency.Id);
         var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
-        configure?.Invoke(budget);
+        configureBudget?.Invoke(budget);
+        configureWallet?.Invoke(wallet);
+        configureCurrency?.Invoke(currency);
         return (currency, budget, wallet);
     }
     
@@ -195,7 +220,7 @@ public class TestDataFactory
     {
         var parent = CreateCategory(p =>
         {
-            p.Type = _random.GetItems([CategoryType.Income, CategoryType.Expense], 1).First();
+            p.Type = _random.GetItems([OperationType.Income, OperationType.Expense], 1).First();
             p.ChildCategories = Enumerable.Range(0, numberOfChildren).Select(i => CreateCategory(c =>
             {
                 c.Name = $"Child Category {i + 1}";
@@ -219,7 +244,7 @@ public class TestDataFactory
             CreateCategory(p =>
             {
                 p.Name = $"Parent Category {i + 1}";
-                p.Type = _random.GetItems([CategoryType.Income, CategoryType.Expense], 1).First();
+                p.Type = _random.GetItems([OperationType.Income, OperationType.Expense], 1).First();
                 p.ChildCategories = Enumerable.Range(0, numberOfChildren).Select(_ => CreateCategory(c =>
                 {
                     c.Name = $"Child Category {categoryIndex++}";
@@ -250,11 +275,11 @@ public class TestDataFactory
             CreateCategory(p =>
             {
                 p.Name = $"Parent Category {i + 1}";
-                p.Type = CategoryType.System;
+                p.IsSystem = true;
                 p.ChildCategories = Enumerable.Range(0, numberOfChildren).Select(_ => CreateCategory(c =>
                 {
                     c.Name = $"Child Category {categoryIndex++}";
-                    c.Type = p.Type;
+                    c.IsSystem = true;
                 })).ToList();
             })
         ).ToList();
@@ -265,11 +290,11 @@ public class TestDataFactory
     
     public (Category category, Goal goal) CreateSingleCategoryWithGoalScenario()
     {
-        var goal = CreateGoal(g => g.Type = GoalType.Income);
+        var goal = CreateGoal(g => g.Type = OperationType.Income);
         var category = CreateCategory(c =>
         {
             c.Goals = [goal];
-            c.Type = CategoryType.Income;
+            c.Type = OperationType.Income;
         });
         return (category, goal);
     }
@@ -355,100 +380,69 @@ public class TestDataFactory
         return (goal, categories);
     }
     
-    public (Currency currency, Budget budget, Category category, Wallet wallet, Goal goal, List<Transaction> applicable, List<Transaction> nonApplicable) CreateGoalWithTransactionsScenario()
-    {
-        var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
-        var category = new Category
-        {
-            Id = Guid.NewGuid(),
-            Name = "Goal Category",
-            IconName = "goal",
-            Type = CategoryType.Expense,
-            Status = CategoryStatus.Active,
-            CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow
-        };
-        var goal = new Goal
-        {
-            Id = Guid.NewGuid(),
-            Name = "My Goal",
-            PlannedMoneyAmount = 1000M,
-            ActualMoneyAmount = 0M,
-            StartDate = DateTimeOffset.UtcNow.AddDays(-10),
-            EndDate = DateTimeOffset.UtcNow.AddDays(-5),
-            Type = GoalType.Expense,
-            Categories = [category],
-            CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow
-        };
-
-        var applicable = new List<Transaction>
-        {
-            CreateTransaction(t =>
-            {
-                t.WalletId = wallet.Id;
-                t.CategoryId = category.Id;
-                t.Amount = 100M;
-                t.Type = TransactionType.Expense;
-                t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-9);
-            }),
-            CreateTransaction(t =>
-            {
-                t.WalletId = wallet.Id;
-                t.CategoryId = category.Id;
-                t.Amount = 50M;
-                t.Type = TransactionType.Expense;
-                t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-6);
-            })
-        };
-        var nonApplicable = new List<Transaction>
-        {
-            CreateTransaction(t =>
-            {
-                t.WalletId = wallet.Id;
-                t.CategoryId = category.Id;
-                t.Amount = 25M;
-                t.Type = TransactionType.Expense;
-                t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-4);
-            }),
-            CreateTransaction(t =>
-            {
-                t.WalletId = wallet.Id;
-                t.CategoryId = category.Id;
-                t.Amount = 25M;
-                t.Type = TransactionType.Expense;
-                t.TransactionDate = DateTimeOffset.UtcNow.AddDays(-15);
-            })
-        };
-
-        goal.ActualMoneyAmount += applicable.Sum(t => t.Amount);
-        return (currency, budget, category, wallet, goal, applicable, nonApplicable);
-    }
-
     // Transaction scenarios
+
+    public (List<Transaction> transactions, List<TransferTransaction> transferTransactions, List<Wallet> wallets, Budget budget, Currency currency, Category category) CreateMixOfTransactionsScenario(int numberOfTransactions, int numberOfTransfers)
+    {
+        var (currency, budget, wallet) = CreateSingleBudgetScenario();
+        var category = CreateCategory();
+        var sourceWallet = CreateWallet(w =>
+        {
+            w.BudgetId = budget.Id;
+            w.CurrencyId = currency.Id;
+        });
+        var targetWallet = CreateWallet(w =>
+        {
+            w.BudgetId = budget.Id;
+            w.CurrencyId = currency.Id;
+        });
+        var transactions = CreateManyTransactions(numberOfTransactions, t =>
+        {
+            t.CategoryId = category.Id;
+            t.WalletId = wallet.Id;
+        });
+        var transferTransactions = CreateManyTransferTransactions(numberOfTransfers, t =>
+        {
+            t.SourceWalletId = sourceWallet.Id;
+            t.TargetWalletId = targetWallet.Id;
+        });
+        
+        return (transactions, transferTransactions, [wallet, sourceWallet, targetWallet], budget, currency, category);
+    }
+    
+    public (List<Transaction> transactions, Wallet wallet, Budget budget, Currency currency, Category category) CreateManyTransactionsScenario(int numberOfTransactions)
+    {
+        var (currency, budget, wallet) = CreateSingleBudgetScenario();
+        var category = CreateCategory();
+        var transactions = CreateManyTransactions(numberOfTransactions, t =>
+        {
+            t.CategoryId = category.Id;
+            t.WalletId = wallet.Id;
+        });
+        
+        return (transactions, wallet, budget, currency, category);
+    }
     
     public (Currency currency, Budget budget, Category category, Wallet wallet, Goal goal, List<Transaction> transactions) CreateTransactionsHierarchyWithGoalScenario()
     {
         var currency = CreateCurrency();
         var budget = CreateBudget(b => b.CurrencyId = currency.Id);
         var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
-        var category = CreateCategory(c => c.Type = CategoryType.Expense);
+        var category = CreateCategory(c => c.Type = OperationType.Expense);
         var applicableTransactions = new List<Transaction>
         {
             CreateTransaction(t =>
             {
                 t.WalletId = wallet.Id;
                 t.CategoryId = category.Id;
-                t.Type = TransactionType.Expense;
+                t.Type = OperationType.Expense;
                 t.TransactionDate = DateTimeOffset.UtcNow;
             }),
             CreateTransaction(t =>
             {
                 t.WalletId = wallet.Id;
                 t.CategoryId = category.Id;
-                t.Type = TransactionType.Expense;
+                t.Type = OperationType.Expense;
                 t.TransactionDate = DateTimeOffset.UtcNow;
             })
         };
@@ -456,7 +450,7 @@ public class TestDataFactory
         {
             g.StartDate = DateTimeOffset.UtcNow.AddDays(-10);
             g.EndDate = DateTimeOffset.UtcNow.AddDays(10);
-            g.Type = GoalType.Expense;
+            g.Type = OperationType.Expense;
             g.Categories = [category];
             g.ActualMoneyAmount = applicableTransactions.Sum(t => t.Amount);
         });
@@ -464,25 +458,50 @@ public class TestDataFactory
         return (currency, budget, category, wallet, goal, applicableTransactions);
     }
     
-    public (Currency currency, Budget budget, Wallet wallet, Category category, Transaction transaction) CreateTransactionScenario()
+    public (Currency currency, Budget budget, Wallet wallet, Category category, Transaction transaction) CreateSingleTransactionScenario(
+        Action<Budget>? configureBudget = null, 
+        Action<Wallet>? configureWallet = null,
+        Action<Currency>? configureCurrency = null,
+        Action<Category>? configureCategory = null,
+        Action<Transaction>? configureTransaction = null)
     {
-        var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
-        var category = new Category
-        {
-            Id = Guid.NewGuid(),
-            Name = "Food",
-            IconName = "food",
-            Type = CategoryType.Expense,
-            Status = CategoryStatus.Active,
-            CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow
-        };
-        var tx = CreateTransaction(t => { t.WalletId = wallet.Id; t.CategoryId = category.Id; t.Amount = 42.5M; t.Type = TransactionType.Expense; });
-        return (currency, budget, wallet, category, tx);
+        var (transactions, wallet, budget, currency, category) = CreateManyTransactionsScenario(1);
+        configureBudget?.Invoke(budget);
+        configureWallet?.Invoke(wallet);
+        configureCurrency?.Invoke(currency);
+        configureCategory?.Invoke(category);
+        configureTransaction?.Invoke(transactions.First());
+        
+        return (currency, budget, wallet, category, transactions.First());
     }
 
+    public (Currency currency, Budget budget, List<Wallet> wallets, TransferTransaction transaction) CreateSingleTransferScenario(
+        Action<Budget>? configureBudget = null, 
+        Action<Wallet>? configureWallet = null,
+        Action<Currency>? configureCurrency = null,
+        Action<TransferTransaction>? configureTransaction = null)
+    {
+        var (currency, budget, wallet) = CreateSingleBudgetScenario();
+        var targetWallet = CreateWallet(w =>
+        {
+            w.BudgetId = budget.Id;
+            w.CurrencyId = currency.Id;
+        });
+        var transaction = CreateTransfer(t =>
+        {
+            t.SourceWalletId = wallet.Id;
+            t.TargetWalletId = targetWallet.Id;
+        });
+        
+        configureBudget?.Invoke(budget);
+        configureWallet?.Invoke(wallet);
+        configureWallet?.Invoke(targetWallet);
+        configureCurrency?.Invoke(currency);
+        configureTransaction?.Invoke(transaction);
+        
+        return (currency, budget, [wallet, targetWallet], transaction);
+    }
+    
     public (Currency currency, Budget budget, Wallet source, Wallet target, TransferTransaction transfer, Transaction transaction) CreateTransferScenario()
     {
         return CreateBudgetWithAllRelatedEntitiesScenario();
@@ -540,28 +559,9 @@ public class TestDataFactory
         return (currency, budget, wallet);
     }
 
-    public (Currency currency, Budget budget, List<Wallet> wallets) CreateWalletsForBudgetScenario(int walletCount = 2)
+    public (Currency currency, Budget budget, Wallet wallet1, Wallet wallet2) CreateTwoWalletsScenario()
     {
-        var (currency, budgets, wallets, _) = CreateMultiBudgetsScenario(1);
-        return (currency, budgets[0], wallets);
-    }
-
-    public (Currency currency, Budget budget, List<Wallet> wallets, List<Transaction> transactions) CreateWalletsWithTransactionsScenario(int walletCount = 2, int transactionsPerWallet = 1)
-    {
-        var (currency, budget, wallets) = CreateWalletsForBudgetScenario(walletCount);
-        var transactions = new List<Transaction>();
-        foreach (var wallet in wallets)
-        {
-            for (int j = 0; j < transactionsPerWallet; j++)
-            {
-                transactions.Add(CreateTransaction(t =>
-                {
-                    t.WalletId = wallet.Id;
-                    t.Amount = Math.Round((decimal)(_random.NextDouble() * 200 + 1), 2);
-                    t.Type = j % 2 == 0 ? TransactionType.Income : TransactionType.Expense;
-                }));
-            }
-        }
-        return (currency, budget, wallets, transactions);
+        var (currency, budget, wallets) = CreateSingleBudgetWithMultipleWalletsScenario(2);
+        return (currency, budget, wallets[0], wallets[1]);
     }
 }

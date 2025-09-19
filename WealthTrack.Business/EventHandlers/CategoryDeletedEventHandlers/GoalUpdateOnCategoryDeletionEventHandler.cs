@@ -40,9 +40,9 @@ namespace WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers
         private bool isTransactionMeetsGoal(Goal goal, Transaction transaction)
         {
             return goal.Categories.Any(c => c.Id == transaction.CategoryId) &&
-                    (goal.Type == GoalType.Income && transaction.Type == TransactionType.Income ||
-                     goal.Type == GoalType.Expense && transaction.Type == TransactionType.Expense) &&
-                    transaction.TransactionDate >= goal.StartDate && transaction.TransactionDate <= goal.EndDate;
+                    goal.Type == transaction.Type &&
+                    transaction.TransactionDate >= goal.StartDate && 
+                    transaction.TransactionDate <= goal.EndDate;
         }
     }
 }

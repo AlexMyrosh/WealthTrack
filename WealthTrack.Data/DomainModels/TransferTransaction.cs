@@ -11,6 +11,8 @@
         public DateTimeOffset TransactionDate { get; set; }
 
         public DateTimeOffset CreatedDate { get; set; }
+        
+        public DateTimeOffset ModifiedDate { get; set; }
 
         public Guid SourceWalletId { get; set; }
 

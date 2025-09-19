@@ -42,6 +42,7 @@ namespace WealthTrack.Business.AutoMapper
                 .ForMember(dest => dest.SourceWalletId, opt => opt.Condition(src => src.SourceWalletId.HasValue))
                 .ForMember(dest => dest.TargetWalletId, opt => opt.Condition(src => src.TargetWalletId.HasValue));
 
+            CreateMap<TransferTransaction, TransactionDetailsBusinessModel>();
             CreateMap<Transaction, TransactionDetailsBusinessModel>();
             CreateMap<Category, CategoryRelatedToTransactionDetailsBusinessModel>();
             CreateMap<Wallet, WalletRelatedToTransactionDetailsBusinessModel>();

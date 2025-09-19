@@ -13,12 +13,12 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHand
                 throw new ArgumentException(nameof(eventMessage));
             }
 
-            if (eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old &&
-                eventMessage.SourceWalletId_New is null || eventMessage.SourceWalletId_New == eventMessage.SourceWalletId_Old &&
-                eventMessage.TargetWalletId_New is null || eventMessage.TargetWalletId_New == eventMessage.TargetWalletId_Old)
-            {
-                return;
-            }
+            // if (eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old &&
+            //     eventMessage.SourceWalletId_New is null || eventMessage.SourceWalletId_New == eventMessage.SourceWalletId_Old &&
+            //     eventMessage.TargetWalletId_New is null || eventMessage.TargetWalletId_New == eventMessage.TargetWalletId_Old)
+            // {
+            //     return;
+            // }
 
             var oldSourceWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.SourceWalletId_Old);
             if (oldSourceWallet == null)

@@ -42,11 +42,13 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 walletBalanceBeforeUpdate = newWallet.Balance;
                 switch (eventMessage.TransactionType_Old)
                 {
-                    case TransactionType.Income:
+                    case OperationType.Income:
                         oldWallet.Balance -= eventMessage.Amount_Old;
+                        newWallet.Balance += eventMessage.Amount_Old;
                         break;
-                    case TransactionType.Expense:
+                    case OperationType.Expense:
                         oldWallet.Balance += eventMessage.Amount_Old;
+                        newWallet.Balance -= eventMessage.Amount_Old;
                         break;
                     default:
                         throw new NotSupportedException($"Transaction type \"{eventMessage.TransactionType_Old.ToString()}\" is not supported");
@@ -65,11 +67,11 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 switch (eventMessage.TransactionType_New)
                 {
                     // Expense -> Income
-                    case TransactionType.Income:
+                    case OperationType.Income:
                         wallet.Balance += eventMessage.Amount_Old * 2;
                         break;
                     // Income -> Expense
-                    case TransactionType.Expense:
+                    case OperationType.Expense:
                         wallet.Balance -= eventMessage.Amount_Old * 2;
                         break;
                     default:
@@ -83,10 +85,10 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 var transactionType = eventMessage.TransactionType_New ?? eventMessage.TransactionType_Old;
                 switch (transactionType)
                 {
-                    case TransactionType.Income:
+                    case OperationType.Income:
                         wallet.Balance -= eventMessage.Amount_Old - eventMessage.Amount_New.Value;
                         break;
-                    case TransactionType.Expense:
+                    case OperationType.Expense:
                         wallet.Balance += eventMessage.Amount_Old - eventMessage.Amount_New.Value;
                         break;
                     default:

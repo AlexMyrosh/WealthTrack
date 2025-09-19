@@ -103,7 +103,7 @@ namespace WealthTrack.Business.Services.Implementations
                     Description = "Balance correction",
                     CreatedDate = DateTimeOffset.Now,
                     CategoryId = new Guid(_balanceCorrectionCategoryId),
-                    Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
+                    Type = model.Balance.Value > originalModel.Balance ? OperationType.Income : OperationType.Expense,
                     WalletId = id
                 });
             }

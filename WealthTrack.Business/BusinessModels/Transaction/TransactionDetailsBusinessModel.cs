@@ -12,7 +12,7 @@ namespace WealthTrack.Business.BusinessModels.Transaction
 
         public DateTimeOffset TransactionDate { get; set; }
 
-        public TransactionType Type { get; set; }
+        public OperationType? Type { get; set; }
 
         public CategoryRelatedToTransactionDetailsBusinessModel Category { get; set; }
 

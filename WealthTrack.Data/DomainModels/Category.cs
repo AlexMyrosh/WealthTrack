@@ -10,7 +10,9 @@ namespace WealthTrack.Data.DomainModels
 
         public string? IconName { get; set; }
 
-        public CategoryType Type { get; set; }
+        public OperationType? Type { get; set; }
+        
+        public bool IsSystem { get; set; }
 
         public DateTimeOffset CreatedDate { get; set; }
 

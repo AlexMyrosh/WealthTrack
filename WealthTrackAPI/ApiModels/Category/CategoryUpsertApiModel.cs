@@ -8,7 +8,7 @@ namespace WealthTrack.API.ApiModels.Category
 
         public string? IconName { get; set; }
 
-        public CategoryType? Type { get; set; }
+        public OperationType? Type { get; set; }
 
         public Guid? ParentCategoryId { get; set; }
     }

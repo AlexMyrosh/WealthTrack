@@ -12,7 +12,7 @@ namespace WealthTrack.Data.DomainModels
 
         public decimal ActualMoneyAmount { get; set; }
 
-        public GoalType Type { get; set; }
+        public OperationType Type { get; set; }
 
         public DateTimeOffset StartDate { get; set; }
 

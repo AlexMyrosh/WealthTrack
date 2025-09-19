@@ -19,7 +19,7 @@ namespace WealthTrack.Data.Repositories.Implementations
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property))
+                if (string.IsNullOrWhiteSpace(property) || typeof(Transaction).GetProperty(property) is null)
                 {
                     continue;
                 }
@@ -37,7 +37,7 @@ namespace WealthTrack.Data.Repositories.Implementations
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property))
+                if (string.IsNullOrWhiteSpace(property) || typeof(Transaction).GetProperty(property) is null)
                 {
                     continue;
                 }

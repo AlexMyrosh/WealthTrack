@@ -365,7 +365,7 @@ namespace WealthTrack.Business.Tests.Services
         {
             // Arrange
             var testDomainModel = TestTransactionModels.TransactionDomainModel;
-            testDomainModel.Type = TransactionType.Income;
+            testDomainModel.Type = OperationType.Income;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.TransactionRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
 

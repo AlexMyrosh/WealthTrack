@@ -96,7 +96,7 @@ namespace WealthTrack.Business.Tests.TestModels
                     Description = "Test transaction",
                     TransactionDate = new DateTimeOffset(2025, 1, 15, 12, 0, 0, TimeSpan.Zero),
                     CreatedDate = new DateTimeOffset(2025, 1, 1, 12, 0, 0, TimeSpan.Zero),
-                    Type = TransactionType.Income
+                    Type = OperationType.Income
                 };
             }
         }

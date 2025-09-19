@@ -43,7 +43,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model.Type));
             }
             
-            if (!Enum.IsDefined(typeof(GoalType), model.Type))
+            if (!Enum.IsDefined(typeof(OperationType), model.Type))
             {
                 throw new ArgumentOutOfRangeException(nameof(model.Type));
             }
@@ -169,19 +169,9 @@ namespace WealthTrack.Business.Services.Implementations
             }
         }
 
-        private bool IsGoalHasCategoriesWithTheSameType(GoalType  goalType, List<Category> categories)
+        private bool IsGoalHasCategoriesWithTheSameType(OperationType  goalType, List<Category> categories)
         {
-            if (goalType == GoalType.Income)
-            {
-                return !categories.Exists(c => c.Type != CategoryType.Income);
-            }
-            
-            if (goalType == GoalType.Expense)
-            {
-                return !categories.Exists(c => c.Type != CategoryType.Expense);
-            }
-
-            return false;
+            return !categories.Exists(c => c.Type != goalType);
         }
     }
 }

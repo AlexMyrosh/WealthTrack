@@ -12,7 +12,7 @@ namespace WealthTrack.Business.BusinessModels.Goal
 
         public decimal ActualMoneyAmount { get; set; }
 
-        public GoalType Type { get; set; }
+        public OperationType Type { get; set; }
 
         public DateTimeOffset StartDate { get; set; }
 
@@ -31,7 +31,7 @@ namespace WealthTrack.Business.BusinessModels.Goal
 
         public string? IconName { get; set; }
 
-        public CategoryType Type { get; set; }
+        public OperationType Type { get; set; }
     }
 
     public class WalletRelatedToGoalDetailsBusinessModel

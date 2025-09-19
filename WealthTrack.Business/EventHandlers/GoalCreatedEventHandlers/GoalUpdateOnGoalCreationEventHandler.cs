@@ -18,8 +18,7 @@ namespace WealthTrack.Business.EventHandlers.GoalCreatedEventHandlers
             var applicableTransactions = transactions.Where(t => t.CategoryId.HasValue && eventMessage.CategoryIds.Contains(t.CategoryId.Value) &&
                                     eventMessage.StartDate <= t.TransactionDate &&
                                     eventMessage.EndDate >= t.TransactionDate &&
-                                    (eventMessage.Type == GoalType.Income && t.Type == TransactionType.Income ||
-                                    eventMessage.Type == GoalType.Expense && t.Type == TransactionType.Expense)).ToList();
+                                    eventMessage.Type == t.Type).ToList();
 
             foreach (var transaction in applicableTransactions)
             {

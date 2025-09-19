@@ -28,10 +28,10 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
             var walletBalanceBeforeUpdate = wallet.Balance;
             switch (eventMessage.Type)
             {
-                case TransactionType.Expense:
+                case OperationType.Expense:
                     wallet.Balance -= eventMessage.Amount;
                     break;
-                case TransactionType.Income:
+                case OperationType.Income:
                     wallet.Balance += eventMessage.Amount;
                     break;
                 default:

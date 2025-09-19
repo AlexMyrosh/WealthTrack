@@ -64,7 +64,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         allGoals.Should().AllSatisfy(goal => goalIds.Should().Contain(goal.Id));
         allGoals.Should().AllSatisfy(goal => goal.Categories.Should().NotBeNullOrEmpty());
     }
-        
+    
     [Fact]
     public async Task GetAll_WithIncorrectIncludeParameter_ReturnsBadRequest()
     {
@@ -180,12 +180,12 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     // // CREATE tests
         
     [Theory]
-    [InlineData(CategoryType.Income, GoalType.Income)]
-    [InlineData(CategoryType.Expense, GoalType.Expense)]
-    public async Task Create_WithCorrectData_CreatesNewGoalWithCorrectDefaultData(CategoryType categoryType, GoalType goalType)
+    [InlineData(OperationType.Income)]
+    [InlineData(OperationType.Expense)]
+    public async Task Create_WithCorrectData_CreatesNewGoalWithCorrectDefaultData(OperationType type)
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = categoryType);
+        var category = DataFactory.CreateCategory(c => c.Type = type);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -193,7 +193,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}", 
             PlannedMoneyAmount = 1000M,
-            Type = goalType,
+            Type = type,
             StartDate = DateTimeOffset.UtcNow,
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id],
@@ -224,18 +224,18 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     {
         // Arrange
         var scenario = DataFactory.CreateWalletScenario();
-        var category1 = DataFactory.CreateCategory(category => category.Type = CategoryType.Expense);
-        var category2 = DataFactory.CreateCategory(category => category.Type = CategoryType.Expense);
+        var category1 = DataFactory.CreateCategory(category => category.Type = OperationType.Expense);
+        var category2 = DataFactory.CreateCategory(category => category.Type = OperationType.Expense);
         var applicableTransaction = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
             t.CategoryId = category1.Id;
             t.TransactionDate = DateTimeOffset.UtcNow;
             t.WalletId = scenario.wallet.Id;
         });
         var notApplicableTransaction = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Income;
+            t.Type = OperationType.Income;
             t.CategoryId = category2.Id;
             t.TransactionDate = DateTimeOffset.UtcNow;
             t.WalletId = scenario.wallet.Id;
@@ -251,7 +251,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category1.Id]
@@ -273,10 +273,10 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     {
         // Arrange
         var scenario = DataFactory.CreateWalletScenario();
-        var category = DataFactory.CreateCategory(category => category.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(category => category.Type = OperationType.Expense);
         var notApplicableTransaction = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Income;
+            t.Type = OperationType.Income;
             t.CategoryId = category.Id;
             t.TransactionDate = DateTimeOffset.UtcNow;
             t.WalletId = scenario.wallet.Id;
@@ -292,7 +292,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -323,7 +323,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -331,7 +331,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = string.Empty,
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -348,7 +348,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNullName_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -356,7 +356,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = null,
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -373,7 +373,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNullPlannedMoneyAmount_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -381,7 +381,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = null,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -398,7 +398,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNegativePlannedMoneyAmount_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -406,7 +406,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = -1M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -423,7 +423,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithDifferentTypeOfGoalAndRelatedCategories_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -431,7 +431,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Income,
+            Type = OperationType.Income,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -448,7 +448,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNullType_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -473,7 +473,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNullStartDate_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -481,7 +481,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = null,
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -498,7 +498,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithNullEndDate_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -506,7 +506,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = null,
             CategoryIds = [category.Id]
@@ -523,7 +523,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithEndDateLessThanStartDate_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -531,7 +531,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(30),
             EndDate = DateTimeOffset.UtcNow.AddDays(-30),
             CategoryIds = [category.Id]
@@ -548,7 +548,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithIncorrectType_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -556,7 +556,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = (GoalType)99,
+            Type = (OperationType)99,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
             CategoryIds = [category.Id]
@@ -573,7 +573,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Create_WithoutCategories_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -581,7 +581,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         { 
             Name = $"Test Goal + {Guid.NewGuid()}",
             PlannedMoneyAmount = 1000M,
-            Type = GoalType.Expense,
+            Type = OperationType.Expense,
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
         };
@@ -724,13 +724,13 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Update_WithNewCategories_UpdatesGoalCategoriesOnly()
     {
         // Arrange
-        var goal = DataFactory.CreateGoal(g => g.Type = GoalType.Income);
+        var goal = DataFactory.CreateGoal(g => g.Type = OperationType.Income);
         var oldCategory = DataFactory.CreateCategory(c =>
         {
             c.Goals = [goal];
-            c.Type = CategoryType.Income;
+            c.Type = OperationType.Income;
         });
-        var newCategory = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var newCategory = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.AddRange(oldCategory, newCategory);
         DbContext.Goals.Add(goal);
         await DbContext.SaveChangesAsync();
@@ -762,10 +762,10 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     {
         // Arrange
         var scenario = DataFactory.CreateWalletScenario();
-        var category = DataFactory.CreateCategory(category => category.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(category => category.Type = OperationType.Expense);
         var transaction1 = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
             t.CategoryId = category.Id;
             t.TransactionDate = DateTimeOffset.Now;
             t.WalletId = scenario.wallet.Id;
@@ -773,7 +773,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             
         var transaction2 = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
             t.CategoryId = category.Id;
             t.TransactionDate = DateTimeOffset.Now.AddDays(-10);
             t.WalletId = scenario.wallet.Id;
@@ -781,7 +781,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             
         var goal = DataFactory.CreateGoal(g =>
         {
-            g.Type = GoalType.Expense;
+            g.Type = OperationType.Expense;
             g.Categories = [category];
             g.StartDate = DateTimeOffset.Now.AddDays(-5);
             g.EndDate = DateTimeOffset.Now.AddDays(5);
@@ -817,10 +817,10 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     {
         // Arrange
         var scenario = DataFactory.CreateWalletScenario();
-        var category = DataFactory.CreateCategory(category => category.Type = CategoryType.Expense);
+        var category = DataFactory.CreateCategory(category => category.Type = OperationType.Expense);
         var transaction1 = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
             t.CategoryId = category.Id;
             t.TransactionDate = DateTimeOffset.Now.AddDays(-15);
             t.WalletId = scenario.wallet.Id;
@@ -828,7 +828,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             
         var transaction2 = DataFactory.CreateTransaction(t =>
         {
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
             t.CategoryId = category.Id;
             t.TransactionDate = DateTimeOffset.Now.AddDays(-5);
             t.WalletId = scenario.wallet.Id;
@@ -836,7 +836,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             
         var goal = DataFactory.CreateGoal(g =>
         {
-            g.Type = GoalType.Expense;
+            g.Type = OperationType.Expense;
             g.Categories = [category];
             g.StartDate = DateTimeOffset.Now.AddDays(-20);
             g.EndDate = DateTimeOffset.Now.AddDays(-10);
@@ -872,15 +872,15 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     {
         // Arrange
         var scenario = DataFactory.CreateWalletScenario();
-        var category1 = DataFactory.CreateCategory(c => c.Type = CategoryType.Expense);
-        var category2 = DataFactory.CreateCategory(c => c.Type = CategoryType.Expense);
+        var category1 = DataFactory.CreateCategory(c => c.Type = OperationType.Expense);
+        var category2 = DataFactory.CreateCategory(c => c.Type = OperationType.Expense);
             
         var transaction1 = DataFactory.CreateTransaction(t =>
         {
             t.CategoryId = category1.Id;
             t.TransactionDate = DateTimeOffset.Now;
             t.WalletId = scenario.wallet.Id;
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
         });
             
         var transaction2 = DataFactory.CreateTransaction(t =>
@@ -888,7 +888,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             t.CategoryId = category2.Id;
             t.TransactionDate = DateTimeOffset.Now;
             t.WalletId = scenario.wallet.Id;
-            t.Type = TransactionType.Expense;
+            t.Type = OperationType.Expense;
         });
             
         var goal = DataFactory.CreateGoal(g =>
@@ -897,7 +897,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
             g.StartDate = DateTimeOffset.Now.AddDays(-5);
             g.EndDate = DateTimeOffset.Now.AddDays(5);
             g.ActualMoneyAmount = transaction1.Amount;
-            g.Type = GoalType.Expense;
+            g.Type = OperationType.Expense;
         });
             
         DbContext.Currencies.Add(scenario.currency);
@@ -1000,12 +1000,12 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     }
         
     [Theory]
-    [InlineData(GoalType.Expense)]
-    [InlineData(GoalType.Income)]
-    public async Task Update_WithNewType_ReturnsBadRequest(GoalType categoryType)
+    [InlineData(OperationType.Expense)]
+    [InlineData(OperationType.Income)]
+    public async Task Update_WithNewType_ReturnsBadRequest(OperationType categoryType)
     {
         // Arrange
-        var goal = DataFactory.CreateGoal(g => g.Type = GoalType.Income);
+        var goal = DataFactory.CreateGoal(g => g.Type = OperationType.Income);
         DbContext.Goals.Add(goal);
         await DbContext.SaveChangesAsync();
             
@@ -1065,11 +1065,11 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task Update_WithCategoriesWithDifferentTypeThanGoalType_ReturnsBadRequest()
     {
         // Arrange
-        var category1 = DataFactory.CreateCategory(p => p.Type = CategoryType.Expense);
-        var category2 = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var category1 = DataFactory.CreateCategory(p => p.Type = OperationType.Expense);
+        var category2 = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         var goal = DataFactory.CreateGoal(g =>
         {
-            g.Type = GoalType.Expense;
+            g.Type = OperationType.Expense;
             g.Categories = [category1];
         });
         DbContext.Goals.Add(goal);

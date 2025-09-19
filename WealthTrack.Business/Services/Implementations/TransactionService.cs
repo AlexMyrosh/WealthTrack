@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -19,8 +18,33 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model));
             }
 
+            if (model.CategoryId.HasValue)
+            {
+                var category = await unitOfWork.CategoryRepository.GetByIdAsync(model.CategoryId.Value);
+                if (category is null)
+                {
+                    throw new ArgumentException($"Category with id {model.CategoryId} not found");    
+                }
+                
+                if (model.Type != category.Type)
+                {
+                    throw new ArgumentException("Transaction type is not aligned with the category's type");
+                }
+            }
+
+            if (!model.Amount.HasValue || model.Amount.Value < 0)
+            {
+                throw new ArgumentException("Amount value is not correct");
+            }
+
+            if (!model.TransactionDate.HasValue)
+            {
+                throw new ArgumentException("TransactionDate value is missing");
+            }
+
             var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
             var transactionCreatedEventModel = mapper.Map<TransactionCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(transactionCreatedEventModel);
@@ -34,9 +58,25 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentNullException(nameof(model));
             }
+            
+            if (!model.Amount.HasValue || model.Amount.Value < 0)
+            {
+                throw new ArgumentException("Amount value is not correct");
+            }
+            
+            if (!model.TransactionDate.HasValue)
+            {
+                throw new ArgumentException("TransactionDate value is missing");
+            }
 
             var domainModel = mapper.Map<TransferTransaction>(model);
+            if (!await IsWalletsHaveTheSameBudget(domainModel.SourceWalletId, domainModel.TargetWalletId))
+            {
+                throw new ArgumentException("Source and Target wallets are from different budgets");
+            }
+            
             domainModel.CreatedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             var createdEntityId = await unitOfWork.TransferTransactionRepository.CreateAsync(domainModel);
             var transferTransactionCreatedEventModel = mapper.Map<TransferTransactionCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(transferTransactionCreatedEventModel);
@@ -48,18 +88,34 @@ namespace WealthTrack.Business.Services.Implementations
         {
             if (id == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(id), "id is empty");
+                throw new ArgumentException("Id cannot be empty.", nameof(id));
             }
 
-            var domainModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, include);
-            var result = mapper.Map<TransactionDetailsBusinessModel>(domainModel);
-            return result;
+            var regular = await unitOfWork.TransactionRepository.GetByIdAsync(id, include);
+            if (regular != null)
+            {
+                return mapper.Map<TransactionDetailsBusinessModel>(regular);
+            }
+
+            var transfer = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id, include);
+            if (transfer != null)
+            {
+                return mapper.Map<TransactionDetailsBusinessModel>(transfer);
+            }
+
+            return null;
         }
 
         public async Task<List<TransactionDetailsBusinessModel>> GetAllAsync(string include = "")
         {
-            var domainModels = await unitOfWork.TransactionRepository.GetAllAsync(include);
-            var result = mapper.Map<List<TransactionDetailsBusinessModel>>(domainModels);
+            var transactionDomainModels = await unitOfWork.TransactionRepository.GetAllAsync(include);
+            var transferTransactionDomainModels = await unitOfWork.TransferTransactionRepository.GetAllAsync(include);
+            var transactionBusinessModels = mapper.Map<List<TransactionDetailsBusinessModel>>(transactionDomainModels);
+            var transferTransactionBusinessModels = mapper.Map<List<TransactionDetailsBusinessModel>>(transferTransactionDomainModels);
+            var result = transactionBusinessModels
+                .Concat(transferTransactionBusinessModels)
+                .OrderBy(t => t.TransactionDate)
+                .ToList();
             return result;
         }
 
@@ -70,12 +126,22 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
+            if (model.Amount is < 0)
+            {
+                throw new ArgumentException("Amount value is not correct");
+            }
+
+            if (model.WalletId.HasValue && await unitOfWork.WalletRepository.GetByIdAsync(model.WalletId.Value) == null)
+            {
+                throw new  ArgumentException($"Wallet with id {model.WalletId.Value} not found");
+            }
+
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, "Wallet");
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
-
+            
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
             {
                 CategoryId_Old = originalModel.CategoryId,
@@ -89,7 +155,23 @@ namespace WealthTrack.Business.Services.Implementations
                 TransactionDate_Old = originalModel.TransactionDate,
                 TransactionDate_New = model.TransactionDate,
             });
+            
             mapper.Map(model, originalModel);
+            if (model.CategoryId.HasValue)
+            {
+                var category = await unitOfWork.CategoryRepository.GetByIdAsync(model.CategoryId.Value);
+                if (category is null)
+                {
+                    throw new ArgumentException($"Category with id {model.CategoryId} not found");    
+                }
+                
+                if (originalModel.Type != category.Type)
+                {
+                    throw new ArgumentException("Transaction type is not aligned with the category's type");
+                }
+            }
+            
+            originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.TransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
@@ -101,12 +183,27 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
+            if (model.SourceWalletId.HasValue &&  await unitOfWork.WalletRepository.GetByIdAsync(model.SourceWalletId.Value) == null)
+            {
+                throw new ArgumentException(nameof(model.SourceWalletId));
+            }
+            
+            if (model.TargetWalletId.HasValue &&  await unitOfWork.WalletRepository.GetByIdAsync(model.TargetWalletId.Value) == null)
+            {
+                throw new ArgumentException(nameof(model.TargetWalletId));
+            }
+            
+            if (model.Amount is < 0)
+            {
+                throw new ArgumentException("Amount value is not correct");
+            }
+
             var originalModel = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
-
+            
             await eventPublisher.PublishAsync(new TransferTransactionUpdatedEvent
             {
                 Amount_New = model.Amount,
@@ -116,7 +213,14 @@ namespace WealthTrack.Business.Services.Implementations
                 TargetWalletId_New = model.TargetWalletId,
                 TargetWalletId_Old = originalModel.TargetWalletId,
             });
+            
             mapper.Map(model, originalModel);
+            if (!await IsWalletsHaveTheSameBudget(originalModel.SourceWalletId, originalModel.TargetWalletId))
+            {
+                throw new ArgumentException("Source and Target wallets are from different budgets");
+            }
+            
+            originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.TransferTransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
@@ -151,6 +255,23 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             await unitOfWork.SaveAsync();
+        }
+
+        private async Task<bool> IsWalletsHaveTheSameBudget(Guid walletId1, Guid walletId2)
+        {
+            var wallet1 = await unitOfWork.WalletRepository.GetByIdAsync(walletId1);
+            var wallet2 = await unitOfWork.WalletRepository.GetByIdAsync(walletId2);
+            if (wallet1 is null)
+            {
+                throw new ArgumentException($"Unable to get wallet by id - {walletId1}");
+            }
+            
+            if (wallet2 is null)
+            {
+                throw new ArgumentException($"Unable to get wallet by id - {walletId1}");
+            }
+            
+            return wallet1.BudgetId == wallet2.BudgetId;
         }
     }
 }

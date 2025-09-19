@@ -8,7 +8,7 @@ namespace WealthTrack.Business.BusinessModels.Goal
 
         public decimal? PlannedMoneyAmount { get; set; }
 
-        public GoalType? Type { get; set; }
+        public OperationType? Type { get; set; }
 
         public DateTimeOffset? StartDate { get; set; }
 

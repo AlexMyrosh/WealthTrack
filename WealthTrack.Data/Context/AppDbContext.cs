@@ -35,8 +35,10 @@ namespace WealthTrack.Data.Context
                     .IsRequired();
 
                 entity.Property(e => e.Type)
-                    .IsRequired()
                     .HasConversion<string>();
+
+                entity.Property(e => e.IsSystem)
+                    .HasDefaultValue(false);
 
                 entity.Property(e => e.Status)
                     .IsRequired()

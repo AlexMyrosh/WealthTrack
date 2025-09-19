@@ -207,8 +207,8 @@ namespace WealthTrack.Business.Tests.Services
             // Arrange
             var testUpsertBusinessModel = TestCategoryModels.UpsertBusinessModel;
             var testDomainModel = TestCategoryModels.DomainModel;
-            testUpsertBusinessModel.Type = CategoryType.Income;
-            testDomainModel.Type = CategoryType.Expense;
+            testUpsertBusinessModel.Type = OperationType.Income;
+            testDomainModel.Type = OperationType.Expense;
             var id = testDomainModel.Id;
             _unitOfWorkMock.Setup(uow => uow.CategoryRepository.GetByIdAsync(id, It.IsAny<string>())).ReturnsAsync(testDomainModel);
 

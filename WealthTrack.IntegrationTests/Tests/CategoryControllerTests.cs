@@ -157,7 +157,11 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task GetById_WithSystemCategoryType_ReturnsNotFound()
     {
         // Arrange
-        var systemCategory = DataFactory.CreateCategory(c => c.Type = CategoryType.System);
+        var systemCategory = DataFactory.CreateCategory(c =>
+        {
+            c.IsSystem = true;
+            c.Type = null;
+        });
         DbContext.Categories.Add(systemCategory);
         await DbContext.SaveChangesAsync();
     
@@ -219,7 +223,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithCorrectData_CreatesCategoryWithCorrectDefaultData()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -227,7 +231,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = $"Test Category + {Guid.NewGuid()}",
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.Income,
+            Type = OperationType.Income,
             ParentCategoryId = parentCategory.Id
         };
     
@@ -270,7 +274,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -278,7 +282,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = string.Empty,
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.Income,
+            Type = OperationType.Income,
             ParentCategoryId = parentCategory.Id
         };
     
@@ -293,7 +297,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithNullName_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -301,7 +305,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = null,
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.Income,
+            Type = OperationType.Income,
             ParentCategoryId = parentCategory.Id
         };
     
@@ -316,7 +320,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithNullType_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -339,7 +343,11 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithSystemCategory_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.System);
+        var parentCategory = DataFactory.CreateCategory(p =>
+        {
+            p.IsSystem = true;
+            p.Type = null;
+        });
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -347,7 +355,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = $"Test Category + {Guid.NewGuid()}",
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.System,
             ParentCategoryId = parentCategory.Id
         };
     
@@ -362,7 +369,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithIncorrectParentCategoryId_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -370,7 +377,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = $"Test Category + {Guid.NewGuid()}",
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.Income,
+            Type = OperationType.Income,
             ParentCategoryId = Guid.NewGuid()
         };
     
@@ -385,7 +392,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithDifferentTypeThanParent_ReturnsBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
         
@@ -393,7 +400,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = $"Test Category + {Guid.NewGuid()}",
             IconName = Guid.NewGuid().ToString(),
-            Type = CategoryType.Expense,
+            Type = OperationType.Expense,
             ParentCategoryId = parentCategory.Id
         };
     
@@ -412,7 +419,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = $"Test Category + {Guid.NewGuid()}",
             IconName = Guid.NewGuid().ToString(),
-            Type = (CategoryType)99
+            Type = (OperationType)99
         };
     
         // Act
@@ -428,7 +435,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithNewName_UpdatesCategoryNameOnly()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
 
@@ -456,7 +463,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithNewIconName_UpdatesCategoryIconOnly()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
 
@@ -485,7 +492,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     {
         // Arrange
         var scenario = DataFactory.CreateCategoryHierarchyWithSingleChildScenario();
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.AddRange(scenario.parent, scenario.child, parentCategory);
         await DbContext.SaveChangesAsync();
 
@@ -513,7 +520,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithEmptyId_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
 
@@ -533,7 +540,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithIncorrectId_ReturnsNotFound()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(p => p.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
 
@@ -553,7 +560,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithNullBody_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
 
@@ -568,7 +575,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithEmptyName_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -588,7 +595,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithEmptyIconName_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -608,7 +615,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Update_WithIncorrectParentId_ReturnsBadRequest()
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         
@@ -625,13 +632,12 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     }
     
     [Theory]
-    [InlineData(CategoryType.Expense)]
-    [InlineData(CategoryType.Income)]
-    [InlineData(CategoryType.System)]
-    public async Task Update_WithNewType_ReturnsBadRequest(CategoryType categoryType)
+    [InlineData(OperationType.Expense)]
+    [InlineData(OperationType.Income)]
+    public async Task Update_WithNewType_ReturnsBadRequest(OperationType categoryType)
     {
         // Arrange
-        var category = DataFactory.CreateCategory(c => c.Type = CategoryType.Income);
+        var category = DataFactory.CreateCategory(c => c.Type = OperationType.Income);
         DbContext.Categories.Add(category);
         await DbContext.SaveChangesAsync();
         

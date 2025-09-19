@@ -16,7 +16,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<Category?> GetByIdAsync(Guid id, string include = "")
         {
-            var query = context.Categories.Where(c => c.Type != CategoryType.System).AsQueryable();
+            var query = context.Categories.Where(c => !c.IsSystem).AsQueryable();
             var includeProperties = include.Split(",");
             foreach (var property in includeProperties)
             {
@@ -34,13 +34,13 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<List<Category>> GetAllAsync()
         {
-            var result = await context.Categories.Where(c => c.Type != CategoryType.System).ToListAsync();
+            var result = await context.Categories.Where(c => !c.IsSystem).ToListAsync();
             return result;
         }
 
         public async Task<List<Category>> GetAllSystemOwnedAsync()
         {
-            var result = await context.Categories.Where(c => c.Type == CategoryType.System).ToListAsync();
+            var result = await context.Categories.Where(c => !c.IsSystem).ToListAsync();
             return result;
         }
 

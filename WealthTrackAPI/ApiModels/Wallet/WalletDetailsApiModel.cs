@@ -59,7 +59,7 @@ namespace WealthTrack.API.ApiModels.Wallet
 
         public DateTimeOffset TransactionDate { get; set; }
 
-        public TransactionType Type { get; set; }
+        public OperationType Type { get; set; }
     }
 
     public class TransferTransactionRelatedToWalletDetailsApiModel

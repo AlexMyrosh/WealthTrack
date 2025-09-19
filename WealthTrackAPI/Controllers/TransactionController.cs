@@ -14,41 +14,69 @@ namespace WealthTrack.API.Controllers
         [HttpGet]
         public async Task<ActionResult<List<TransactionDetailsApiModel>>> GetAll([FromQuery] string include = "")
         {
-            var businessModels = await transactionService.GetAllAsync(include);
-            var apiModels = mapper.Map<List<TransactionDetailsApiModel>>(businessModels);
-            return Ok(apiModels);
+            try
+            {
+                var businessModels = await transactionService.GetAllAsync(include);
+                var apiModels = mapper.Map<List<TransactionDetailsApiModel>>(businessModels);
+                return Ok(apiModels);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // GET api/transaction/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<TransactionDetailsApiModel>> GetById(Guid id, [FromQuery] string include = "")
         {
-            var businessModel = await transactionService.GetByIdAsync(id, include);
-            if (businessModel is null)
+            try
             {
-                return NotFound();
-            }
+                var businessModel = await transactionService.GetByIdAsync(id, include);
+                if (businessModel is null)
+                {
+                    return NotFound();
+                }
 
-            var apiModel = mapper.Map<TransactionDetailsApiModel>(businessModel);
-            return Ok(apiModel);
+                var apiModel = mapper.Map<TransactionDetailsApiModel>(businessModel);
+                return Ok(apiModel);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/transaction/create
         [HttpPost("create")]
         public async Task<ActionResult> Create([FromBody] TransactionUpsertApiModel model)
         {
-            var businessModel = mapper.Map<TransactionUpsertBusinessModel>(model);
-            var createdEntityId = await transactionService.CreateAsync(businessModel);
-            return Ok(createdEntityId);
+            try
+            {
+                var businessModel = mapper.Map<TransactionUpsertBusinessModel>(model);
+                var createdEntityId = await transactionService.CreateAsync(businessModel);
+                return Ok(createdEntityId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // POST api/transaction/transfer/create
         [HttpPost("transfer/create")]
         public async Task<ActionResult> Create([FromBody] TransferTransactionUpsertApiModel model)
         {
-            var businessModel = mapper.Map<TransferTransactionUpsertBusinessModel>(model);
-            var createdEntityId = await transactionService.CreateAsync(businessModel);
-            return Ok(createdEntityId);
+            try
+            {
+                var businessModel = mapper.Map<TransferTransactionUpsertBusinessModel>(model);
+                var createdEntityId = await transactionService.CreateAsync(businessModel);
+                return Ok(createdEntityId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // PUT api/transaction/update/{id}
@@ -64,6 +92,10 @@ namespace WealthTrack.API.Controllers
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
 
@@ -81,14 +113,25 @@ namespace WealthTrack.API.Controllers
             {
                 return NotFound();
             }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         // DELETE api/transaction/hard_delete/{id}
         [HttpDelete("hard_delete/{id}")]
         public async Task<ActionResult> HardDelete(Guid id)
         {
-            await transactionService.HardDeleteAsync(id);
-            return Accepted();
+            try
+            {
+                await transactionService.HardDeleteAsync(id);
+                return Accepted();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

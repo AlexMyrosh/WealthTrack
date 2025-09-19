@@ -17,18 +17,13 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentNullException(nameof(model));
             }
-
-            if (model.Type == CategoryType.System)
-            {
-                throw new UnauthorizedAccessException("You are not allowed to create this type of category.");
-            }
-
+            
             if (!model.Type.HasValue)
             {
                 throw new ArgumentNullException($"{nameof(model.Type)} should not be null.");
             }
 
-            if (!Enum.IsDefined(typeof(CategoryType), model.Type))
+            if (!Enum.IsDefined(typeof(OperationType), model.Type))
             {
                 throw new ArgumentOutOfRangeException(nameof(model.Type));
             }

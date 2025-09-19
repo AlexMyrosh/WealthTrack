@@ -20,7 +20,7 @@ namespace WealthTrack.Business.Seeders
                     Id = new Guid(_balanceCorrectionId),
                     Name = "Balance correction",
                     IconName = "BalanceCorrection",
-                    Type = CategoryType.System,
+                    IsSystem = true,
                     CreatedDate = DateTimeOffset.Now,
                     ModifiedDate = DateTimeOffset.Now,
                     Status = CategoryStatus.Active
@@ -30,7 +30,7 @@ namespace WealthTrack.Business.Seeders
                     Id = new Guid(_transferCategoryId),
                     Name = "Transfer",
                     IconName = "Transfer",
-                    Type = CategoryType.System,
+                    IsSystem = true,
                     CreatedDate = DateTimeOffset.Now,
                     ModifiedDate = DateTimeOffset.Now,
                     Status = CategoryStatus.Active
