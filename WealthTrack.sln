@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Business", "Wea
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Data", "WealthTrack.Data\WealthTrack.Data.csproj", "{084FB303-F842-4EE5-9F7A-937BCC17E2D7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Business.Tests", "WealthTrack.Business.Tests\WealthTrack.Business.Tests.csproj", "{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.Shared", "WealthTrack.Shared\WealthTrack.Shared.csproj", "{B014B161-3F0A-4717-83D3-158D4A8883CC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WealthTrack.IntegrationTests", "WealthTrack.IntegrationTests\WealthTrack.IntegrationTests.csproj", "{2761C4EC-8136-459A-831B-F11EE636E70E}"
@@ -33,10 +31,6 @@ Global
 		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{084FB303-F842-4EE5-9F7A-937BCC17E2D7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A637A66A-BA12-4B1F-A077-FAB80F03E2F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B014B161-3F0A-4717-83D3-158D4A8883CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
