@@ -10,7 +10,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, IConfiguration configuration) : IWalletService
+    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, ITransactionService transactionService, IConfiguration configuration) : IWalletService
     {
         private readonly string _balanceCorrectionCategoryId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
 
@@ -43,9 +43,23 @@ namespace WealthTrack.Business.Services.Implementations
 
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             domainModel.Status = WalletStatus.Active;
             var createdEntityId = await unitOfWork.WalletRepository.CreateAsync(domainModel);
+            // Move this logic to Event handlers
+            if (model.Balance.HasValue && model.Balance != 0)
+            {
+                await unitOfWork.TransactionRepository.CreateAsync(new Transaction
+                {
+                    Amount = decimal.Abs(model.Balance.Value),
+                    Description = "Balance correction",
+                    CreatedDate = DateTimeOffset.Now,
+                    CategoryId = new Guid(_balanceCorrectionCategoryId),
+                    Type = model.Balance.Value > 0 ? OperationType.Income : OperationType.Expense,
+                    WalletId = createdEntityId
+                });
+            }
+            
             var walletCreatedEventModel = mapper.Map<WalletCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(walletCreatedEventModel);
             await unitOfWork.SaveAsync();
@@ -132,12 +146,22 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var domainModelToDelete = await unitOfWork.WalletRepository.GetByIdAsync(id);
+            var domainModelToDelete = await unitOfWork.WalletRepository.GetByIdAsync(id, $"{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
             if (domainModelToDelete is null)
             {
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
 
+            while (domainModelToDelete.IncomeTransferTransactions.Any())
+            {
+                await transactionService.HardDeleteAsync(domainModelToDelete.IncomeTransferTransactions.First().Id);
+            }
+            
+            while (domainModelToDelete.OutgoingTransferTransactions.Any())
+            {
+                await transactionService.HardDeleteAsync(domainModelToDelete.OutgoingTransferTransactions.First().Id);
+            }
+            
             await unitOfWork.WalletRepository.HardDeleteAsync(domainModelToDelete);
             var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
             await eventPublisher.PublishAsync(walletDeletedEventModel);

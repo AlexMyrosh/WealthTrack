@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -44,7 +45,7 @@ namespace WealthTrack.Business.Services.Implementations
 
             var domainModel = mapper.Map<Category>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             domainModel.Status = CategoryStatus.Active;
             var createdEntityId = await unitOfWork.CategoryRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
@@ -86,6 +87,20 @@ namespace WealthTrack.Business.Services.Implementations
             if (originalModel == null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
+            }
+            
+            if (model.ParentCategoryId.HasValue)
+            {
+                var parentCategory = await unitOfWork.CategoryRepository.GetByIdAsync(model.ParentCategoryId.Value);
+                if (parentCategory is null)
+                {
+                    throw new ArgumentException("Parent category not found.", nameof(model.ParentCategoryId));
+                }
+
+                if (parentCategory.Type != originalModel.Type)
+                {
+                    throw new  ArgumentException("Parent category type not match.", nameof(model.Type));
+                }
             }
 
             mapper.Map(model, originalModel);

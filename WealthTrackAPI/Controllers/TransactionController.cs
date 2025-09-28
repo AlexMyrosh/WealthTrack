@@ -118,6 +118,25 @@ namespace WealthTrack.API.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        
+        // PUT api/transaction/unassign_category/{id}
+        [HttpPut("unassign_category/{id}")]
+        public async Task<ActionResult> UnassignCategory(Guid id)
+        {
+            try
+            {
+                await transactionService.UnassignCategoryAsync(id);
+                return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
 
         // DELETE api/transaction/hard_delete/{id}
         [HttpDelete("hard_delete/{id}")]
@@ -127,6 +146,10 @@ namespace WealthTrack.API.Controllers
             {
                 await transactionService.HardDeleteAsync(id);
                 return Accepted();
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
             }
             catch (Exception ex)
             {

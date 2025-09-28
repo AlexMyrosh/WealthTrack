@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -114,7 +115,7 @@ namespace WealthTrack.Business.Services.Implementations
             var transferTransactionBusinessModels = mapper.Map<List<TransactionDetailsBusinessModel>>(transferTransactionDomainModels);
             var result = transactionBusinessModels
                 .Concat(transferTransactionBusinessModels)
-                .OrderBy(t => t.TransactionDate)
+                .OrderByDescending(t => t.TransactionDate)
                 .ToList();
             return result;
         }
@@ -124,6 +125,11 @@ namespace WealthTrack.Business.Services.Implementations
             if (id == Guid.Empty)
             {
                 throw new ArgumentException(nameof(id));
+            }
+
+            if (model.Type.HasValue)
+            {
+                throw new ArgumentException("Transaction type is not allowed to be updated");
             }
 
             if (model.Amount is < 0)
@@ -140,6 +146,11 @@ namespace WealthTrack.Business.Services.Implementations
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+            }
+            
+            if (model.WalletId.HasValue && !await IsWalletsHaveTheSameBudget(model.WalletId.Value, originalModel.WalletId))
+            {
+                throw new ArgumentException("Source and Target wallets are from different budgets");
             }
             
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
@@ -225,6 +236,40 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
+        public async Task UnassignCategoryAsync(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException(nameof(id));
+            }
+            
+            var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, $"{nameof(Transaction.Category)}");
+            if (originalModel is null)
+            {
+                throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+            }
+            
+            await eventPublisher.PublishAsync(new TransactionUpdatedEvent
+            {
+                CategoryId_Old = originalModel.CategoryId,
+                CategoryId_New = null,
+                IsCategoryDeleted = true,
+                TransactionType_Old = originalModel.Type,
+                TransactionType_New = null,
+                WalletId_Old = originalModel.WalletId,
+                WalletId_New = null,
+                Amount_Old = originalModel.Amount,
+                Amount_New = null,
+                TransactionDate_Old = originalModel.TransactionDate,
+                TransactionDate_New = null
+            });
+
+            originalModel.CategoryId = null;
+            originalModel.ModifiedDate = DateTimeOffset.Now;
+            unitOfWork.TransactionRepository.Update(originalModel);
+            await unitOfWork.SaveAsync();
+        }
+
         public async Task HardDeleteAsync(Guid id)
         {
             if (id == Guid.Empty)
@@ -269,6 +314,11 @@ namespace WealthTrack.Business.Services.Implementations
             if (wallet2 is null)
             {
                 throw new ArgumentException($"Unable to get wallet by id - {walletId1}");
+            }
+
+            if (wallet1.Id == wallet2.Id)
+            {
+                throw new ArgumentException("Wallets are the same");
             }
             
             return wallet1.BudgetId == wallet2.BudgetId;

@@ -16,6 +16,7 @@ namespace WealthTrack.Business.Tests.Services
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
         private readonly Mock<IBudgetRepository> _budgetRepositoryMock;
+        private readonly Mock<IWalletService> _walletServiceMock;
         private readonly Mock<IMapper> _mapperMock;
         private readonly IBudgetService _budgetService;
 
@@ -23,10 +24,11 @@ namespace WealthTrack.Business.Tests.Services
         {
             _unitOfWorkMock = new Mock<IUnitOfWork>();
             _budgetRepositoryMock = new Mock<IBudgetRepository>();
+            _walletServiceMock = new Mock<IWalletService>();
             _mapperMock = new Mock<IMapper>();
 
             _unitOfWorkMock.Setup(u => u.BudgetRepository).Returns(_budgetRepositoryMock.Object);
-            _budgetService = new BudgetService(_unitOfWorkMock.Object, _mapperMock.Object);
+            _budgetService = new BudgetService(_unitOfWorkMock.Object, _walletServiceMock.Object, _mapperMock.Object);
         }
 
         [Fact]

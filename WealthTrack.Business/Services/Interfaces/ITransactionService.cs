@@ -15,6 +15,8 @@ namespace WealthTrack.Business.Services.Interfaces
         public Task UpdateAsync(Guid id, TransactionUpsertBusinessModel model);
 
         public Task UpdateAsync(Guid id, TransferTransactionUpsertBusinessModel model);
+        
+        public Task UnassignCategoryAsync(Guid id);
 
         public Task HardDeleteAsync(Guid id);
     }

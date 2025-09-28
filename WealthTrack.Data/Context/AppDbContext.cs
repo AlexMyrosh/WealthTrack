@@ -280,8 +280,8 @@ namespace WealthTrack.Data.Context
                     .WithMany(c => c.Goals)
                     .UsingEntity<Dictionary<string, object>>(
                         "GoalCategory",
-                        j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId"),
-                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId")
+                        j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId").IsRequired(),
+                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId").IsRequired()
                     );
                 
                 entity.ToTable(t =>

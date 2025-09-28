@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Moq;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.Events.Interfaces;

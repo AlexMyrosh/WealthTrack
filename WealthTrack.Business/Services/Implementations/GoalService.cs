@@ -53,14 +53,14 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentNullException(nameof(model.CategoryIds));
             }
 
-            if (model.EndDate < model.StartDate)
+            if (model.EndDate <= model.StartDate)
             {
                 throw new ArgumentException("EndDate must be greater than or equal to StartDate");
             }
             
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, domainModel);
             if (!IsGoalHasCategoriesWithTheSameType(model.Type.Value, domainModel.Categories))
             {
@@ -118,13 +118,18 @@ namespace WealthTrack.Business.Services.Implementations
             
             mapper.Map(model, originalModel);
             
-            if (originalModel.EndDate < originalModel.StartDate)
+            if (originalModel.EndDate <= originalModel.StartDate)
             {
                 throw new ArgumentException("EndDate must be greater than or equal to StartDate");
             }
             
             originalModel.ModifiedDate = DateTimeOffset.Now;
             await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
+            if (!originalModel.Categories.Any())
+            {
+                throw new ArgumentNullException(nameof(model.CategoryIds));
+            }
+            
             if (!IsGoalHasCategoriesWithTheSameType(originalModel.Type, originalModel.Categories))
             {
                 throw new ArgumentException("The type of selected categories should align with goal's type");
@@ -164,6 +169,10 @@ namespace WealthTrack.Business.Services.Implementations
                     if (category != null)
                     {
                         domainModel.Categories.Add(category);
+                    }
+                    else
+                    {
+                        throw new ArgumentException($"Unable to find category with id - {categoryId.ToString()}");
                     }
                 }
             }

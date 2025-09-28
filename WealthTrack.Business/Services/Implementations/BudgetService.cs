@@ -7,7 +7,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class BudgetService(IUnitOfWork unitOfWork, IMapper mapper) : IBudgetService
+    public class BudgetService(IUnitOfWork unitOfWork, IWalletService walletService, IMapper mapper) : IBudgetService
     {
         public async Task<Guid> CreateAsync(BudgetUpsertBusinessModel model)
         {
@@ -18,7 +18,7 @@ namespace WealthTrack.Business.Services.Implementations
 
             var domainModel = mapper.Map<Budget>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
-            domainModel.ModifiedDate = DateTimeOffset.Now;
+            domainModel.ModifiedDate = domainModel.CreatedDate;
             domainModel.Status = BudgetStatus.Active;
             var createdEntityId = await unitOfWork.BudgetRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
@@ -70,10 +70,15 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var domainModelToDelete = await unitOfWork.BudgetRepository.GetByIdAsync(id);
+            var domainModelToDelete = await unitOfWork.BudgetRepository.GetByIdAsync(id, $"{nameof(Budget.Wallets)}");
             if (domainModelToDelete is null)
             {
                 throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
+            }
+
+            while (domainModelToDelete.Wallets.Any())
+            {
+                await walletService.HardDeleteAsync(domainModelToDelete.Wallets.First().Id);
             }
 
             await unitOfWork.BudgetRepository.HardDeleteAsync(domainModelToDelete);

@@ -21,6 +21,7 @@ namespace WealthTrack.Business.Tests.Services
         private readonly Mock<IMapper> _mapperMock;
         private readonly Mock<IConfiguration> _configurationMock;
         private readonly Mock<IEventPublisher> _eventPublisherMock;
+        private readonly Mock<ITransactionService> _transactionServiceMock;
         private readonly IWalletService _walletService;
         private readonly Guid _testBalanceCorrectionCategoryId;
 
@@ -31,11 +32,12 @@ namespace WealthTrack.Business.Tests.Services
             _mapperMock = new Mock<IMapper>();
             _configurationMock = new Mock<IConfiguration>();
             _eventPublisherMock = new Mock<IEventPublisher>();
+            _transactionServiceMock =  new Mock<ITransactionService>();
             _testBalanceCorrectionCategoryId = Guid.NewGuid();
             _configurationMock.Setup(m => m["SystemCategories:BalanceCorrectionId"]).Returns(_testBalanceCorrectionCategoryId.ToString());
 
             _unitOfWorkMock.Setup(u => u.WalletRepository).Returns(_walletRepositoryMock.Object);
-            _walletService = new WalletService(_unitOfWorkMock.Object, _mapperMock.Object, _eventPublisherMock.Object, _configurationMock.Object);
+            _walletService = new WalletService(_unitOfWorkMock.Object, _mapperMock.Object, _eventPublisherMock.Object, _transactionServiceMock.Object, _configurationMock.Object);
         }
 
         [Fact]

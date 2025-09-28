@@ -7,6 +7,8 @@ namespace WealthTrack.Business.Events.Models
         public Guid? CategoryId_Old { get; set; }
 
         public Guid? CategoryId_New { get; set; }
+        
+        public bool IsCategoryDeleted { get; set; }
 
         public OperationType TransactionType_Old { get; set; }
 

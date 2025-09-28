@@ -13,15 +13,38 @@ namespace WealthTrack.IntegrationTests.Tests;
 [Collection("WalletTests")]
 public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTestBase(factory)
 {
-    // GET ALL tests
-    
-    [Fact]
-    public async Task GetAll_WithoutIncludeParameter_ReturnsAllWalletsWithoutRelatedEntities()
+    #region GET ALL TESTS
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetAll_ShouldReturnCorrectNumberOfWallets(int numberOfWallets)
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateManyWallets(numberOfWallets);
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var response = await Client.GetAsync("/api/wallet");
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        walletsFromResponse.Should().NotBeNullOrEmpty();
+        walletsFromResponse.Should().HaveCount(numberOfWallets);
+    }
+    
+    [Fact]
+    public async Task GetAll_WithoutIncludeParameter_ShouldReturnWalletsWithoutLoadingRelatedEntities()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateWalletsWithTransactions();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -30,26 +53,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync("/api/wallet");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
     }
 
     [Fact]
-    public async Task GetAll_WithIncludedCurrency_ReturnsAllWalletsWithCurrencyOnly()
+    public async Task GetAll_WithIncludedCurrency_ShouldReturnWalletsWithLoadingCurrencyOnly()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -58,26 +79,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.Currency)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
     }
     
     [Fact]
-    public async Task GetAll_WithIncludedBudget_ReturnsAllWalletsWithBudgetOnly()
+    public async Task GetAll_WithIncludedBudget_ShouldReturnWalletsWithLoadingBudgetOnly()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -86,26 +105,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.Budget)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
     }
     
     [Fact]
-    public async Task GetAll_WithIncludedTransactions_ReturnsAllWalletsWithTransactionsOnly()
+    public async Task GetAll_WithIncludedTransactions_ShouldReturnWalletsWithLoadingTransactionsOnly()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -114,26 +131,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.Transactions)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
     }
     
     [Fact]
-    public async Task GetAll_WithIncludedIncomeTransferTransactions_ReturnsAllWalletsWithIncomeAndOutgoingTransferTransactionsOnly()
+    public async Task GetAll_WithIncludedIncomeTransferTransactions_ShouldReturnWalletsWithLoadingIncomeAndOutgoingTransferTransactionsOnly()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -142,26 +157,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.IncomeTransferTransactions)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
     }
     
     [Fact]
-    public async Task GetAll_WithIncludedOutgoingTransferTransactions_ReturnsAllWalletsWithOutgoingTransferTransactionsOnly()
+    public async Task GetAll_WithIncludedOutgoingTransferTransactions_ShouldReturnWalletsWithLoadingIncomeAndOutgoingTransferTransactionsOnly()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -170,26 +183,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.OutgoingTransferTransactions)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
     }
     
     [Fact]
-    public async Task GetAll_WithIncludeAllRelatedEntities_ReturnsAllWalletsWithAllRelatedEntities()
+    public async Task GetAll_WithIncludeAllRelatedEntities_ShouldReturnWalletsWithLoadingAllRelatedEntities()
     {
         // Arrange
-        var numberOfWallets = 2;
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -203,25 +214,24 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
                                              $"{nameof(Wallet.Transactions)}," +
                                              $"{nameof(Wallet.IncomeTransferTransactions)}," +
                                              $"{nameof(Wallet.OutgoingTransferTransactions)}");
-        var allWallets = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
+        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allWallets.Should().NotBeNullOrEmpty();
-        allWallets.Should().HaveCount(numberOfWallets);
-        allWallets.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
-        allWallets.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
-        allWallets.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
-        allWallets.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
+        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
+        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
     }
     
     [Fact]
     public async Task GetAll_WithIncorrectIncludeParameter_ReturnsBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -235,242 +245,258 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
-    // GET BY ID tests
+    #endregion
+    
+    #region GET BY ID TESTS
     
     [Fact]
-    public async Task GetById_WithoutIncludeParameter_ReturnsWalletWithEmptyRelatedEntities()
+    public async Task GetById_ShouldReturnWalletWithCorrectId()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
     
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().BeNull();
-        wallet.Budget.Should().BeNull();
-        wallet.Transactions.Should().BeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Id.Should().Be(walletId);
     }
-    
+
     [Fact]
-    public async Task GetById_WithIncludedCurrency_ReturnsWalletWithCurrencyOnly()
+    public async Task GetById_WithoutIncludeParameter_ShouldReturnWalletWithoutLoadingRelatedEntities()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
-    
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
+        
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include={nameof(Wallet.Currency)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().NotBeNull();
-        wallet.Budget.Should().BeNull();
-        wallet.Transactions.Should().BeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().BeNull();
+        walletFromResponse.Budget.Should().BeNull();
+        walletFromResponse.Transactions.Should().BeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncludedBudget_ReturnsWalletWithBudgetOnly()
+    public async Task GetById_WithIncludedCurrency_ShouldReturnWalletWithCurrencyOnly()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
+    
+        // Act
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.Currency)}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().NotBeNull();
+        walletFromResponse.Budget.Should().BeNull();
+        walletFromResponse.Transactions.Should().BeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+    }
+    
+    [Fact]
+    public async Task GetById_WithIncludedBudget_ShouldReturnWalletWithBudgetOnly()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateWalletsWithTransactions();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
+        await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
         
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include={nameof(Wallet.Budget)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.Budget)}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().BeNull();
-        wallet.Budget.Should().NotBeNull();
-        wallet.Transactions.Should().BeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().BeNull();
+        walletFromResponse.Budget.Should().NotBeNull();
+        walletFromResponse.Transactions.Should().BeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncludedTransactions_ReturnsWalletWithTransactionsOnly()
+    public async Task GetById_WithIncludedTransactions_ShouldReturnWalletWithTransactionsOnly()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
         
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include={nameof(Wallet.Transactions)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.Transactions)}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().BeNull();
-        wallet.Budget.Should().BeNull();
-        wallet.Transactions.Should().NotBeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().BeNull();
+        walletFromResponse.Budget.Should().BeNull();
+        walletFromResponse.Transactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncludedIncomeTransferTransactions_ReturnsWalletWithIncomeTransferTransactionsOnly()
+    public async Task GetById_WithIncludedIncomeTransferTransactions_ShouldReturnWalletWithIncomeTransferTransactionsOnly()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
         
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include={nameof(Wallet.IncomeTransferTransactions)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.IncomeTransferTransactions)}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().BeNull();
-        wallet.Budget.Should().BeNull();
-        wallet.Transactions.Should().BeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().BeNull();
+        walletFromResponse.Budget.Should().BeNull();
+        walletFromResponse.Transactions.Should().BeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncludedOutgoingTransferTransactions_ReturnsWalletWithOutgoingTransferTransactionsOnly()
+    public async Task GetById_WithIncludedOutgoingTransferTransactions_ShouldReturnWalletWithOutgoingTransferTransactionsOnly()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
         
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include={nameof(Wallet.OutgoingTransferTransactions)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.OutgoingTransferTransactions)}");
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().BeNull();
-        wallet.Budget.Should().BeNull();
-        wallet.Transactions.Should().BeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().BeNull();
+        walletFromResponse.Budget.Should().BeNull();
+        walletFromResponse.Transactions.Should().BeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncludedAllRelatedEntities_ReturnsWalletWithAllRelatedEntities()
+    public async Task GetById_WithIncludedAllRelatedEntities_ShouldReturnWalletWithAllRelatedEntities()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
         await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
     
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallets[0].Id}?include=" +
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include=" +
                                              $"{nameof(Wallet.Budget)}," +
                                              $"{nameof(Wallet.Currency)}," +
                                              $"{nameof(Wallet.Transactions)}," +
                                              $"{nameof(Wallet.IncomeTransferTransactions)}," +
                                              $"{nameof(Wallet.OutgoingTransferTransactions)}");
-        var wallet = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
+        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        wallet.Should().NotBeNull();
-        wallet.Id.Should().Be(scenario.wallets[0].Id);
-        wallet.Currency.Should().NotBeNull();
-        wallet.Budget.Should().NotBeNull();
-        wallet.Transactions.Should().NotBeNullOrEmpty();
-        wallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
-        wallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.Should().NotBeNull();
+        walletFromResponse.Currency.Should().NotBeNull();
+        walletFromResponse.Budget.Should().NotBeNull();
+        walletFromResponse.Transactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
+        walletFromResponse.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
     }
     
     [Fact]
-    public async Task GetById_WithIncorrectIncludeParameter_ReturnsBadRequest()
+    public async Task GetById_WithIncorrectIncludeParameter_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        await DbContext.SaveChangesAsync();
+        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
         
         // Act
-        var response = await Client.GetAsync($"/api/wallet/{scenario.wallet.Id}?include=SomeProperty");
+        var response = await Client.GetAsync($"/api/wallet/{walletId}?include=SomeProperty");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
     
     [Fact]
-    public async Task GetById_WithWrongId_ReturnsNotFound()
+    public async Task GetById_WithEmptyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        
-        // Act
-        var response = await Client.GetAsync($"/api/wallet/{Guid.NewGuid()}");
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-    }
-    
-    [Fact]
-    public async Task GetById_WithEmptyId_ReturnsBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         
         // Act
@@ -480,13 +506,31 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
     
-    // CREATE tests
-
     [Fact]
-    public async Task Create_WithCorrectData_CreatesNewWalletWithCorrectDefaultData()
+    public async Task GetById_WithIncorrectId_ShouldReturnNotFoundResult()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateManyWallets();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync($"/api/wallet/{Guid.NewGuid()}");
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    #endregion
+    
+    #region CREATE TESTS
+
+    [Fact] public async Task Create_WithCorrectData_ShouldCreateNewWalletWithCorrectDefaultData()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -496,9 +540,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -524,19 +566,18 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         created.Type.Should().Be(upsert.Type);
         created.Status.Should().Be(WalletStatus.Active);
         created.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
-        created.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        created.ModifiedDate.Should().BeExactly(created.CreatedDate);
         created.Currency.Id.Should().Be(upsert.CurrencyId.Value);
         created.Budget.Id.Should().Be(upsert.BudgetId.Value);
-        created.Transactions.Should().BeNullOrEmpty();
         created.IncomeTransferTransactions.Should().BeNullOrEmpty();
         created.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task Create_CreatesWalletAsPartOfGeneralBalance_UpdatesBudgetBalance()
+    public async Task Create_WhenAsPartOfGeneralBalanceIsTrue_ShouldUpdateBudgetBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -546,9 +587,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = true,
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -563,10 +602,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_CreatesWalletAsNotPartOfGeneralBalance_BudgetBalanceNotUpdated()
+    public async Task Create_WhenAsPartOfGeneralBalanceIsFalse_ShouldNotUpdateBudgetBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -576,9 +615,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = false,
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -592,8 +629,43 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedBudget.OverallBalance.Should().Be(0M);
     }
     
+    [Theory]
+    [InlineData(1, OperationType.Income)]
+    [InlineData(-1, OperationType.Expense)]
+    public async Task Create_CreatesWalletWithInitialBalance_ShouldCreateCorrectionTransaction(int initialBalanceSign, OperationType operationType)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithDependencies();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        await DbContext.SaveChangesAsync();
+        
+        var upsert = new WalletUpsertApiModel
+        {
+            Name = $"Test Wallet + {Guid.NewGuid()}",
+            Balance = Random.Next(100, 1000) * initialBalanceSign,
+            IsPartOfGeneralBalance = false,
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
+            CurrencyId = scenario.currency.Id,
+            BudgetId = scenario.budget.Id
+        };
+        var expectedTransactionAmount =  decimal.Abs(upsert.Balance.Value);
+        var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
+        
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var allTransactions = await DbContext.Transactions.AsNoTracking().ToListAsync();
+        allTransactions.Should().HaveCount(1);
+        allTransactions[0].Amount.Should().Be(expectedTransactionAmount);
+        allTransactions[0].Type.Should().Be(operationType);
+        allTransactions[0].CategoryId.ToString().Should().Be(balanceCorrectionCategoryId);
+    }
+    
     [Fact]
-    public async Task Create_WithNullBody_ReturnsBadRequest()
+    public async Task Create_WithNullBody_ShouldReturnBadRequest()
     {
         // Act
         var response = await Client.PostAsJsonAsync("/api/wallet/create", (WalletUpsertApiModel)null!);
@@ -603,10 +675,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithEmptyName_ReturnsBadRequest()
+    public async Task Create_WithEmptyName_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -616,9 +688,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = string.Empty,
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -631,10 +701,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithNullName_ReturnsBadRequest()
+    public async Task Create_WithNullName_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -644,9 +714,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = null,
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -659,10 +727,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithNullBalance_ReturnsBadRequest()
+    public async Task Create_WithNullBalance_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -672,9 +740,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = null,
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -687,10 +753,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithNullIsPartOfGeneralBalance_ReturnsBadRequest()
+    public async Task Create_WithNullIsPartOfGeneralBalance_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -700,9 +766,35 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = null,
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
+            CurrencyId = scenario.currency.Id,
+            BudgetId = scenario.budget.Id
+        };
+    
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Theory]
+    [InlineData(null)]
+    [InlineData((WalletType)99)]
+    public async Task Create_WithIncorrectType_ShouldReturnBadRequest(WalletType? type)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithDependencies();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        await DbContext.SaveChangesAsync();
+        
+        var upsert = new WalletUpsertApiModel
+        {
+            Name = $"Test Wallet + {Guid.NewGuid()}",
+            Balance = Random.Next(100, 1000),
+            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
+            Type = type,
             CurrencyId = scenario.currency.Id,
             BudgetId = scenario.budget.Id
         };
@@ -715,10 +807,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithNullType_ReturnsBadRequest()
+    public async Task Create_WithNullCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -728,35 +820,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = null,
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
-        };
-    
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Create_WithNullCurrencyId_ReturnsBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        await DbContext.SaveChangesAsync();
-        
-        var upsert = new WalletUpsertApiModel
-        {
-            Name = $"Test Wallet + {Guid.NewGuid()}",
-            Balance = Random.Next(100, 1000),
-            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = null,
             BudgetId = scenario.budget.Id
         };
@@ -769,10 +833,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithIncorrectCurrencyId_ReturnsBadRequest()
+    public async Task Create_WithIncorrectCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -782,9 +846,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = Guid.NewGuid(),
             BudgetId = scenario.budget.Id
         };
@@ -797,10 +859,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithNullBudgetId_ReturnsBadRequest()
+    public async Task Create_WithEmptyCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -810,9 +872,33 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
+            CurrencyId = Guid.Empty,
+            BudgetId = scenario.budget.Id
+        };
+    
+        // Act
+        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Fact]
+    public async Task Create_WithNullBudgetId_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithDependencies();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        await DbContext.SaveChangesAsync();
+        
+        var upsert = new WalletUpsertApiModel
+        {
+            Name = $"Test Wallet + {Guid.NewGuid()}",
+            Balance = Random.Next(100, 1000),
+            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = null
         };
@@ -825,10 +911,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithIncorrectBudgetId_ReturnsBadRequest()
+    public async Task Create_WithIncorrectBudgetId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -838,9 +924,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random
-                .GetItems([WalletType.Cash, WalletType.CreditCard, WalletType.DebitCard, WalletType.SavingAccount], 1)
-                .First(),
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
             BudgetId = Guid.NewGuid()
         };
@@ -853,10 +937,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Create_WithIncorrectType_ReturnsBadRequest()
+    public async Task Create_WithEmptyBudgetId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetScenario();
+        var scenario = DataFactory.CreateBudgetWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         await DbContext.SaveChangesAsync();
@@ -866,9 +950,9 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = (WalletType)99,
+            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            BudgetId = Guid.Empty
         };
     
         // Act
@@ -877,15 +961,18 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
-    
-    // UPDATE tests
-    
+
+    #endregion
+
+    #region UPDATE TESTS
+
     [Fact]
-    public async Task Update_WithNewName_UpdatesNameOnly()
+    public async Task Update_WithNewName_ShouldUpdateNameOnly()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -894,7 +981,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         
         var upsert = new WalletUpsertApiModel
         {
-            Name = "Updated Name"
+            Name = $"Updated Name + {Guid.NewGuid()}"
         };
     
         // Act
@@ -909,11 +996,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             .FirstOrDefaultAsync(w => w.Id == scenario.wallets[0].Id);
         updatedWallet.Should().NotBeNull();
         updatedWallet.Name.Should().Be(upsert.Name);
-        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
-        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.Balance.Should().Be(scenario.wallets[0].Balance);
         updatedWallet.IsPartOfGeneralBalance.Should().Be(scenario.wallets[0].IsPartOfGeneralBalance);
-        updatedWallet.CreatedDate.Should().Be(scenario.wallets[0].CreatedDate);
+        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
+        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
         updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
@@ -924,11 +1011,12 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithNewBalance_UpdatesBalanceOnly()
+    public async Task Update_WithNewBalance_ShouldUpdateBalanceOnly()
     {
       // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -952,11 +1040,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             .FirstOrDefaultAsync(w => w.Id == scenario.wallets[0].Id);
         updatedWallet.Should().NotBeNull();
         updatedWallet.Name.Should().Be(scenario.wallets[0].Name);
-        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
-        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.Balance.Should().Be(upsert.Balance);
         updatedWallet.IsPartOfGeneralBalance.Should().Be(scenario.wallets[0].IsPartOfGeneralBalance);
-        updatedWallet.CreatedDate.Should().Be(scenario.wallets[0].CreatedDate);
+        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
+        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
         updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
@@ -967,11 +1055,12 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithNewIsPartOfGeneralBalance_UpdatesIsPartOfGeneralBalanceOnly()
+    public async Task Update_WithNewIsPartOfGeneralBalance_ShouldUpdateIsPartOfGeneralBalanceOnly()
     {
       // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -995,11 +1084,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             .FirstOrDefaultAsync(w => w.Id == scenario.wallets[0].Id);
         updatedWallet.Should().NotBeNull();
         updatedWallet.Name.Should().Be(scenario.wallets[0].Name);
-        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
-        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.Balance.Should().Be(scenario.wallets[0].Balance);
         updatedWallet.IsPartOfGeneralBalance.Should().Be(upsert.IsPartOfGeneralBalance.Value);
-        updatedWallet.CreatedDate.Should().Be(scenario.wallets[0].CreatedDate);
+        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
+        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
         updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
@@ -1010,12 +1099,13 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithNewCurrencyId_UpdatesCurrencyIdOnly()
+    public async Task Update_WithNewCurrency_ShouldUpdateCurrencyOnly()
     {
-      // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        // Arrange
+        var scenario = DataFactory.CreateWalletsWithTransactions();
         var newCurrency = DataFactory.CreateCurrency();
         DbContext.Currencies.AddRange(scenario.currency, newCurrency);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -1039,11 +1129,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             .FirstOrDefaultAsync(w => w.Id == scenario.wallets[0].Id);
         updatedWallet.Should().NotBeNull();
         updatedWallet.Name.Should().Be(scenario.wallets[0].Name);
-        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
-        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.Balance.Should().Be(scenario.wallets[0].Balance);
         updatedWallet.IsPartOfGeneralBalance.Should().Be(scenario.wallets[0].IsPartOfGeneralBalance);
-        updatedWallet.CreatedDate.Should().Be(scenario.wallets[0].CreatedDate);
+        updatedWallet.ModifiedDate.Should().NotBe(updatedWallet.CreatedDate);
+        updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
         updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(upsert.CurrencyId.Value);
@@ -1053,27 +1143,52 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedWallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
     }
     
-    [Fact]
-    public async Task Update_WithNewIsPartOfGeneralBalance_UpdatesBudgetBalance()
+    [Theory]
+    [InlineData(false, true, 1)]
+    [InlineData(true, false, -1)]
+    public async Task Update_WithNewIsPartOfGeneralBalance_ShouldUpdateBudgetBalance(bool initialValue, bool valueToUpdate, int operationSign)
     {
-
+        // Arrange
+        var scenario = DataFactory.CreateWalletsWithTransactions(configureWallets: w => w.IsPartOfGeneralBalance = initialValue);
+        DbContext.Currencies.AddRange(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.budget.OverallBalance + scenario.wallets[0].Balance * operationSign;
+        
+        var upsert = new WalletUpsertApiModel
+        {
+            IsPartOfGeneralBalance = valueToUpdate
+        };
+    
+        // Act
+        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallets[0].Id}", upsert);
+        
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
+        updatedBudget.Should().NotBeNull();
+        updatedBudget.OverallBalance.Should().Be(expectedOverallBalance);
     }
     
     [Fact]
     public async Task Update_UpdateWalletBalanceWithBiggerAmount_ShouldCreateIncomeCorrectionTransaction()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
-        
         var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
         var upsert = new WalletUpsertApiModel
         {
-            Balance = Random.Next((int)scenario.wallet.Balance, (int)scenario.wallet.Balance + 1000)
+            Balance = scenario.wallet.Balance + Random.Next(100, 1000)
         };
+        
         var expectedTransactionAmount = upsert.Balance - scenario.wallet.Balance;
     
         // Act
@@ -1081,28 +1196,28 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var allTransactions = await DbContext.Transactions.AsNoTracking().ToListAsync();
-        allTransactions.Should().HaveCount(1);
-        allTransactions[0].Amount.Should().Be(expectedTransactionAmount);
-        allTransactions[0].Type.Should().Be(OperationType.Income);
-        allTransactions[0].CategoryId.ToString().Should().Be(balanceCorrectionCategoryId);
+        var correctionTransaction = await DbContext.Transactions.AsNoTracking().SingleOrDefaultAsync();
+        correctionTransaction.Should().NotBeNull();
+        correctionTransaction.Amount.Should().Be(expectedTransactionAmount);
+        correctionTransaction.Type.Should().Be(OperationType.Income);
+        correctionTransaction.CategoryId.ToString().Should().Be(balanceCorrectionCategoryId);
     }
     
     [Fact]
     public async Task Update_UpdateWalletBalanceWithSmallerAmount_ShouldCreateExpenseCorrectionTransaction()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
-        
         var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
         var upsert = new WalletUpsertApiModel
         {
-            Balance = Random.Next((int)scenario.wallet.Balance - 1000, (int)scenario.wallet.Balance - 1)
+            Balance = scenario.wallet.Balance - Random.Next(100, 1000)
         };
+        
         var expectedTransactionAmount =  scenario.wallet.Balance - upsert.Balance;
     
         // Act
@@ -1110,18 +1225,41 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var allTransactions = await DbContext.Transactions.AsNoTracking().ToListAsync();
-        allTransactions.Should().HaveCount(1);
-        allTransactions[0].Amount.Should().Be(expectedTransactionAmount);
-        allTransactions[0].Type.Should().Be(OperationType.Expense);
-        allTransactions[0].CategoryId.ToString().Should().Be(balanceCorrectionCategoryId);
+        var correctionTransaction = await DbContext.Transactions.AsNoTracking().SingleOrDefaultAsync();
+        correctionTransaction.Should().NotBeNull();
+        correctionTransaction.Amount.Should().Be(expectedTransactionAmount);
+        correctionTransaction.Type.Should().Be(OperationType.Expense);
+        correctionTransaction.CategoryId.ToString().Should().Be(balanceCorrectionCategoryId);
+    }
+    
+    [Fact]
+    public async Task Update_WhenWalletBalanceIsNotChanged_ShouldNotCreateAnyTransactions()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        await DbContext.SaveChangesAsync();
+        var upsert = new WalletUpsertApiModel
+        {
+            Balance = scenario.wallet.Balance
+        };
+    
+        // Act
+        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", upsert);
+    
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var correctionTransaction = await DbContext.Transactions.AsNoTracking().ToListAsync();
+        correctionTransaction.Should().BeNullOrEmpty();
     }
         
     [Fact]
     public async Task Update_UpdateWalletBalance_WhenWalletIsPartOfGeneralBalance_ShouldUpdateBudgetBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario(w => w.IsPartOfGeneralBalance = true);
+        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.IsPartOfGeneralBalance = true);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1146,7 +1284,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Update_UpdateWalletBalance_WhenWalletIsNotPartOfGeneralBalance_ShouldNotUpdateBudgetBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario(w => w.IsPartOfGeneralBalance = false);
+        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.IsPartOfGeneralBalance = false);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1156,21 +1294,22 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         {
             Balance = Random.Next(100, 1000)
         };
-    
+        var expectedBalance = scenario.budget.OverallBalance;
+        
         // Act
         var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", upsert);
     
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var updatedBudget = await DbContext.Budgets.AsNoTracking().FirstAsync(b => b.Id == scenario.budget.Id);
-        updatedBudget.OverallBalance.Should().Be(scenario.budget.OverallBalance);
+        updatedBudget.OverallBalance.Should().Be(expectedBalance);
     }
     
     [Fact]
-    public async Task Update_WithEmptyId_ReturnsBadRequestResult()
+    public async Task Update_WithEmptyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1189,10 +1328,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithIncorrectId_ReturnsNotFound()
+    public async Task Update_WithIncorrectId_ShouldReturnNotFoundResult()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1211,27 +1350,27 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithNullBody_ReturnsBadRequestResult()
+    public async Task Update_WithNullBody_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
         // Act
-        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{Guid.Empty}", (WalletUpsertApiModel)null!);
+        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", (WalletUpsertApiModel)null!);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
     
     [Fact]
-    public async Task Update_WithEmptyName_ReturnsBadRequestResult()
+    public async Task Update_WithEmptyName_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1250,14 +1389,12 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Theory]
-    [InlineData(WalletType.Cash)]
-    [InlineData(WalletType.CreditCard)]
-    [InlineData(WalletType.DebitCard)]
-    [InlineData(WalletType.SavingAccount)]
-    public async Task Update_WithNewType_ReturnsBadRequestResult(WalletType walletType)
+    [InlineData(WalletType.Cash, WalletType.DebitCard)]
+    [InlineData(WalletType.DebitCard, WalletType.Cash)]
+    public async Task Update_WithNewType_ShouldReturnBadRequest(WalletType oldType, WalletType newType)
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.Type = oldType);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1265,7 +1402,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         
         var modelToUpdate = new WalletUpsertApiModel
         {
-            Type = walletType
+            Type = newType
         };
 
         // Act
@@ -1276,10 +1413,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithIncorrectCurrencyId_ReturnsBadRequestResult()
+    public async Task Update_WithIncorrectCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1298,13 +1435,35 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Update_WithNewBudget_ReturnsBadRequestResult()
+    public async Task Update_WithEmptyCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
-        var newBudget = DataFactory.CreateBudget();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        await DbContext.SaveChangesAsync();
+        
+        var modelToUpdate = new WalletUpsertApiModel
+        {
+            CurrencyId = Guid.Empty
+        };
+
+        // Act
+        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", modelToUpdate);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+    
+    [Fact]
+    public async Task Update_WithNewBudget_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
+        var newBudget = DataFactory.CreateBudget(b => b.CurrencyId = scenario.currency.Id);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.AddRange(scenario.budget, newBudget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1320,15 +1479,37 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
     
-    // DELETE tests
+    #endregion
     
+    #region DELETE TESTS
+
     [Fact]
-    public async Task HardDelete_WithCorrectData_DeletesWalletWithRelatedTransactionsAndTransferTransactions()
+    public async Task HardDelete_WithCorrectData_ShouldDeleteWallet()
     {
         // Arrange
-        var scenario = DataFactory.CreatePairOfWalletHierarchyWithTransactionsScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        await DbContext.SaveChangesAsync();
+    
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+    
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var deletedWallet = await DbContext.Wallets.AsNoTracking().FirstOrDefaultAsync(w => w.Id == scenario.wallet.Id);
+        deletedWallet.Should().BeNull();
+    }
+    
+    [Fact]
+    public async Task HardDelete_WithCorrectData_ShouldDeleteRelatedTransactions()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateWalletsWithTransactions();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Categories.Add(scenario.category);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
@@ -1339,58 +1520,77 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var deletedWallet = await DbContext.Wallets.AsNoTracking().FirstOrDefaultAsync(w => w.Id == scenario.wallets[0].Id);
-        var deletedTransactions = await DbContext.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.WalletId == scenario.wallets[0].Id);
-        var deletedTransferTransactions = await DbContext.TransferTransactions.AsNoTracking().FirstOrDefaultAsync(t =>
-            t.SourceWalletId == scenario.wallets[0].Id || t.TargetWalletId == scenario.wallets[0].Id);
-        deletedWallet.Should().BeNull();
-        deletedTransactions.Should().BeNull();
-        deletedTransferTransactions.Should().BeNull();
+        var deletedTransactions = await DbContext.Transactions.AsNoTracking().Where(t => t.WalletId == scenario.wallets[0].Id).ToListAsync();
+        var deletedTransferTransactions = await DbContext.TransferTransactions.AsNoTracking().Where(t =>
+            t.SourceWalletId == scenario.wallets[0].Id || t.TargetWalletId == scenario.wallets[0].Id).ToListAsync();
+        deletedTransactions.Should().BeNullOrEmpty();
+        deletedTransferTransactions.Should().BeNullOrEmpty();
     }
     
     [Fact]
-    public async Task HardDelete_RelatedCurrencyIsNotDeleted()
+    public async Task HardDelete_WithCorrectData_ShouldNotDeleteRelatedBudget()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
-        
+    
         // Act
         var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
     
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var existingCurrency = DbContext.Currencies.AsNoTracking().FirstOrDefault(c => c.Id == scenario.wallet.CurrencyId);
-        existingCurrency.Should().NotBeNull();
-    }
-    
-    [Fact]
-    public async Task HardDelete_RelatedBudgetIsNotDeleted()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        await DbContext.SaveChangesAsync();
-        
-        // Act
-        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
-    
-        // Assert
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var existingBudget = DbContext.Budgets.AsNoTracking().FirstOrDefault(c => c.Id == scenario.wallet.BudgetId);
+        var existingBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
         existingBudget.Should().NotBeNull();
     }
     
     [Fact]
-    public async Task HardDelete_WhenWalletWasAsPartOfGeneralBalance_BudgetBalanceUpdated()
+    public async Task HardDelete_WithCorrectData_ShouldNotDeleteRelatedCurrency()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario(w => w.IsPartOfGeneralBalance = true);
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        await DbContext.SaveChangesAsync();
+    
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+    
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var existingCurrency = await DbContext.Currencies.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.currency.Id);
+        existingCurrency.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task HardDelete_WithCorrectData_ShouldNotDeleteRelatedTransactionCategory()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransactionScenario();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Transactions.AddRange(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+    
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+    
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var existingCategory = await DbContext.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.category.Id);
+        existingCategory.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task HardDelete_WhenWalletWasAsPartOfGeneralBalance_ShouldUpdateBudgetBalance()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.IsPartOfGeneralBalance = true);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1407,14 +1607,15 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task HardDelete_WhenWalletWasNotAsPartOfGeneralBalance_BudgetBalanceNotUpdated()
+    public async Task HardDelete_WhenWalletWasNotAsPartOfGeneralBalance_ShouldNotUpdateBudgetBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario(w => w.IsPartOfGeneralBalance = false);
+        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.IsPartOfGeneralBalance = false);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
+        var expectedBudgetBalance = scenario.budget.OverallBalance;
     
         // Act
         var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
@@ -1422,22 +1623,70 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var updatedBudget = await DbContext.Budgets.AsNoTracking().FirstAsync(b => b.Id == scenario.budget.Id);
-        updatedBudget.OverallBalance.Should().Be(scenario.budget.OverallBalance);
+        updatedBudget.OverallBalance.Should().Be(expectedBudgetBalance);
     }
     
     [Fact]
-    public async Task HardDelete_GoalsOfRelatedTransactionsAreUpdated()
+    public async Task HardDelete_WhenTransferTransactionExists_ShouldUpdateTargetWalletBalance()
     {
         // Arrange
-        var scenario = DataFactory.CreateTransactionsHierarchyWithGoalScenario();
+        var scenario = DataFactory.CreateSingleTransferScenario();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.TransferTransactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+        var sourceWallet = scenario.wallets.First(w => w.Id == scenario.transaction.SourceWalletId);
+        var targetWallet = scenario.wallets.First(w => w.Id == scenario.transaction.TargetWalletId);
+        var expectedTargetWalletBalance = targetWallet.Balance - scenario.transaction.Amount;
+        
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{sourceWallet.Id}");
+    
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedTargetWallet = await DbContext.Wallets.AsNoTracking().FirstAsync(w => w.Id == targetWallet.Id);
+        updatedTargetWallet.Should().NotBeNull();
+        updatedTargetWallet.Balance.Should().Be(expectedTargetWalletBalance);
+    }
+    
+    [Fact]
+    public async Task HardDelete_WhenTransferTransactionExists_ShouldUpdateSourceWalletBalance()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransferScenario();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.TransferTransactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+        var sourceWallet = scenario.wallets.First(w => w.Id == scenario.transaction.SourceWalletId);
+        var targetWallet = scenario.wallets.First(w => w.Id == scenario.transaction.TargetWalletId);
+        var expectedSourceWalletBalance = sourceWallet.Balance + scenario.transaction.Amount;
+        
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{targetWallet.Id}");
+    
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedSourceWallet = await DbContext.Wallets.AsNoTracking().FirstAsync(w => w.Id == sourceWallet.Id);
+        updatedSourceWallet.Should().NotBeNull();
+        updatedSourceWallet.Balance.Should().Be(expectedSourceWalletBalance);
+    }
+    
+    [Fact]
+    public async Task HardDelete_WhenApplicableGoalExists_ShouldUpdateGoalActualMoneyAmount()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransactionWithApplicableGoal();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.Transactions.AddRange(scenario.transaction);
         DbContext.Goals.Add(scenario.goal);
         await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = scenario.goal.ActualMoneyAmount - scenario.transactions.Sum(t => t.Amount);
+        var expectedGoalActualMoneyAmount = scenario.goal.ActualMoneyAmount - scenario.transaction.Amount;
         
         // Act
         var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
@@ -1448,11 +1697,127 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
     }
     
-    [Fact]
-    public async Task HardDelete_WithWrongId_ReturnsNotFound()
+    [Theory]
+    [InlineData(OperationType.Income)]
+    [InlineData(OperationType.Expense)]
+    public async Task HardDelete_WhenApplicableGoalIsNotExist_WhenTransactionDateIsBiggerThanGoalEndDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleTransactionScenario(
+            configureCategory: c => c.Type = type,
+            configureTransaction: t =>
+            {
+                t.Type = type;
+                t.TransactionDate = DateTimeOffset.UtcNow;
+            });
+        var goal = DataFactory.CreateGoal(g =>
+        {
+            g.Type = type;
+            g.StartDate =  DateTimeOffset.UtcNow.AddDays(-30);
+            g.EndDate = DateTimeOffset.UtcNow.AddMinutes(-1);
+            g.Categories = [scenario.category];
+        });
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Goals.Add(goal);
+        DbContext.Transactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
+        
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(w => w.Id == goal.Id);
+        updatedGoal.Should().NotBeNull();
+        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
+    }
+    
+    [Theory]
+    [InlineData(OperationType.Income)]
+    [InlineData(OperationType.Expense)]
+    public async Task HardDelete_WhenApplicableGoalIsNotExist_WhenTransactionDateIsLessThanGoalStartDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransactionScenario(
+            configureCategory: c => c.Type = type,
+            configureTransaction: t =>
+            {
+                t.Type = type;
+                t.TransactionDate = DateTimeOffset.UtcNow;
+            });
+        var goal = DataFactory.CreateGoal(g =>
+        {
+            g.Type = type;
+            g.StartDate =  DateTimeOffset.UtcNow.AddDays(1);
+            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
+            g.Categories = [scenario.category];
+        });
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Goals.Add(goal);
+        DbContext.Transactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
+        
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(w => w.Id == goal.Id);
+        updatedGoal.Should().NotBeNull();
+        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
+    }
+    
+    [Theory]
+    [InlineData(OperationType.Income)]
+    [InlineData(OperationType.Expense)]
+    public async Task HardDelete_WhenApplicableGoalIsNotExist_WhenTransactionCategoryIsDifferentFromGoal_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransactionScenario(
+            configureCategory: c => c.Type = type,
+            configureTransaction: t => {
+                t.Type = type;
+                t.TransactionDate = DateTimeOffset.Now;
+            });
+        var secondCategory = DataFactory.CreateCategory(c => c.Type = type);
+        var goal = DataFactory.CreateGoal(g => {
+            g.Type = type;
+            g.StartDate =  DateTimeOffset.UtcNow.AddMinutes(-30);
+            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
+            g.Categories = [secondCategory];
+        });
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Categories.AddRange(scenario.category, secondCategory);
+        DbContext.Goals.Add(goal);
+        DbContext.Transactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
+        
+        // Act
+        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
+
+        // Assert
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(w => w.Id == goal.Id);
+        updatedGoal.Should().NotBeNull();
+        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
+    }
+    
+    [Fact]
+    public async Task HardDelete_WithIncorrectId_ShouldReturnNotFoundResult() 
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1466,10 +1831,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task HardDelete_WithEmptyId_ReturnsBadRequest()
+    public async Task HardDelete_WithEmptyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateWalletScenario();
+        var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -1481,4 +1846,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    #endregion
 }

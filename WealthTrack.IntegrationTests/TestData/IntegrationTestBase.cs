@@ -9,7 +9,7 @@ public abstract class IntegrationTestBase(BaseTestWebAppFactory factory) : IAsyn
     protected readonly HttpClient Client = factory.CreateClient();
     protected AppDbContext DbContext = null!;
     protected TestDataFactory DataFactory = null!;
-    protected readonly Random Random = new();
+    protected Random Random = null!;
         
     private IServiceScope _scope = null!;
 
@@ -20,6 +20,7 @@ public abstract class IntegrationTestBase(BaseTestWebAppFactory factory) : IAsyn
         _scope = factory.Services.CreateScope();
         DbContext = _scope.ServiceProvider.GetRequiredService<AppDbContext>();
         DataFactory = new TestDataFactory();
+        Random = new Random();
     }
 
     public virtual async Task DisposeAsync()

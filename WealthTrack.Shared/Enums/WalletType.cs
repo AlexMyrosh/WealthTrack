@@ -3,7 +3,5 @@
 public enum WalletType
 {
     Cash,
-    CreditCard,
-    DebitCard,
-    SavingAccount
+    DebitCard
 }

@@ -10,35 +10,37 @@ namespace WealthTrack.IntegrationTests.Tests;
 [Collection("CurrencyTests")]
 public class CurrencyControllerTests(EmptyWebAppFactory factory) : IntegrationTestBase(factory)
 {
-    // GET ALL tests
-    
+    #region GET ALL TESTS
+
     [Theory]
     [InlineData(1)]
     [InlineData(3)]
     [InlineData(5)]
-    public async Task GetAll_ReturnsAllCurrencies(int numberOfBudgets)
+    public async Task GetAll_ShouldReturnCorrectNumberOfCurrencies(int numberOfCurrencies)
     {
         // Arrange
-        var currencies = DataFactory.CreateCurrenciesScenario(numberOfBudgets);
+        var currencies = DataFactory.CreateManyCurrencies(numberOfCurrencies);
         DbContext.Currencies.AddRange(currencies);
         await DbContext.SaveChangesAsync();
         var currencyIds = currencies.Select(b => b.Id).ToList();
         
         // Act
         var response = await Client.GetAsync("/api/currency");
-        var allCurrencies = await response.Content.ReadFromJsonAsync<List<CurrencyDetailsApiModel>>();
+        var currenciesFromResponse = await response.Content.ReadFromJsonAsync<List<CurrencyDetailsApiModel>>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        allCurrencies.Should().NotBeNullOrEmpty();
-        allCurrencies.Should().HaveCount(numberOfBudgets);
-        allCurrencies.Should().AllSatisfy(currency => currencyIds.Should().Contain(currency.Id));
+        currenciesFromResponse.Should().NotBeNullOrEmpty();
+        currenciesFromResponse.Should().HaveCount(numberOfCurrencies);
+        currenciesFromResponse.Should().AllSatisfy(c => currencyIds.Should().Contain(c.Id));
     }
 
-    // GET BY ID tests
+    #endregion
     
+    #region GET BY ID TESTS
+
     [Fact]
-    public async Task GetById_ReturnsCurrency()
+    public async Task GetById_ShouldReturnCurrencyWithCorrectId()
     {
         // Arrange
         var currency = DataFactory.CreateCurrency();
@@ -47,27 +49,12 @@ public class CurrencyControllerTests(EmptyWebAppFactory factory) : IntegrationTe
 
         // Act
         var response = await Client.GetAsync($"/api/currency/{currency.Id}");
-        var model = await response.Content.ReadFromJsonAsync<CurrencyDetailsApiModel>();
+        var currencyFromResponse = await response.Content.ReadFromJsonAsync<CurrencyDetailsApiModel>();
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        model.Should().NotBeNull();
-        model.Id.Should().Be(currency.Id);
-    }
-
-    [Fact]
-    public async Task GetById_WithWrongId_ReturnsNotFound()
-    {
-        // Arrange
-        var currency = DataFactory.CreateCurrency();
-        DbContext.Currencies.Add(currency);
-        await DbContext.SaveChangesAsync();
-        
-        // Act
-        var response = await Client.GetAsync($"/api/currency/{Guid.NewGuid()}");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        currencyFromResponse.Should().NotBeNull();
+        currencyFromResponse.Id.Should().Be(currency.Id);
     }
     
     [Fact]
@@ -84,4 +71,21 @@ public class CurrencyControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+    
+    [Fact]
+    public async Task GetById_WithIncorrectId_ShouldReturnNotFoundResult()
+    {
+        // Arrange
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync($"/api/currency/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    #endregion
 }

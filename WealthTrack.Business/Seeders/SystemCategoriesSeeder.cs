@@ -8,7 +8,6 @@ namespace WealthTrack.Business.Seeders
     public class SystemCategoriesSeeder(IUnitOfWork unitOfWork, IConfiguration configuration)
     {
         private readonly string _balanceCorrectionId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
-        private readonly string _transferCategoryId = configuration["SystemCategories:TransferId"] ?? throw new InvalidOperationException("Unable to get transfer category id from configuration");
 
         public async Task SeedAsync()
         {
@@ -20,16 +19,6 @@ namespace WealthTrack.Business.Seeders
                     Id = new Guid(_balanceCorrectionId),
                     Name = "Balance correction",
                     IconName = "BalanceCorrection",
-                    IsSystem = true,
-                    CreatedDate = DateTimeOffset.Now,
-                    ModifiedDate = DateTimeOffset.Now,
-                    Status = CategoryStatus.Active
-                },
-                new()
-                {
-                    Id = new Guid(_transferCategoryId),
-                    Name = "Transfer",
-                    IconName = "Transfer",
                     IsSystem = true,
                     CreatedDate = DateTimeOffset.Now,
                     ModifiedDate = DateTimeOffset.Now,
