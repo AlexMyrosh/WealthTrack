@@ -17,8 +17,7 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var domainModel = mapper.Map<Budget>(model);
-            domainModel.CreatedDate = DateTimeOffset.Now;
-            domainModel.ModifiedDate = domainModel.CreatedDate;
+            domainModel.CreatedDate = domainModel.ModifiedDate = DateTimeOffset.Now;
             domainModel.Status = BudgetStatus.Active;
             var createdEntityId = await unitOfWork.BudgetRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
@@ -63,7 +62,7 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)
             {
@@ -76,13 +75,37 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
             }
 
-            while (domainModelToDelete.Wallets.Any())
+            foreach (var walletToDelete in domainModelToDelete.Wallets)
             {
-                await walletService.HardDeleteAsync(domainModelToDelete.Wallets.First().Id);
+                await walletService.HardDeleteAsync(walletToDelete.Id, false);
             }
 
             await unitOfWork.BudgetRepository.HardDeleteAsync(domainModelToDelete);
-            await unitOfWork.SaveAsync();
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+        
+        public async Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var domainModelsToDelete = await unitOfWork.BudgetRepository.GetByIdsAsync(ids, $"{nameof(Budget.Wallets)}");
+            if (domainModelsToDelete is null || domainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get budgets from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            await walletService.BulkHardDeleteAsync(ids, false);
+            unitOfWork.BudgetRepository.BulkHardDelete(domainModelsToDelete);
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
         }
     }
 }

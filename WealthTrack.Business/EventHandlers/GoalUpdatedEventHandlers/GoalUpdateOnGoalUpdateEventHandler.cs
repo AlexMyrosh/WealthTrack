@@ -21,17 +21,17 @@ namespace WealthTrack.Business.EventHandlers.GoalUpdatedEventHandlers
             //     return;
             // }
             
-            var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
-            var applicableTransactions = transactions.Where(t => t.CategoryId.HasValue && eventMessage.CategoryIds.Contains(t.CategoryId.Value) &&
-                                                                 eventMessage.StartDate <= t.TransactionDate &&
-                                                                 eventMessage.EndDate >= t.TransactionDate &&
-                                                                 eventMessage.Type == t.Type).ToList();
-
-            eventMessage.GoalModel.ActualMoneyAmount = 0;
-            foreach (var transaction in applicableTransactions)
-            {
-                eventMessage.GoalModel.ActualMoneyAmount += transaction.Amount;
-            }
+            // var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
+            // var applicableTransactions = transactions.Where(t => t.CategoryId.HasValue && eventMessage.CategoryIds.Contains(t.CategoryId.Value) &&
+            //                                                      eventMessage.StartDate <= t.TransactionDate &&
+            //                                                      eventMessage.EndDate >= t.TransactionDate &&
+            //                                                      eventMessage.Type == t.Type).ToList();
+            //
+            // eventMessage.GoalModel.ActualMoneyAmount = 0;
+            // foreach (var transaction in applicableTransactions)
+            // {
+            //     eventMessage.GoalModel.ActualMoneyAmount += transaction.Amount;
+            // }
         }
     }
 }

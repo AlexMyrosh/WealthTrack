@@ -7,11 +7,15 @@ namespace WealthTrack.Data.Repositories.Interfaces
         public Task<Guid> CreateAsync(TransferTransaction model);
 
         public Task<TransferTransaction?> GetByIdAsync(Guid id, string include = "");
+        
+        public Task<List<TransferTransaction>> GetByIdsAsync(IEnumerable<Guid> ids, string include = "");
 
         public Task<List<TransferTransaction>> GetAllAsync(string include = "");
 
         public void Update(TransferTransaction model);
 
         public void HardDelete(TransferTransaction model);
+
+        public void BulkHardDelete(IEnumerable<TransferTransaction> models);
     }
 }

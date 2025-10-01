@@ -10,25 +10,25 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
     {
         public async Task Handle(TransactionCreatedEvent eventMessage)
         {
-            if (eventMessage is null)
-            {
-                throw new ArgumentException(nameof(eventMessage));
-            }
-
-            // In the future it will be taking goals of specific user
-            var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
-            if (goals.Count == 0)
-            {
-                return;
-            }
-
-            foreach (var goal in goals)
-            {
-                if (isTransactionMeetsGoal(goal, eventMessage))
-                {
-                    goal.ActualMoneyAmount += eventMessage.Amount;
-                }
-            }
+            // if (eventMessage is null)
+            // {
+            //     throw new ArgumentException(nameof(eventMessage));
+            // }
+            //
+            // // In the future it will be taking goals of specific user
+            // var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
+            // if (goals.Count == 0)
+            // {
+            //     return;
+            // }
+            //
+            // foreach (var goal in goals)
+            // {
+            //     if (isTransactionMeetsGoal(goal, eventMessage))
+            //     {
+            //         goal.ActualMoneyAmount += eventMessage.Amount;
+            //     }
+            // }
         }
 
         private bool isTransactionMeetsGoal(Goal goal, TransactionCreatedEvent transaction)

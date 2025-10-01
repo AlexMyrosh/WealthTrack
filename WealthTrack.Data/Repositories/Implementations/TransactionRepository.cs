@@ -16,10 +16,10 @@ namespace WealthTrack.Data.Repositories.Implementations
         public async Task<Transaction?> GetByIdAsync(Guid id, string include = "")
         {
             var query = context.Transactions.AsQueryable();
-            var includeProperties = include.Split(",");
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property) || typeof(TransferTransaction).GetProperty(property) is not null)
+                if (typeof(TransferTransaction).GetProperty(property) is not null)
                 {
                     continue;
                 }
@@ -31,13 +31,31 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
+        public async Task<List<Transaction>> GetByIdsAsync(IEnumerable<Guid> ids, string include = "")
+        {
+            var query = context.Transactions.AsQueryable();
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
+            foreach (var property in includeProperties)
+            {
+                if (typeof(TransferTransaction).GetProperty(property) is not null)
+                {
+                    continue;
+                }
+
+                query = EntityFrameworkQueryableExtensions.Include(query, property);
+            }
+
+            var result = await query.Where(t => ids.Contains(t.Id)).ToListAsync();
+            return result;
+        }
+
         public async Task<List<Transaction>> GetAllAsync(string include = "")
         {
             var query = context.Transactions.AsQueryable();
-            var includeProperties = include.Split(",");
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property) || typeof(TransferTransaction).GetProperty(property) is not null)
+                if (typeof(TransferTransaction).GetProperty(property) is not null)
                 {
                     continue;
                 }
@@ -56,7 +74,13 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public void HardDelete(Transaction model)
         {
-            context.Transactions.Remove(model);
+            //context.Transactions.Remove(model);
+            context.Entry(model).State = EntityState.Deleted;
+        }
+        
+        public void BulkHardDelete(IEnumerable<Transaction> models)
+        {
+            context.Transactions.RemoveRange(models);
         }
     }
 }

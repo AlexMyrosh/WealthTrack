@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -64,9 +63,9 @@ namespace WealthTrack.Business.Services.Implementations
             return result;
         }
 
-        public async Task<List<CategoryDetailsBusinessModel>> GetAllAsync()
+        public async Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "")
         {
-            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync();
+            var domainModels = await unitOfWork.CategoryRepository.GetAllAsync(include);
             var result = mapper.Map<List<CategoryDetailsBusinessModel>>(domainModels);
             return result;
         }
@@ -109,7 +108,7 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)
             {
@@ -124,13 +123,44 @@ namespace WealthTrack.Business.Services.Implementations
 
             foreach (var childCategory in domainModelToDelete.ChildCategories)
             {
-                unitOfWork.CategoryRepository.HardDelete(childCategory);
+                await HardDeleteAsync(childCategory.Id, false);
             }
 
             unitOfWork.CategoryRepository.HardDelete(domainModelToDelete);
             var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(domainModelToDelete);
             await eventPublisher.PublishAsync(categoryDeletedEventModel);
-            await unitOfWork.SaveAsync();
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+        
+        public async Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var domainModelsToDelete = await unitOfWork.CategoryRepository.GetByIdsAsync(ids, $"{nameof(Category.ChildCategories)}");
+            if (domainModelsToDelete is null || domainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get categories from database by ids: {string.Join(", ", ids)}");
+            }
+
+            var childCategoryIdsToDelete = domainModelsToDelete.SelectMany(c => c.ChildCategories.Select(cc => cc.Id)).ToList();
+            await BulkHardDeleteAsync(childCategoryIdsToDelete, false);
+            unitOfWork.CategoryRepository.BulkHardDelete(domainModelsToDelete);
+            foreach (var domainModelToDelete in domainModelsToDelete)
+            {
+                var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(categoryDeletedEventModel);
+            }
+            
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
         }
     }
 }

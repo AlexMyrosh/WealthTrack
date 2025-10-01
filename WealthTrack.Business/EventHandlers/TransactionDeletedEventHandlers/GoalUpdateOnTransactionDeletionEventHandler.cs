@@ -2,7 +2,6 @@
 using WealthTrack.Business.Events.Models;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
-using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
 {
@@ -10,25 +9,25 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
     {
         public async Task Handle(TransactionDeletedEvent eventMessage)
         {
-            if (eventMessage is null)
-            {
-                throw new ArgumentException(nameof(eventMessage));
-            }
-
-            // In future it will be taking goals of specific user
-            var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
-            if (goals.Count == 0)
-            {
-                return;
-            }
-
-            foreach (var goal in goals)
-            {
-                if (isTransactionMeetsGoal(goal, eventMessage))
-                {
-                    goal.ActualMoneyAmount -= eventMessage.Amount;
-                }
-            }
+            // if (eventMessage is null)
+            // {
+            //     throw new ArgumentException(nameof(eventMessage));
+            // }
+            //
+            // // In future it will be taking goals of specific user
+            // var goals = await unitOfWork.GoalRepository.GetAllAsync($"{nameof(Goal.Categories)}");
+            // if (goals.Count == 0)
+            // {
+            //     return;
+            // }
+            //
+            // foreach (var goal in goals)
+            // {
+            //     if (isTransactionMeetsGoal(goal, eventMessage))
+            //     {
+            //         goal.ActualMoneyAmount -= eventMessage.Amount;
+            //     }
+            // }
         }
 
         private bool isTransactionMeetsGoal(Goal goal, TransactionDeletedEvent transaction)

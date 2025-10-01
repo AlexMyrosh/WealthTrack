@@ -75,6 +75,32 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         goalsFromResponse.Should().AllSatisfy(goal => goal.Categories.Should().NotBeNullOrEmpty());
     }
     
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_ShouldReturnGoalsWithCorrectActualMoneyAmount(int numberOfGoals, int numberOfTransactions)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyGoalsWithManyApplicableTransactions(numberOfGoals, numberOfTransactions);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.Goals.AddRange(scenario.goals);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync("/api/goal");
+        var goalsFromResponse = await response.Content.ReadFromJsonAsync<List<GoalDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        goalsFromResponse.Should().NotBeNullOrEmpty();
+        goalsFromResponse.Should().AllSatisfy(g => g.ActualMoneyAmount.Should().Be(CalculateActualMoneyAmount(scenario.goals.First(g2 => g2.Id == g.Id), scenario.transactions)));
+    }
+    
     [Fact]
     public async Task GetAll_WithIncorrectIncludeParameter_ShouldReturnBadRequest()
     {
@@ -90,8 +116,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
-
-
+    
     #endregion
     
     #region GET BY ID TESTS
@@ -152,6 +177,33 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         goalFromResponse.Should().NotBeNull();
         goalFromResponse.Categories.Should().NotBeNullOrEmpty();
+    }
+    
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetById_ShouldReturnGoalsWithCorrectActualMoneyAmount(int numberOfTransactions)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleGoalWithManyTransactions(numberOfTransactions);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.Goals.Add(scenario.goal);
+        await DbContext.SaveChangesAsync();
+        var expectedActualMoneyAmount = CalculateActualMoneyAmount(scenario.goal, scenario.transactions);
+        
+        // Act
+        var response = await Client.GetAsync($"/api/goal/{scenario.goal.Id}");
+        var goalFromResponse = await response.Content.ReadFromJsonAsync<GoalDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        goalFromResponse.Should().NotBeNull();
+        goalFromResponse.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
     }
     
     [Fact]
@@ -234,7 +286,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         createdGoal.Should().NotBeNull();
         createdGoal.Name.Should().Be(upsert.Name);
         createdGoal.PlannedMoneyAmount.Should().Be(upsert.PlannedMoneyAmount);
-        createdGoal.ActualMoneyAmount.Should().Be(0M);
         createdGoal.Type.Should().Be(upsert.Type);
         createdGoal.StartDate.Should().Be(upsert.StartDate);
         createdGoal.EndDate.Should().Be(upsert.EndDate);
@@ -242,227 +293,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         createdGoal.ModifiedDate.Should().BeExactly(createdGoal.CreatedDate);
         createdGoal.Categories.Should().NotBeNullOrEmpty();
         createdGoal.Categories.Should().ContainSingle(c => c.Id == category.Id);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Income, OperationType.Expense)]
-    [InlineData(OperationType.Expense, OperationType.Income)]
-    public async Task Create_WhenApplicableTransactionsExist_ShouldCreateGoalWithCorrectActualMoneyAmount(OperationType applicableType, OperationType notApplicableType) 
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var category = DataFactory.CreateCategory(category => category.Type = applicableType);
-        var applicableTransaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = applicableType;
-            t.CategoryId = category.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        var notApplicableTransaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = notApplicableType;
-            t.CategoryId = category.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.Add(category);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Transactions.AddRange(applicableTransaction, notApplicableTransaction);
-        await DbContext.SaveChangesAsync();
-            
-        var upsert = new GoalUpsertApiModel 
-        { 
-            Name = $"Test Goal + {Guid.NewGuid()}",
-            PlannedMoneyAmount = Random.Next(100,1000),
-            Type = applicableType,
-            StartDate = DateTimeOffset.UtcNow.AddDays(-1),
-            EndDate = DateTimeOffset.UtcNow.AddDays(1),
-            CategoryIds = [category.Id]
-        };
-
-        var expectedGoalActualMoneyAmount = applicableTransaction.Amount;
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
-        var createdId = await response.Content.ReadFromJsonAsync<Guid>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var createdGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == createdId);
-        createdGoal.Should().NotBeNull();
-        createdGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Income, OperationType.Expense)]
-    [InlineData(OperationType.Expense, OperationType.Income)]
-    public async Task Create_WhenApplicableTransactionsNotExist_WhenTypeIsDifferent_ShouldCreateGoalWithZeroActualMoneyAmount(OperationType goalType, OperationType transactionType) 
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var category = DataFactory.CreateCategory(category => category.Type = goalType);
-        var transaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = transactionType;
-            t.CategoryId = category.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(category);
-        DbContext.Transactions.Add(transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new GoalUpsertApiModel 
-        { 
-            Name = $"Test Goal + {Guid.NewGuid()}",
-            PlannedMoneyAmount = Random.Next(100,1000),
-            Type = goalType,
-            StartDate = DateTimeOffset.UtcNow.AddDays(-1),
-            EndDate = DateTimeOffset.UtcNow.AddDays(1),
-            CategoryIds = [category.Id]
-        };
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
-        var createdId = await response.Content.ReadFromJsonAsync<Guid>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var createdGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == createdId);
-        createdGoal.Should().NotBeNull();
-        createdGoal.ActualMoneyAmount.Should().Be(0M);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Income)]
-    [InlineData(OperationType.Expense)]
-    public async Task Create_WhenApplicableTransactionsNotExist_WhenCategoryIsDifferent_ShouldCreateGoalWithZeroActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var category1 = DataFactory.CreateCategory(category => category.Type = type);
-        var category2 = DataFactory.CreateCategory(category => category.Type = type);
-        var transaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = type;
-            t.CategoryId = category1.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(category1, category2);
-        DbContext.Transactions.Add(transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new GoalUpsertApiModel 
-        { 
-            Name = $"Test Goal + {Guid.NewGuid()}",
-            PlannedMoneyAmount = Random.Next(100,1000),
-            Type = type,
-            StartDate = DateTimeOffset.UtcNow.AddDays(-1),
-            EndDate = DateTimeOffset.UtcNow.AddDays(1),
-            CategoryIds = [category2.Id]
-        };
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
-        var createdId = await response.Content.ReadFromJsonAsync<Guid>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var createdGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == createdId);
-        createdGoal.Should().NotBeNull();
-        createdGoal.ActualMoneyAmount.Should().Be(0M);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Income)]
-    [InlineData(OperationType.Expense)]
-    public async Task Create_WhenApplicableTransactionsNotExist_WhenTransactionDateIsBigger_ShouldCreateGoalWithZeroActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var category = DataFactory.CreateCategory(category => category.Type = type);
-        var transaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = type;
-            t.CategoryId = category.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(category);
-        DbContext.Transactions.Add(transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new GoalUpsertApiModel 
-        { 
-            Name = $"Test Goal + {Guid.NewGuid()}",
-            PlannedMoneyAmount = Random.Next(100,1000),
-            Type = type,
-            StartDate = transaction.TransactionDate.AddDays(-30),
-            EndDate = transaction.TransactionDate.AddMinutes(-1),
-            CategoryIds = [category.Id]
-        };
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
-        var createdId = await response.Content.ReadFromJsonAsync<Guid>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var createdGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == createdId);
-        createdGoal.Should().NotBeNull();
-        createdGoal.ActualMoneyAmount.Should().Be(0M);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Income)]
-    [InlineData(OperationType.Expense)]
-    public async Task Create_WhenApplicableTransactionsNotExist_WhenTransactionDateIsLess_ShouldCreateGoalWithZeroActualMoneyAmount(OperationType type)
-    {
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var category = DataFactory.CreateCategory(category => category.Type = type);
-        var transaction = DataFactory.CreateTransaction(t =>
-        {
-            t.Type = type;
-            t.CategoryId = category.Id;
-            t.TransactionDate = DateTimeOffset.UtcNow;
-            t.WalletId = scenario.wallet.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(category);
-        DbContext.Transactions.Add(transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new GoalUpsertApiModel 
-        { 
-            Name = $"Test Goal + {Guid.NewGuid()}",
-            PlannedMoneyAmount = Random.Next(100,1000),
-            Type = type,
-            StartDate = transaction.TransactionDate.AddMinutes(1),
-            EndDate = transaction.TransactionDate.AddDays(30),
-            CategoryIds = [category.Id]
-        };
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
-        var createdId = await response.Content.ReadFromJsonAsync<Guid>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var createdGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == createdId);
-        createdGoal.Should().NotBeNull();
-        createdGoal.ActualMoneyAmount.Should().Be(0M);
     }
         
     [Fact]
@@ -886,7 +716,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.Should().NotBeNull();
         updatedGoal.Name.Should().Be(upsert.Name);
         updatedGoal.PlannedMoneyAmount.Should().Be(scenario.goals[0].PlannedMoneyAmount);
-        updatedGoal.ActualMoneyAmount.Should().Be(scenario.goals[0].ActualMoneyAmount);
         updatedGoal.Type.Should().Be(scenario.goals[0].Type);
         updatedGoal.StartDate.Should().BeExactly(scenario.goals[0].StartDate);
         updatedGoal.EndDate.Should().BeExactly(scenario.goals[0].EndDate);
@@ -926,7 +755,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.Should().NotBeNull();
         updatedGoal.Name.Should().Be(scenario.goals[0].Name);
         updatedGoal.PlannedMoneyAmount.Should().Be(upsert.PlannedMoneyAmount);
-        updatedGoal.ActualMoneyAmount.Should().Be(scenario.goals[0].ActualMoneyAmount);
         updatedGoal.Type.Should().Be(scenario.goals[0].Type);
         updatedGoal.StartDate.Should().BeExactly(scenario.goals[0].StartDate);
         updatedGoal.EndDate.Should().BeExactly(scenario.goals[0].EndDate);
@@ -966,7 +794,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.Should().NotBeNull();
         updatedGoal.Name.Should().Be(scenario.goals[0].Name);
         updatedGoal.PlannedMoneyAmount.Should().Be(scenario.goals[0].PlannedMoneyAmount);
-        updatedGoal.ActualMoneyAmount.Should().Be(scenario.goals[0].ActualMoneyAmount);
         updatedGoal.Type.Should().Be(scenario.goals[0].Type);
         updatedGoal.StartDate.Should().BeExactly(upsert.StartDate);
         updatedGoal.EndDate.Should().BeExactly(scenario.goals[0].EndDate);
@@ -1006,7 +833,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.Should().NotBeNull();
         updatedGoal.Name.Should().Be(scenario.goals[0].Name);
         updatedGoal.PlannedMoneyAmount.Should().Be(scenario.goals[0].PlannedMoneyAmount);
-        updatedGoal.ActualMoneyAmount.Should().Be(scenario.goals[0].ActualMoneyAmount);
         updatedGoal.Type.Should().Be(scenario.goals[0].Type);
         updatedGoal.StartDate.Should().BeExactly(scenario.goals[0].StartDate);
         updatedGoal.EndDate.Should().BeExactly(upsert.EndDate);
@@ -1048,7 +874,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.Should().NotBeNull();
         updatedGoal.Name.Should().Be(scenario.goals[0].Name);
         updatedGoal.PlannedMoneyAmount.Should().Be(scenario.goals[0].PlannedMoneyAmount);
-        updatedGoal.ActualMoneyAmount.Should().Be(scenario.goals[0].ActualMoneyAmount);
         updatedGoal.Type.Should().Be(scenario.goals[0].Type);
         updatedGoal.StartDate.Should().BeExactly(scenario.goals[0].StartDate);
         updatedGoal.EndDate.Should().BeExactly(scenario.goals[0].EndDate);
@@ -1056,271 +881,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         updatedGoal.ModifiedDate.Should().NotBe(updatedGoal.CreatedDate);
         updatedGoal.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedGoal.Categories.Should().ContainSingle(c => c.Id == newCategory.Id);
-    }
-        
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateStartDateToIncludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => t.Type = type
-        );
-        scenario.transactions[0].TransactionDate = DateTimeOffset.UtcNow;
-        scenario.transactions[1].TransactionDate = DateTimeOffset.UtcNow.AddDays(-1);
-        scenario.transactions[2].TransactionDate = DateTimeOffset.UtcNow.AddDays(-3);
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category];
-            g.StartDate = DateTimeOffset.Now.AddMinutes(-1);
-            g.EndDate = DateTimeOffset.Now.AddDays(30);
-            g.ActualMoneyAmount = scenario.transactions[0].Amount;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-
-        var expectedActualMoneyAmount = scenario.transactions.Sum(t => t.Amount);
-        var upsert = new GoalUpsertApiModel
-        {
-            StartDate = scenario.transactions.Min(t => t.TransactionDate).AddMinutes(-1)
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-        
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateEndDateToIncludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => t.Type = type
-        );
-        scenario.transactions[0].TransactionDate = DateTimeOffset.UtcNow.AddDays(-15);
-        scenario.transactions[1].TransactionDate = DateTimeOffset.UtcNow.AddDays(-5);
-        scenario.transactions[2].TransactionDate = DateTimeOffset.UtcNow;
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category];
-            g.StartDate = DateTimeOffset.Now.AddDays(-30);
-            g.EndDate = DateTimeOffset.Now.AddDays(-10);
-            g.ActualMoneyAmount = scenario.transactions[0].Amount;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-
-        var expectedActualMoneyAmount = scenario.transactions.Sum(t => t.Amount);
-        var upsert = new GoalUpsertApiModel
-        {
-            EndDate = scenario.transactions.Max(t => t.TransactionDate).AddMinutes(1)
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-        
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateCategoryIdsToIncludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var newCategory = DataFactory.CreateCategory(c => c.Type = type);
-        scenario.transactions[1].CategoryId = newCategory.Id;
-        scenario.transactions[2].CategoryId = newCategory.Id;
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category];
-            g.StartDate = DateTimeOffset.Now.AddMinutes(-30);
-            g.EndDate = DateTimeOffset.Now.AddDays(30);
-            g.ActualMoneyAmount = scenario.transactions[0].Amount;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.AddRange(scenario.category, newCategory);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = scenario.transactions.Where(t => t.CategoryId == newCategory.Id).Sum(t => t.Amount);
-        var upsert = new GoalUpsertApiModel
-        {
-            CategoryIds = [newCategory.Id]
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateStartDateToExcludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => t.Type = type
-        );
-        scenario.transactions[0].TransactionDate = DateTimeOffset.UtcNow;
-        scenario.transactions[1].TransactionDate = DateTimeOffset.UtcNow.AddDays(-5);
-        scenario.transactions[2].TransactionDate = DateTimeOffset.UtcNow.AddDays(-10);
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category];
-            g.StartDate = DateTimeOffset.Now.AddDays(-30);
-            g.EndDate = DateTimeOffset.Now.AddDays(30);
-            g.ActualMoneyAmount = scenario.transactions.Sum(t => t.Amount);
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = scenario.transactions[0].Amount;
-        var upsert = new GoalUpsertApiModel
-        {
-            StartDate = scenario.transactions[0].TransactionDate.AddMinutes(-1)
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-        
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateEndDateToExcludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => t.Type = type
-        );
-        scenario.transactions[0].TransactionDate = DateTimeOffset.UtcNow;
-        scenario.transactions[1].TransactionDate = DateTimeOffset.UtcNow.AddDays(-5);
-        scenario.transactions[2].TransactionDate = DateTimeOffset.UtcNow.AddDays(-10);
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category];
-            g.StartDate = DateTimeOffset.Now.AddDays(-30);
-            g.EndDate = DateTimeOffset.Now.AddDays(30);
-            g.ActualMoneyAmount = scenario.transactions.Sum(t => t.Amount);
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-
-        var expectedActualMoneyAmount = scenario.transactions[2].Amount;
-        var upsert = new GoalUpsertApiModel
-        {
-            EndDate = scenario.transactions[2].TransactionDate.AddMinutes(1)
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-        
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task Update_WhenUpdateCategoryIdsToExcludeTransaction_ShouldUpdateActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateManyTransactionsWithDependencies(3,
-            configureCategory: c => c.Type = type,
-            configureTransactions: t => {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var newCategory = DataFactory.CreateCategory();
-        scenario.transactions[1].CategoryId = newCategory.Id;
-        scenario.transactions[2].CategoryId = newCategory.Id;
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.Categories = [scenario.category, newCategory];
-            g.StartDate = DateTimeOffset.Now.AddMinutes(-30);
-            g.EndDate = DateTimeOffset.Now.AddDays(30);
-            g.ActualMoneyAmount = scenario.transactions.Sum(t => t.Amount);
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Categories.AddRange(scenario.category, newCategory);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = scenario.transactions.Where(t => t.CategoryId == scenario.category.Id).Sum(t => t.Amount);
-        var upsert = new GoalUpsertApiModel
-        {
-            CategoryIds = [scenario.category.Id]
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/goal/update/{goal.Id}", upsert);
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
     }
         
     [Fact]
@@ -1678,4 +1238,14 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     }
 
     #endregion
+    
+    private decimal CalculateActualMoneyAmount(Goal goal, List<Transaction> transactions)
+    {
+        return transactions.Where(
+            t => t.Type == goal.Type &&
+                 t.CategoryId.HasValue &&
+                 goal.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
+                 t.TransactionDate >= goal.StartDate && t.TransactionDate <= goal.EndDate
+        ).Sum(t => t.Amount);
+    }
 }

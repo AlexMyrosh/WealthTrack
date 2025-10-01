@@ -270,7 +270,7 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)
             {
@@ -299,7 +299,50 @@ namespace WealthTrack.Business.Services.Implementations
                 }
             }
             
-            await unitOfWork.SaveAsync();
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+        
+        public async Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var transactionDomainModelsToDelete = await unitOfWork.TransactionRepository.GetByIdsAsync(ids);
+            if (transactionDomainModelsToDelete.Count != 0)
+            {
+                unitOfWork.TransactionRepository.BulkHardDelete(transactionDomainModelsToDelete);
+                foreach (var transactionDomainModelToDelete in transactionDomainModelsToDelete)
+                {
+                    var transactionDeletedEventModel = mapper.Map<TransactionDeletedEvent>(transactionDomainModelToDelete);
+                    await eventPublisher.PublishAsync(transactionDeletedEventModel);
+                }
+            }
+            
+            var transferTransactionDomainModelsToDelete = await unitOfWork.TransferTransactionRepository.GetByIdsAsync(ids);
+            if (transferTransactionDomainModelsToDelete.Count != 0)
+            {
+                unitOfWork.TransferTransactionRepository.BulkHardDelete(transferTransactionDomainModelsToDelete);
+                foreach (var transferTransactionDomainModelToDelete in transferTransactionDomainModelsToDelete)
+                {
+                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToDelete);
+                    await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
+                }
+            }
+
+            if (transactionDomainModelsToDelete.Count == 0 && transferTransactionDomainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
         }
 
         private async Task<bool> IsWalletsHaveTheSameBudget(Guid walletId1, Guid walletId2)

@@ -131,7 +131,6 @@ public class TestDataFactory
             Id = Guid.NewGuid(),
             Name = $"Goal {_random.Next(1, 1000)}",
             PlannedMoneyAmount = _random.Next(1, 1000),
-            ActualMoneyAmount = 0M,
             Type = _random.GetItems([OperationType.Income, OperationType.Expense], 1).First(),
             StartDate = DateTimeOffset.UtcNow.AddDays(-30),
             EndDate = DateTimeOffset.UtcNow.AddDays(30),
@@ -141,6 +140,16 @@ public class TestDataFactory
 
         configure?.Invoke(goal);
         return goal;
+    }
+    
+    public List<Goal> CreateManyGoals(int numberOfGoals = 2, Action<Goal>? configure = null)
+    {
+        var goals = Enumerable.Range(0, numberOfGoals).Select(i =>
+            CreateGoal(t => t.Name = $"Goal {i + 1}")
+        ).ToList();
+        
+        goals.ForEach(g => configure?.Invoke(g));
+        return goals;
     }
 
     public List<Transaction> CreateManyTransactions(int numberOfTransactions = 2, Action<Transaction>? configure = null)
@@ -497,6 +506,52 @@ public class TestDataFactory
         return (currency, budget, wallet, category, transaction, goal);
     }
     
+    public (Currency currency, Budget budget, Wallet wallet, Category category, List<Transaction> transactions, Goal goal) CreateSingleGoalWithManyTransactions(int numberOfTransactions = 2)
+    {
+        var currency = CreateCurrency();
+        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var category = CreateCategory();
+        var goal = CreateGoal(g =>
+        {
+            g.StartDate =  DateTimeOffset.UtcNow.AddDays(-30);
+            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
+            g.Categories = [category];
+        });
+        var transactions = CreateManyTransactions(numberOfTransactions, t =>
+        {
+            t.CategoryId = category.Id;
+            t.CreatedDate = goal.StartDate.AddDays(_random.Next((goal.EndDate - goal.StartDate).Days + 1));
+            t.WalletId = wallet.Id;
+        });
+        
+        return (currency, budget, wallet, category, transactions, goal);
+    }
+    
+    public (Currency currency, Budget budget, Wallet wallet, Category category, List<Transaction> transactions, List<Goal> goals) CreateManyGoalsWithManyApplicableTransactions(int numberOfGoals = 2, int numberOfTransactions = 2)
+    {
+        var currency = CreateCurrency();
+        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var category = CreateCategory();
+        var goals = CreateManyGoals(numberOfGoals, g =>
+        {
+            g.StartDate =  DateTimeOffset.UtcNow.AddDays(-30);
+            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
+            g.Categories = [category];
+        });
+        var transactions = Enumerable.Range(0, goals.Count).Select(i =>
+            CreateManyTransactions(numberOfTransactions, t =>
+            {
+                t.CategoryId = category.Id;
+                t.CreatedDate = goals[i].StartDate.AddDays(_random.Next((goals[i].EndDate - goals[i].StartDate).Days + 1));
+                t.WalletId = wallet.Id;
+            })
+        ).SelectMany(t => t).ToList();
+        
+        return (currency, budget, wallet, category, transactions, goals);
+    }
+    
     public (Currency currency, Budget budget, Wallet wallet, Category parentCategory, Category childCagegory, Transaction transaction, Goal goal) CreateSingleTransactionWithChildCategoryWithApplicableGoal(
         Action<Wallet>? configureWallet = null,
         Action<Category>? configureCategory = null,
@@ -545,5 +600,25 @@ public class TestDataFactory
         });
 
         return (parentCategory, childCategory);
+    }
+
+    public List<Category> CreateCategoriesChain(int numberOfLayers)
+    {
+        var categories = new List<Category>();
+        var root = CreateCategory(c => c.Name = "Root");
+        categories.Add(root);
+        for (var i = 1; i < numberOfLayers; i++)
+        {
+            var parent = categories.Last();
+            var category = CreateCategory(c =>
+            {
+                c.Name = $"Layer {i + 1}";
+                c.ParentCategoryId = parent.Id;
+            });
+
+            categories.Add(category);
+        }
+        
+        return categories;
     }
 }

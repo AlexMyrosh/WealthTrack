@@ -139,33 +139,74 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)
             {
                 throw new ArgumentException(nameof(id));
             }
 
-            var domainModelToDelete = await unitOfWork.WalletRepository.GetByIdAsync(id, $"{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
+            var domainModelToDelete = await unitOfWork.WalletRepository.GetByIdAsync(id, $"{nameof(Wallet.Transactions)},{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
             if (domainModelToDelete is null)
             {
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
-
-            while (domainModelToDelete.IncomeTransferTransactions.Any())
+            
+            foreach (var transactionToDelete in domainModelToDelete.Transactions)
             {
-                await transactionService.HardDeleteAsync(domainModelToDelete.IncomeTransferTransactions.First().Id);
+                await transactionService.HardDeleteAsync(transactionToDelete.Id, false);
             }
             
-            while (domainModelToDelete.OutgoingTransferTransactions.Any())
+            foreach (var incomeTransactionToDelete in domainModelToDelete.IncomeTransferTransactions)
             {
-                await transactionService.HardDeleteAsync(domainModelToDelete.OutgoingTransferTransactions.First().Id);
+                await transactionService.HardDeleteAsync(incomeTransactionToDelete.Id, false);
+            }
+            
+            foreach (var outgoingTransactionToDelete in domainModelToDelete.OutgoingTransferTransactions)
+            {
+                await transactionService.HardDeleteAsync(outgoingTransactionToDelete.Id, false);
             }
             
             await unitOfWork.WalletRepository.HardDeleteAsync(domainModelToDelete);
             var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
             await eventPublisher.PublishAsync(walletDeletedEventModel);
-            await unitOfWork.SaveAsync();
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+        
+        public async Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var domainModelsToDelete = await unitOfWork.WalletRepository.GetByIdsAsync(ids, $"{nameof(Wallet.Transactions)},{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
+            if (domainModelsToDelete is null || domainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get wallets from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            var transactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.Transactions).Select(t => t.Id).ToList();
+            var outgoingTransactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.OutgoingTransferTransactions).Select(t => t.Id).ToList();
+            var incomeTransactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.IncomeTransferTransactions).Select(t => t.Id).ToList();
+            await transactionService.BulkHardDeleteAsync(transactionIdsToDelete, false);
+            await transactionService.BulkHardDeleteAsync(outgoingTransactionIdsToDelete, false);
+            await transactionService.BulkHardDeleteAsync(incomeTransactionIdsToDelete, false);
+            
+            unitOfWork.WalletRepository.BulkHardDelete(domainModelsToDelete);
+            foreach (var domainModelToDelete in domainModelsToDelete)
+            {
+                var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(walletDeletedEventModel);
+            }
+
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
         }
     }
 }

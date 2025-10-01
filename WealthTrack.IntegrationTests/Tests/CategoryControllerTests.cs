@@ -26,7 +26,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         DbContext.Categories.AddRange(scenario.parents);
         DbContext.Categories.AddRange(scenario.children);
         await DbContext.SaveChangesAsync();
-        var expectedNumberOfCategories = scenario.parents.Count + scenario.children.Count;
+        var expectedNumberOfCategories = scenario.parents.Count;
 
         // Act
         var response = await Client.GetAsync("/api/category");
@@ -37,15 +37,19 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         categoriesFromResponse.Should().NotBeNullOrEmpty();
         categoriesFromResponse.Should().HaveCount(expectedNumberOfCategories);
     }
-
-    [Fact]
-    public async Task GetAll_ShouldReturnCategoriesWithLoadingParentAndChildren()
+    
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_WithoutIncludeParameter_ShouldReturnParentCategoriesOnly(int numberOfParents, int numberOfChildren)
     {
         // Arrange
-        var scenario = DataFactory.CreateManyNotSystemCategoryHierarchies();
+        var scenario = DataFactory.CreateManyNotSystemCategoryHierarchies(numberOfParents, numberOfChildren);
         DbContext.Categories.AddRange(scenario.parents);
         DbContext.Categories.AddRange(scenario.children);
         await DbContext.SaveChangesAsync();
+        var parentCategoryIds = scenario.parents.Select(c => c.Id).ToList();
 
         // Act
         var response = await Client.GetAsync("/api/category");
@@ -53,7 +57,63 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        categoriesFromResponse.Should().NotContain(c => c.ParentCategory == null && c.ChildCategories.Count == 0);
+        categoriesFromResponse.Should().NotBeNullOrEmpty();
+        categoriesFromResponse.Should().AllSatisfy(c => parentCategoryIds.Contains(c.Id));
+        categoriesFromResponse.Should().AllSatisfy(b => b.ParentCategory.Should().BeNull());
+        categoriesFromResponse.Should().AllSatisfy(b => b.ChildCategories.Should().BeNullOrEmpty());
+    }
+
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_WithIncludedChildCategories_ShouldReturnCategoriesWithLoadingChildren(int numberOfParents, int numberOfChildren)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyNotSystemCategoryHierarchies(numberOfParents, numberOfChildren);
+        DbContext.Categories.AddRange(scenario.parents);
+        DbContext.Categories.AddRange(scenario.children);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var response = await Client.GetAsync($"/api/category?include={nameof(Category.ChildCategories)}");
+        var categoriesFromResponse = await response.Content.ReadFromJsonAsync<List<CategoryDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        categoriesFromResponse.Should().NotBeNullOrEmpty();
+        categoriesFromResponse.Should().HaveCount(numberOfParents);
+        categoriesFromResponse.Should().AllSatisfy(c => c.ChildCategories.Count.Should().Be(numberOfChildren));
+    }
+    
+    [Theory]
+    [InlineData(2)]
+    [InlineData(4)]
+    [InlineData(6)]
+    public async Task GetAll_WithIncludedChildCategories_ShouldReturnCategoriesWithLoadingAllLayers(int numberOfLayers)
+    {
+        // Arrange
+        var categories = DataFactory.CreateCategoriesChain(numberOfLayers);
+        DbContext.Categories.AddRange(categories);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var response = await Client.GetAsync($"/api/category?include={nameof(Category.ChildCategories)}");
+        var categoriesFromResponse = await response.Content.ReadFromJsonAsync<List<CategoryDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        categoriesFromResponse.Should().NotBeNullOrEmpty();
+        categoriesFromResponse.Should().HaveCount(1);
+        
+        var root = categoriesFromResponse.Single();
+        root.ChildCategories.Should().ContainSingle();
+        var current = root.ChildCategories.Single();
+        for (int i = 2; i < numberOfLayers; i++)
+        {
+            current.ChildCategories.Should().ContainSingle();
+            current = current.ChildCategories.Single();
+        }
     }
 
     [Fact]
@@ -66,7 +126,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         DbContext.Categories.AddRange(scenario.systemChildren);
         DbContext.Categories.AddRange(scenario.systemParents);
         await DbContext.SaveChangesAsync();
-        var expectedNumberOfCategories = scenario.regularChildren.Count + scenario.regularParents.Count;
+        var expectedNumberOfCategories = scenario.regularParents.Count;
 
         // Act
         var response = await Client.GetAsync("/api/category");
@@ -75,6 +135,22 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         categoriesFromResponse.Should().HaveCount(expectedNumberOfCategories);
+    }
+    
+    [Fact]
+    public async Task GetAll_WithIncorrectIncludeParameter_ShouldReturnBadRequest()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyNotSystemCategoryHierarchies();
+        DbContext.Categories.AddRange(scenario.parents);
+        DbContext.Categories.AddRange(scenario.children);
+        await DbContext.SaveChangesAsync();
+        
+        // Act
+        var response = await Client.GetAsync("/api/category?include=SomeProperty");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     #endregion
@@ -859,276 +935,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var existingGoals = await DbContext.Goals.AsNoTracking().ToListAsync();
         existingGoals.Count.Should().Be(scenario.goals.Count);
-    }
-    
-    [Fact]
-    public async Task HardDelete_SingleCategory_WhenApplicableGoalExists_ShouldUpdateGoalActualMoneyAmount()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionWithApplicableGoal();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Transactions.Add(scenario.transaction);
-        DbContext.Goals.AddRange(scenario.goal);
-        await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = scenario.goal.ActualMoneyAmount - scenario.transaction.Amount;
-
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.category.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var goal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.goal.Id);
-        goal.Should().NotBeNull();
-        goal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_SingleCategory_ApplicableGoalIsNotExist_WhenTransactionDateIsBiggerThanGoalEndDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        var scenario = DataFactory.CreateSingleTransactionScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t =>
-            {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var goal = DataFactory.CreateGoal(g =>
-        {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddDays(-30);
-            g.EndDate = DateTimeOffset.UtcNow.AddMinutes(-1);
-            g.Categories = [scenario.category];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.category.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_SingleCategory_ApplicableGoalIsNotExist_WhenTransactionDateIsLessThanGoalStartDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t =>
-            {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var goal = DataFactory.CreateGoal(g =>
-        {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddDays(1);
-            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
-            g.Categories = [scenario.category];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.category.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_SingleCategory_ApplicableGoalIsNotExist_WhenCategoryIsDifferent_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t => {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.Now;
-            });
-        var secondCategory = DataFactory.CreateCategory(c => c.Type = type);
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddMinutes(-30);
-            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
-            g.Categories = [secondCategory];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(scenario.category, secondCategory);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.category.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Fact]
-    public async Task HardDelete_ParentCategory_WhenApplicableGoalByChildCategoryExists_ShouldUpdateGoalActualMoneyAmount()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionWithChildCategoryWithApplicableGoal();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(scenario.parentCategory, scenario.childCagegory);
-        DbContext.Transactions.Add(scenario.transaction);
-        DbContext.Goals.AddRange(scenario.goal);
-        await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = scenario.goal.ActualMoneyAmount - scenario.transaction.Amount;
-
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.parentCategory.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var goal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.goal.Id);
-        goal.Should().NotBeNull();
-        goal.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_ParentCategory_ApplicableGoalIsNotExist_WhenTransactionDateIsBiggerThanGoalEndDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        var scenario = DataFactory.CreateSingleTransactionWithChildCategoryScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t =>
-            {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var goal = DataFactory.CreateGoal(g =>
-        {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddDays(-30);
-            g.EndDate = DateTimeOffset.UtcNow.AddMinutes(-1);
-            g.Categories = [scenario.childCategory];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(scenario.parentCategory, scenario.childCategory);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.parentCategory.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_ParentCategory_ApplicableGoalIsNotExist_WhenTransactionDateIsLessThanGoalStartDate_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionWithChildCategoryScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t =>
-            {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.UtcNow;
-            });
-        var goal = DataFactory.CreateGoal(g =>
-        {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddDays(1);
-            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
-            g.Categories = [scenario.childCategory];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(scenario.parentCategory, scenario.childCategory);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.parentCategory.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
-    }
-    
-    [Theory]
-    [InlineData(OperationType.Expense)]
-    [InlineData(OperationType.Income)]
-    public async Task HardDelete_ParentCategory_ApplicableGoalIsNotExist_WhenCategoryIsDifferentFromChildCategory_ShouldNotUpdateGoalActualMoneyAmount(OperationType type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionWithChildCategoryScenario(
-            configureCategory: c => c.Type = type,
-            configureTransaction: t => {
-                t.Type = type;
-                t.TransactionDate = DateTimeOffset.Now;
-            });
-        var secondCategory = DataFactory.CreateCategory(c => c.Type = type);
-        var goal = DataFactory.CreateGoal(g => {
-            g.Type = type;
-            g.StartDate =  DateTimeOffset.UtcNow.AddMinutes(-30);
-            g.EndDate = DateTimeOffset.UtcNow.AddDays(30);
-            g.Categories = [secondCategory];
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Categories.AddRange(scenario.parentCategory, scenario.childCategory, secondCategory);
-        DbContext.Goals.Add(goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var expectedGoalActualMoneyAmount = goal.ActualMoneyAmount;
-        
-        // Act
-        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.parentCategory.Id}");
-
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var updatedGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(c => c.Id == goal.Id);
-        updatedGoal.Should().NotBeNull();
-        updatedGoal.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount);
     }
     
     [Fact]

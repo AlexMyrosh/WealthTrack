@@ -1,5 +1,8 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using WealthTrack.API.AutoMapper;
+using WealthTrack.API.FluentValidationRules;
 using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers;
@@ -45,6 +48,7 @@ namespace WealthTrack.API
 
         private static void ConfigureMiddleware(WebApplication app)
         {
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -61,16 +65,14 @@ namespace WealthTrack.API
             services.AddOpenApi();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+            services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
 
             services.AddAutoMapper(cfg =>
             {
                 cfg.AddProfile<DomainAndBusinessModelsMapperProfile>();
                 cfg.AddProfile<BusinessAndApiModelsMapperProfile>();
             });
-
-            services.AddTransient<ApiKeyValidationMiddleware>();
-
+            
             services.AddHttpClient<CurrenciesSeeder>();
 
             services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -84,6 +86,11 @@ namespace WealthTrack.API
 
             services.AddScoped<CurrenciesSeeder>();
             services.AddScoped<SystemCategoriesSeeder>();
+            
+            services.AddValidatorsFromAssemblyContaining<BudgetUpsertApiModelValidator>();
+            
+            services.AddFluentValidationAutoValidation();
+            services.AddFluentValidationClientsideAdapters();
 
             services.AddScoped<IEventHandler<TransactionCreatedEvent>, WalletUpdateOnTransactionCreationEventHandler>();
             services.AddScoped<IEventHandler<TransactionCreatedEvent>, GoalUpdateOnTransactionCreationEventHandler>();

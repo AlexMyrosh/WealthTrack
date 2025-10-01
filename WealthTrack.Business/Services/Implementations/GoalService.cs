@@ -80,16 +80,68 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new ArgumentException(nameof(id));
             }
+            
+            var isIncludeUpdated = false;
+            if (!include.Contains($"{nameof(Goal.Categories)}"))
+            {
+                isIncludeUpdated = true;
+                if (string.IsNullOrWhiteSpace(include))
+                {
+                    include += $"{nameof(Goal.Categories)}";
+                }
+                else
+                {
+                    include += $",{nameof(Goal.Categories)}";
+                }
+            }
 
             var domainModel = await unitOfWork.GoalRepository.GetByIdAsync(id, include);
+            
+            // TODO: Add filters to find only necessary transactions
+            var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
             var result = mapper.Map<GoalDetailsBusinessModel>(domainModel);
+            if (result is not null)
+            {
+                result.ActualMoneyAmount = CalculateActualMoneyAmount(result, transactions);
+                if (isIncludeUpdated)
+                {
+                    result.Categories = new List<CategoryRelatedToGoalDetailsBusinessModel>();
+                }
+            }
+            
             return result;
         }
 
         public async Task<List<GoalDetailsBusinessModel>> GetAllAsync(string include = "")
         {
+            var isIncludeUpdated = false;
+            if (!include.Contains($"{nameof(Goal.Categories)}"))
+            {
+                isIncludeUpdated = true;
+                if (string.IsNullOrWhiteSpace(include))
+                {
+                    include += $"{nameof(Goal.Categories)}";
+                }
+                else
+                {
+                    include += $",{nameof(Goal.Categories)}";
+                }
+            }
+            
             var domainModels = await unitOfWork.GoalRepository.GetAllAsync(include);
             var result = mapper.Map<List<GoalDetailsBusinessModel>>(domainModels);
+            
+            // TODO: Add filters to find only necessary transactions
+            var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
+            result.ForEach(g =>
+            {
+                g.ActualMoneyAmount = CalculateActualMoneyAmount(g, transactions);
+                if (isIncludeUpdated)
+                {
+                    g.Categories = new List<CategoryRelatedToGoalDetailsBusinessModel>();
+                }
+            });
+            
             return result;
         }
 
@@ -141,7 +193,7 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
-        public async Task HardDeleteAsync(Guid id)
+        public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)
             {
@@ -155,8 +207,30 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             unitOfWork.GoalRepository.HardDelete(domainModelToDelete);
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
 
-            await unitOfWork.SaveAsync();
+        public async Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var domainModelsToDelete = await unitOfWork.GoalRepository.GetByIdsAsync(ids);
+            if (domainModelsToDelete is null || domainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get goals from database by ids: {string.Join(", ", ids)}");
+            }
+
+            unitOfWork.GoalRepository.BulkHardDelete(domainModelsToDelete);
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
         }
 
         private async Task LoadRelatedEntitiesByIdsAsync(List<Guid>? categoryIds, List<Guid>? walletIds, Goal domainModel)
@@ -181,6 +255,16 @@ namespace WealthTrack.Business.Services.Implementations
         private bool IsGoalHasCategoriesWithTheSameType(OperationType  goalType, List<Category> categories)
         {
             return !categories.Exists(c => c.Type != goalType);
+        }
+        
+        private decimal CalculateActualMoneyAmount(GoalDetailsBusinessModel goal, List<Transaction> transactions)
+        {
+            return transactions.Where(
+                t => t.Type == goal.Type &&
+                     t.CategoryId.HasValue &&
+                     goal.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
+                     t.TransactionDate >= goal.StartDate && t.TransactionDate <= goal.EndDate
+            ).Sum(t => t.Amount);
         }
     }
 }

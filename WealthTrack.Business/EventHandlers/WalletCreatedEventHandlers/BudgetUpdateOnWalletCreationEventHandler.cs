@@ -21,7 +21,7 @@ namespace WealthTrack.Business.EventHandlers.WalletCreatedEventHandlers
             var budgedEntity = await unitOfWork.BudgetRepository.GetByIdAsync(eventMessage.BudgetId);
             if(budgedEntity is null)
             {
-                throw new KeyNotFoundException($"Unable to get budget from database by id - {eventMessage.BudgetId.ToString()}");
+                throw new ArgumentException($"Unable to get budget from database by id - {eventMessage.BudgetId.ToString()}");
             }
 
             budgedEntity.OverallBalance += eventMessage.Balance;

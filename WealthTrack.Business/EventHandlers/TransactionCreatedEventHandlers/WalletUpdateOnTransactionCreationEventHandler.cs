@@ -22,7 +22,7 @@ namespace WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers
             var wallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId);
             if (wallet == null)
             {
-                throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId.ToString()}");
+                throw new ArgumentException($"Unable to get wallet from database by id - {eventMessage.WalletId.ToString()}");
             }
 
             var walletBalanceBeforeUpdate = wallet.Balance;

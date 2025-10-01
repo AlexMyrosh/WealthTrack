@@ -3,7 +3,7 @@ using WealthTrack.Data.DomainModels;
 
 namespace WealthTrack.Data.Context
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
         public DbSet<Category> Categories { get; set; }
         public DbSet<Currency> Currencies { get; set; }
@@ -12,8 +12,6 @@ namespace WealthTrack.Data.Context
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Goal> Goals { get; set; }
-
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -47,7 +45,7 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.ParentCategory)
                     .WithMany(e => e.ChildCategories)
                     .HasForeignKey(e => e.ParentCategoryId)
-                    .OnDelete(DeleteBehavior.ClientCascade);
+                    .OnDelete(DeleteBehavior.NoAction);
                 
                 entity.ToTable(t =>
                 {
@@ -167,7 +165,7 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.Wallet)
                     .WithMany(e => e.Transactions)
                     .HasForeignKey(e => e.WalletId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<TransferTransaction>(entity =>
@@ -196,12 +194,12 @@ namespace WealthTrack.Data.Context
                 entity.HasOne(e => e.SourceWallet)
                     .WithMany(w => w.OutgoingTransferTransactions)
                     .HasForeignKey(e => e.SourceWalletId)
-                    .OnDelete(DeleteBehavior.ClientCascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne(e => e.TargetWallet)
                     .WithMany(w => w.IncomeTransferTransactions)
                     .HasForeignKey(e => e.TargetWalletId)
-                    .OnDelete(DeleteBehavior.ClientCascade);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             modelBuilder.Entity<Budget>(entity =>
@@ -236,7 +234,7 @@ namespace WealthTrack.Data.Context
                 entity.HasMany(e => e.Wallets)
                     .WithOne(e => e.Budget)
                     .HasForeignKey(e => e.BudgetId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
                 
                 entity.ToTable(t =>
                 {
@@ -268,9 +266,9 @@ namespace WealthTrack.Data.Context
                     .HasColumnType("decimal(18,9)")
                     .IsRequired();
 
-                entity.Property(e => e.ActualMoneyAmount)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
+                // entity.Property(e => e.ActualMoneyAmount)
+                //     .HasColumnType("decimal(18,9)")
+                //     .IsRequired();
 
                 entity.Property(e => e.Type)
                     .IsRequired()

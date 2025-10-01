@@ -16,14 +16,9 @@ namespace WealthTrack.Data.Repositories.Implementations
         public async Task<Wallet?> GetByIdAsync(Guid id, string include = "")
         {
             var query = context.Wallets.AsQueryable();
-            var includeProperties = include.Split(",");
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property))
-                {
-                    continue;
-                }
-
                 query = EntityFrameworkQueryableExtensions.Include(query, property);
             }
 
@@ -31,17 +26,25 @@ namespace WealthTrack.Data.Repositories.Implementations
             return result;
         }
 
+        public async Task<List<Wallet>> GetByIdsAsync(IEnumerable<Guid> ids, string include = "")
+        {
+            var query = context.Wallets.AsQueryable();
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
+            foreach (var property in includeProperties)
+            {
+                query = EntityFrameworkQueryableExtensions.Include(query, property);
+            }
+
+            var result = await query.Where(w => ids.Contains(w.Id)).ToListAsync();
+            return result;
+        }
+
         public async Task<List<Wallet>> GetAllAsync(string include = "")
         {
             var query = context.Wallets.AsQueryable();
-            var includeProperties = include.Split(",");
+            var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
             foreach (var property in includeProperties)
             {
-                if (string.IsNullOrWhiteSpace(property))
-                {
-                    continue;
-                }
-
                 query = query.Include(property);
             }
 
@@ -56,11 +59,17 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task HardDeleteAsync(Wallet model)
         {
-            await context.TransferTransactions
-                .Where(t => t.SourceWalletId == model.Id || t.TargetWalletId == model.Id)
-                .ExecuteDeleteAsync();
+            // await context.TransferTransactions
+            //     .Where(t => t.SourceWalletId == model.Id || t.TargetWalletId == model.Id)
+            //     .ExecuteDeleteAsync();
 
-            context.Wallets.Remove(model);
+            context.Entry(model).State = EntityState.Deleted;
+            //context.Wallets.Remove(model);
+        }
+        
+        public void BulkHardDelete(IEnumerable<Wallet> models)
+        {
+            context.Wallets.RemoveRange(models);
         }
     }
 }

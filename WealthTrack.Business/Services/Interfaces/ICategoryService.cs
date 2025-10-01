@@ -8,10 +8,12 @@ namespace WealthTrack.Business.Services.Interfaces
 
         public Task<CategoryDetailsBusinessModel?> GetByIdAsync(Guid id, string include = "");
 
-        public Task<List<CategoryDetailsBusinessModel>> GetAllAsync();
+        public Task<List<CategoryDetailsBusinessModel>> GetAllAsync(string include = "");
 
         public Task UpdateAsync(Guid id, CategoryUpsertBusinessModel model);
 
-        public Task HardDeleteAsync(Guid id);
+        public Task HardDeleteAsync(Guid id, bool shouldBeSaved = true);
+        
+        public Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true);
     }
 }
