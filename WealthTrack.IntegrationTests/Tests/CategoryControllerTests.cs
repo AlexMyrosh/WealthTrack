@@ -362,7 +362,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         createdCategory.IconName.Should().Be(upsert.IconName);
         createdCategory.Type.Should().Be(upsert.Type);
         createdCategory.ParentCategoryId.Should().Be(upsert.ParentCategoryId);
-        createdCategory.Status.Should().Be(CategoryStatus.Active);
         createdCategory.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         createdCategory.ModifiedDate.Should().BeExactly(createdCategory.CreatedDate);
         createdCategory.ChildCategories.Should().BeNullOrEmpty();
@@ -591,7 +590,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         updated.CreatedDate.Should().BeExactly(category.CreatedDate);
         updated.ModifiedDate.Should().NotBe(updated.CreatedDate);
         updated.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
-        updated.Status.Should().Be(category.Status);
         updated.ParentCategoryId.Should().Be(category.ParentCategoryId);
     }
 
@@ -622,7 +620,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         updated.CreatedDate.Should().BeExactly(category.CreatedDate);
         updated.ModifiedDate.Should().NotBe(updated.CreatedDate);
         updated.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
-        updated.Status.Should().Be(category.Status);
         updated.ParentCategoryId.Should().Be(category.ParentCategoryId);
     }
 
@@ -654,7 +651,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         updated.CreatedDate.Should().BeExactly(category.CreatedDate);
         updated.ModifiedDate.Should().NotBe(updated.CreatedDate);
         updated.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
-        updated.Status.Should().Be(category.Status);
         updated.ParentCategoryId.Should().Be(upsert.ParentCategoryId);
     }
     
@@ -934,6 +930,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var existingGoals = await DbContext.Goals.AsNoTracking().ToListAsync();
+        existingGoals.Should().NotBeNullOrEmpty();
         existingGoals.Count.Should().Be(scenario.goals.Count);
     }
     

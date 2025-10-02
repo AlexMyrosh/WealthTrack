@@ -61,7 +61,7 @@ namespace WealthTrack.Business.Services.Implementations
             var domainModel = mapper.Map<Goal>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = domainModel.CreatedDate;
-            await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, domainModel);
+            await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, domainModel);
             if (!IsGoalHasCategoriesWithTheSameType(model.Type.Value, domainModel.Categories))
             {
                 throw new ArgumentException("The type of selected categories should align with goal's type");
@@ -176,7 +176,7 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             originalModel.ModifiedDate = DateTimeOffset.Now;
-            await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, model.WalletIds, originalModel);
+            await LoadRelatedEntitiesByIdsAsync(model.CategoryIds, originalModel);
             if (!originalModel.Categories.Any())
             {
                 throw new ArgumentNullException(nameof(model.CategoryIds));
@@ -233,7 +233,7 @@ namespace WealthTrack.Business.Services.Implementations
             }
         }
 
-        private async Task LoadRelatedEntitiesByIdsAsync(List<Guid>? categoryIds, List<Guid>? walletIds, Goal domainModel)
+        private async Task LoadRelatedEntitiesByIdsAsync(List<Guid>? categoryIds, Goal domainModel)
         {
             if (categoryIds != null)
             {

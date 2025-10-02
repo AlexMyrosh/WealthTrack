@@ -21,5 +21,9 @@ namespace WealthTrack.Business.Services.Interfaces
         public Task HardDeleteAsync(Guid id, bool shouldBeSaved = true);
         
         public Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true);
+        
+        public Task ArchiveAsync(Guid id, bool shouldBeSaved = true);
+        
+        public Task BulkArchiveAsync(List<Guid> ids, bool shouldBeSaved = true);
     }
 }

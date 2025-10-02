@@ -14,8 +14,6 @@ namespace WealthTrack.Data.DomainModels
 
         public decimal ExchangeRate { get; set; }
 
-        public CurrencyStatus Status { get; set; }
-
         public CurrencyType Type { get; set; }
 
         public List<Wallet> Wallets { get; set; }

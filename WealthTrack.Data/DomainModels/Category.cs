@@ -18,8 +18,6 @@ namespace WealthTrack.Data.DomainModels
 
         public DateTimeOffset ModifiedDate { get; set; }
 
-        public CategoryStatus Status { get; set; }
-
         public Guid? ParentCategoryId { get; set; }
 
         public Category ParentCategory { get; set; }

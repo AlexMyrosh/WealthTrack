@@ -38,10 +38,6 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.IsSystem)
                     .HasDefaultValue(false);
 
-                entity.Property(e => e.Status)
-                    .IsRequired()
-                    .HasConversion<string>();
-
                 entity.HasOne(e => e.ParentCategory)
                     .WithMany(e => e.ChildCategories)
                     .HasForeignKey(e => e.ParentCategoryId)
@@ -74,10 +70,6 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(10);
 
                 entity.Property(e => e.Type)
-                    .IsRequired()
-                    .HasConversion<string>();
-
-                entity.Property(e => e.Status)
                     .IsRequired()
                     .HasConversion<string>();
                 
@@ -156,6 +148,10 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.Type)
                     .HasConversion<string>();
+                
+                entity.Property(e => e.Status)
+                    .IsRequired()
+                    .HasConversion<string>();
 
                 entity.HasOne(e => e.Category)
                     .WithMany(e => e.Transactions)
@@ -184,6 +180,10 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.TransactionDate)
                     .IsRequired();
+                
+                entity.Property(e => e.Status)
+                    .IsRequired()
+                    .HasConversion<string>();
 
                 entity.Property(e => e.SourceWalletId)
                     .IsRequired();
@@ -219,10 +219,6 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.ModifiedDate)
                     .IsRequired();
-
-                entity.Property(e => e.Status)
-                    .IsRequired()
-                    .HasConversion<string>();
 
                 entity.Property(e => e.Status)
                     .IsRequired()
@@ -265,11 +261,7 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.PlannedMoneyAmount)
                     .HasColumnType("decimal(18,9)")
                     .IsRequired();
-
-                // entity.Property(e => e.ActualMoneyAmount)
-                //     .HasColumnType("decimal(18,9)")
-                //     .IsRequired();
-
+                
                 entity.Property(e => e.Type)
                     .IsRequired()
                     .HasConversion<string>();

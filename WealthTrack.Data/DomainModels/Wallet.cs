@@ -16,7 +16,7 @@ namespace WealthTrack.Data.DomainModels
 
         public DateTimeOffset ModifiedDate { get; set; }
 
-        public WalletStatus Status { get; set; }
+        public EntityStatus Status { get; set; }
 
         public WalletType Type { get; set; }
 

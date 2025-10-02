@@ -18,7 +18,7 @@ namespace WealthTrack.Business.Services.Implementations
 
             var domainModel = mapper.Map<Budget>(model);
             domainModel.CreatedDate = domainModel.ModifiedDate = DateTimeOffset.Now;
-            domainModel.Status = BudgetStatus.Active;
+            domainModel.Status = EntityStatus.Active;
             var createdEntityId = await unitOfWork.BudgetRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
@@ -74,12 +74,13 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
             }
-
-            foreach (var walletToDelete in domainModelToDelete.Wallets)
+            
+            var walletIds = domainModelToDelete.Wallets.Select(w => w.Id).ToList();
+            if (walletIds.Count != 0)
             {
-                await walletService.HardDeleteAsync(walletToDelete.Id, false);
+                await walletService.BulkHardDeleteAsync(walletIds, false);
             }
-
+            
             await unitOfWork.BudgetRepository.HardDeleteAsync(domainModelToDelete);
             if (shouldBeSaved)
             {
@@ -99,9 +100,40 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new KeyNotFoundException($"Unable to get budgets from database by ids: {string.Join(", ", ids)}");
             }
+
+            var walletIds = domainModelsToDelete.SelectMany(b => b.Wallets).Select(w => w.Id).ToList();
+            if (walletIds.Count != 0)
+            {
+                await walletService.BulkHardDeleteAsync(walletIds, false);
+            }
             
-            await walletService.BulkHardDeleteAsync(ids, false);
             unitOfWork.BudgetRepository.BulkHardDelete(domainModelsToDelete);
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+
+        public async Task ArchiveAsync(Guid id, bool shouldBeSaved = true)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException(nameof(id));
+            }
+
+            var domainModelToArchive = await unitOfWork.BudgetRepository.GetByIdAsync(id, $"{nameof(Budget.Wallets)}");
+            if (domainModelToArchive is null)
+            {
+                throw new KeyNotFoundException($"Unable to get budget from database by id - {id.ToString()}");
+            }
+
+            var walletIds = domainModelToArchive.Wallets.Select(w => w.Id).ToList();
+            if (walletIds.Count != 0)
+            {
+                await walletService.BulkArchiveAsync(walletIds, false);
+            }
+            
+            domainModelToArchive.Status = EntityStatus.Archived;
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();

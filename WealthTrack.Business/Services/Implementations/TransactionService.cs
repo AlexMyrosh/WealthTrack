@@ -6,6 +6,7 @@ using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
+using WealthTrack.Shared.Enums;
 using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations
@@ -335,6 +336,81 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             if (transactionDomainModelsToDelete.Count == 0 && transferTransactionDomainModelsToDelete.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+
+        public async Task ArchiveAsync(Guid id, bool shouldBeSaved = true)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException(nameof(id));
+            }
+
+            var domainModelToArchive = await unitOfWork.TransactionRepository.GetByIdAsync(id);
+            if (domainModelToArchive is not null)
+            {
+                domainModelToArchive.Status = EntityStatus.Archived;
+                var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToArchive);
+                await eventPublisher.PublishAsync(transactionArchivedEventModel);
+            }
+            else
+            {
+                var transferTransactionDomainModelToArchive = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
+                if (transferTransactionDomainModelToArchive is not null)
+                {
+                    transferTransactionDomainModelToArchive.Status = EntityStatus.Archived;
+                    var transferTransactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToArchive);
+                    await eventPublisher.PublishAsync(transferTransactionArchivedEventModel);
+                }
+                else
+                {
+                    throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+                }
+            }
+            
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+
+        public async Task BulkArchiveAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var transactionDomainModelsToArchive = await unitOfWork.TransactionRepository.GetByIdsAsync(ids);
+            if (transactionDomainModelsToArchive.Count != 0)
+            {
+                transactionDomainModelsToArchive.ForEach(t => t.Status = EntityStatus.Archived);
+                foreach (var transactionDomainModelToArchive in transactionDomainModelsToArchive)
+                {
+                    var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(transactionDomainModelToArchive);
+                    await eventPublisher.PublishAsync(transactionArchivedEventModel);
+                }
+            }
+            
+            var transferTransactionDomainModelsToArchive = await unitOfWork.TransferTransactionRepository.GetByIdsAsync(ids);
+            if (transferTransactionDomainModelsToArchive.Count != 0)
+            {
+                transferTransactionDomainModelsToArchive.ForEach(t => t.Status = EntityStatus.Archived);
+                foreach (var transferTransactionDomainModelToArchive in transferTransactionDomainModelsToArchive)
+                {
+                    var transferTransactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToArchive);
+                    await eventPublisher.PublishAsync(transferTransactionArchivedEventModel);
+                }
+            }
+
+            if (transactionDomainModelsToArchive.Count == 0 && transferTransactionDomainModelsToArchive.Count == 0)
             {
                 throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
             }

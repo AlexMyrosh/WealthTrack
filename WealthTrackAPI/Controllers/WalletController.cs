@@ -51,11 +51,19 @@ public class WalletController(IWalletService walletService, IMapper mapper) : Co
         return Accepted();
     }
 
-    // DELETE api/wallet/hard_delete
+    // DELETE api/wallet/hard_delete/{id}
     [HttpDelete("hard_delete/{id}")]
     public async Task<ActionResult> HardDelete(Guid id)
     {
         await walletService.HardDeleteAsync(id);
+        return Accepted();
+    }
+    
+    // DELETE api/wallet/archive/{id}
+    [HttpDelete("archive/{id}")]
+    public async Task<ActionResult> Archive(Guid id)
+    {
+        await walletService.ArchiveAsync(id);
         return Accepted();
     }
 }

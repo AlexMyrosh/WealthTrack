@@ -45,7 +45,6 @@ namespace WealthTrack.Business.Services.Implementations
             var domainModel = mapper.Map<Category>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = domainModel.CreatedDate;
-            domainModel.Status = CategoryStatus.Active;
             var createdEntityId = await unitOfWork.CategoryRepository.CreateAsync(domainModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
@@ -121,9 +120,10 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
             }
 
-            foreach (var childCategory in domainModelToDelete.ChildCategories)
+            var childCategoryIdsToDelete = domainModelToDelete.ChildCategories.Select(cc => cc.Id).ToList();
+            if (childCategoryIdsToDelete.Count != 0)
             {
-                await HardDeleteAsync(childCategory.Id, false);
+                await BulkHardDeleteAsync(childCategoryIdsToDelete, false);
             }
 
             unitOfWork.CategoryRepository.HardDelete(domainModelToDelete);
@@ -149,7 +149,11 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var childCategoryIdsToDelete = domainModelsToDelete.SelectMany(c => c.ChildCategories.Select(cc => cc.Id)).ToList();
-            await BulkHardDeleteAsync(childCategoryIdsToDelete, false);
+            if (childCategoryIdsToDelete.Count != 0)
+            {
+                await BulkHardDeleteAsync(childCategoryIdsToDelete, false);
+            }
+            
             unitOfWork.CategoryRepository.BulkHardDelete(domainModelsToDelete);
             foreach (var domainModelToDelete in domainModelsToDelete)
             {

@@ -17,6 +17,8 @@ namespace WealthTrack.Data.DomainModels
         public DateTimeOffset ModifiedDate { get; set; }
 
         public OperationType Type { get; set; }
+        
+        public EntityStatus Status { get; set; }
 
         public Guid? CategoryId { get; set; }
 

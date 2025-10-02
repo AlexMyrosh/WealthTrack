@@ -17,7 +17,6 @@ public class TestDataFactory
             Name = $"Currency {_random.Next(1, 1000)}",
             Symbol = $"S{_random.Next(1, 1000)}",
             ExchangeRate = (decimal)(_random.NextDouble() * 100 + _random.NextDouble()),
-            Status = CurrencyStatus.Active,
             Type = _random.GetItems([CurrencyType.Fiat, CurrencyType.Crypto], 1).First()
         };
 
@@ -32,7 +31,7 @@ public class TestDataFactory
             Id = Guid.NewGuid(),
             Name = $"Budget {_random.Next(1, 1000)}",
             OverallBalance = 0,
-            Status = BudgetStatus.Active,
+            Status = EntityStatus.Active,
             CreatedDate = DateTimeOffset.UtcNow,
             ModifiedDate = DateTimeOffset.UtcNow
         };
@@ -50,7 +49,7 @@ public class TestDataFactory
             Balance = _random.Next(1, 1000),
             IsPartOfGeneralBalance = _random.GetItems([true, false], 1).First(),
             Type = _random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            Status = WalletStatus.Active,
+            Status = EntityStatus.Active,
             CreatedDate = DateTimeOffset.UtcNow,
             ModifiedDate = DateTimeOffset.UtcNow
         };
@@ -68,8 +67,7 @@ public class TestDataFactory
             IconName = $"Category icon {_random.Next(1, 1000)}",
             Type = _random.GetItems([OperationType.Income, OperationType.Expense], 1).First(),
             CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow,
-            Status = CategoryStatus.Active
+            ModifiedDate = DateTimeOffset.UtcNow
         };
 
         configure?.Invoke(category);
@@ -85,8 +83,7 @@ public class TestDataFactory
             IconName = $"Category icon {_random.Next(1, 1000)}",
             IsSystem = true,
             CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow,
-            Status = CategoryStatus.Active
+            ModifiedDate = DateTimeOffset.UtcNow
         };
 
         configure?.Invoke(category);
@@ -205,6 +202,56 @@ public class TestDataFactory
         return (currency, budgets, wallets);
     }
     
+    public (Currency currency, List<Budget> activeBudgets, List<Budget> archivedBudgets) CreateMixOfActiveAndArchivedBudgets(int numberOfActiveBudgets = 2, int numberOfArchivedBudgets = 2)
+    {
+        var currency = CreateCurrency();
+        var activeBudgets = Enumerable.Range(0, numberOfActiveBudgets).Select(i =>
+            CreateBudget(b =>
+            {
+                b.Name = $"Active Budget {i + 1}";
+                b.CurrencyId = currency.Id;
+                b.Status = EntityStatus.Active;
+            })
+        ).ToList();
+        var archivedBudgets = Enumerable.Range(0, numberOfArchivedBudgets).Select(i =>
+            CreateBudget(b =>
+            {
+                b.Name = $"Archived Budget {i + 1}";
+                b.CurrencyId = currency.Id;
+                b.Status = EntityStatus.Archived;
+            })
+        ).ToList();
+        
+        
+        return (currency, activeBudgets, archivedBudgets);
+    }
+    
+    public (Currency currency, Budget budget, List<Wallet> activeWallets, List<Wallet> archivedWallets) CreateMixOfActiveAndArchivedWallets(int numberOfActiveWallets = 2, int numberOfArchivedWallets = 2)
+    {
+        var (currency, budget) = CreateBudgetWithDependencies();
+        var activeWallets = Enumerable.Range(0, numberOfActiveWallets).Select(i =>
+            CreateWallet(w =>
+            {
+                w.Name = $"Active Wallet {i + 1}";
+                w.CurrencyId = currency.Id;
+                w.Status = EntityStatus.Active;
+                w.BudgetId = budget.Id;
+            })
+        ).ToList();
+        var archivedWallets = Enumerable.Range(0, numberOfArchivedWallets).Select(i =>
+            CreateWallet(w =>
+            {
+                w.Name = $"Archived Budget {i + 1}";
+                w.CurrencyId = currency.Id;
+                w.Status = EntityStatus.Archived;
+                w.BudgetId = budget.Id;
+            })
+        ).ToList();
+        
+        
+        return (currency, budget, activeWallets, archivedWallets);
+    }
+    
     public (List<Category> parents, List<Category> children) CreateManyNotSystemCategoryHierarchies(int numberOfParent = 2, int numberOfChildren = 2)
     {
         var categoryIndex = 1;
@@ -272,7 +319,7 @@ public class TestDataFactory
         return (goals, categories);
     }
     
-    public (Currency currency, Budget budget, List<Wallet> wallets) CreateManyWallets(int numberOfWallets = 2)
+    public (Currency currency, Budget budget, List<Wallet> wallets) CreateManyWallets(int numberOfWallets = 2, Action<Wallet>? configureWallets = null)
     {
         var currency = CreateCurrency();
         var budget = CreateBudget(b => b.CurrencyId = currency.Id);
@@ -283,10 +330,12 @@ public class TestDataFactory
             w.BudgetId = budget.Id;
         })).ToList();
         
+        wallets.ForEach(w => configureWallets?.Invoke(w));
+        
         return (currency, budget, wallets);
     }
     
-    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<TransferTransaction> transferTransactions) CreateMixOfTransactionsScenario(int numberOfTransactions = 2, int numberOfTransfers = 2, Action<Wallet>? configureWallets = null)
+    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<TransferTransaction> transferTransactions) CreateMixOfTransactionsScenario(int numberOfTransactions = 2, int numberOfTransfers = 2, Action<Wallet>? configureWallets = null, Action<Transaction>? configureTransaction = null, Action<TransferTransaction>? configureTransferTransaction = null)
     {
         (numberOfTransactions % 2).Should().Be(0);
         (numberOfTransfers % 2).Should().Be(0);
@@ -327,17 +376,25 @@ public class TestDataFactory
         
         configureWallets?.Invoke(wallet1);
         configureWallets?.Invoke(wallet2);
+        transactions.ForEach(t => configureTransaction?.Invoke(t));
+        transferTransactions.ForEach(t => configureTransferTransaction?.Invoke(t));
         
         return (currency, category, budget, [wallet1, wallet2], transactions, transferTransactions);
     }
     
-    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<TransferTransaction> transferTransactions) CreateWalletsWithTransactions(Action<Wallet>? configureWallets = null)
+    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<TransferTransaction> transferTransactions) CreateWalletsWithTransactions(
+        Action<Wallet>? configureWallets = null,
+        Action<Transaction>? configureTransaction = null,
+        Action<TransferTransaction>? configureTransferTransaction = null)
     {
-        var result = CreateMixOfTransactionsScenario(configureWallets: configureWallets);
+        var result = CreateMixOfTransactionsScenario(
+            configureWallets: configureWallets, 
+            configureTransaction: configureTransaction, 
+            configureTransferTransaction: configureTransferTransaction);
         return result;
     }
     
-    public (Currency currency, Budget budget, List<Wallet> wallets, TransferTransaction transaction) CreateSingleTransferScenario(Action<Wallet>? configureWallet = null)
+    public (Currency currency, Budget budget, List<Wallet> wallets, TransferTransaction transaction) CreateSingleTransferScenario(Action<Wallet>? configureWallet = null, Action<TransferTransaction>? configureTransferTransaction = null)
     {
         var currency = CreateCurrency();
         var budget = CreateBudget(b => b.CurrencyId = currency.Id);
@@ -355,6 +412,7 @@ public class TestDataFactory
         
         configureWallet?.Invoke(wallet);
         configureWallet?.Invoke(targetWallet);
+        configureTransferTransaction?.Invoke(transaction);
         
         return (currency, budget, [wallet, targetWallet], transaction);
     }
@@ -370,10 +428,12 @@ public class TestDataFactory
         return (currency, budget, wallet);
     }
 
-    public (Currency currency, Budget budget) CreateBudgetWithDependencies()
+    public (Currency currency, Budget budget) CreateBudgetWithDependencies(Action<Budget>? configureBudget = null)
     {
         var currency = CreateCurrency();
         var budget = CreateBudget(b => b.CurrencyId = currency.Id);
+        
+        configureBudget?.Invoke(budget);
         
         return (currency, budget);
     }

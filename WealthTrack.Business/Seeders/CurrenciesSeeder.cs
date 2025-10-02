@@ -22,7 +22,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "USD",
                     Name = "US Dollar",
                     Symbol = "$",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -31,7 +30,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "EUR",
                     Name = "Euro",
                     Symbol = "€",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -40,7 +38,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "GBP",
                     Name = "British Pound Sterling",
                     Symbol = "£",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -49,7 +46,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "JPY",
                     Name = "Japanese Yen",
                     Symbol = "¥",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -58,7 +54,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "AUD",
                     Name = "Australian Dollar",
                     Symbol = "A$",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -67,7 +62,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "CAD",
                     Name = "Canadian Dollar",
                     Symbol = "C$",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -76,7 +70,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "CHF",
                     Name = "Swiss Franc",
                     Symbol = "CHF",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -85,7 +78,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "CNY",
                     Name = "Chinese Yuan Renminbi",
                     Symbol = "¥",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -94,7 +86,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "INR",
                     Name = "Indian Rupee",
                     Symbol = "₹",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
                 new()
@@ -103,7 +94,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "UAH",
                     Name = "Ukrainian Hryvnia",
                     Symbol = "₴",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Fiat
                 },
 
@@ -114,7 +104,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "BTC",
                     Name = "Bitcoin",
                     Symbol = "₿",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -123,7 +112,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "ETH",
                     Name = "Ethereum",
                     Symbol = "Ξ",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -132,7 +120,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "USDT",
                     Name = "Tether",
                     Symbol = "T$",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -141,7 +128,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "BNB",
                     Name = "Binance Coin",
                     Symbol = "BNB",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -150,7 +136,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "XRP",
                     Name = "Ripple",
                     Symbol = "XRP",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -159,7 +144,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "ADA",
                     Name = "Cardano",
                     Symbol = "ADA",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -168,7 +152,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "SOL",
                     Name = "Solana",
                     Symbol = "SOL",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -177,7 +160,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "DOT",
                     Name = "Polkadot",
                     Symbol = "DOT",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 },
                 new()
@@ -186,7 +168,6 @@ namespace WealthTrack.Business.Seeders
                     Code = "LTC",
                     Name = "Litecoin",
                     Symbol = "Ł",
-                    Status = CurrencyStatus.Active,
                     Type = CurrencyType.Crypto
                 }
             };

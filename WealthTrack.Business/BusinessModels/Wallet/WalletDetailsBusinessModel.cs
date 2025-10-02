@@ -12,7 +12,7 @@ namespace WealthTrack.Business.BusinessModels.Wallet
 
         public bool IsPartOfGeneralBalance { get; set; }
 
-        public WalletStatus Status { get; set; }
+        public EntityStatus Status { get; set; }
 
         public WalletType Type { get; set; }
 

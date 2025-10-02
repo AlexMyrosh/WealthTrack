@@ -1,7 +1,7 @@
 ﻿namespace WealthTrack.Shared.Enums;
 
-public enum CategoryStatus
+public enum EntityStatus
 {
     Active,
-    Deleted
+    Archived
 }

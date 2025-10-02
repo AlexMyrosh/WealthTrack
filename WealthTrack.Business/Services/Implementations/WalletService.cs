@@ -44,7 +44,7 @@ namespace WealthTrack.Business.Services.Implementations
             var domainModel = mapper.Map<Wallet>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = domainModel.CreatedDate;
-            domainModel.Status = WalletStatus.Active;
+            domainModel.Status = EntityStatus.Active;
             var createdEntityId = await unitOfWork.WalletRepository.CreateAsync(domainModel);
             // Move this logic to Event handlers
             if (model.Balance.HasValue && model.Balance != 0)
@@ -152,19 +152,22 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
             }
             
-            foreach (var transactionToDelete in domainModelToDelete.Transactions)
+            var transactionIdsToDelete = domainModelToDelete.Transactions.Select(t => t.Id).ToList();
+            var outgoingTransactionIdsToDelete = domainModelToDelete.OutgoingTransferTransactions.Select(t => t.Id).ToList();
+            var incomeTransactionIdsToDelete = domainModelToDelete.IncomeTransferTransactions.Select(t => t.Id).ToList();
+            if (transactionIdsToDelete.Count != 0)
             {
-                await transactionService.HardDeleteAsync(transactionToDelete.Id, false);
+                await transactionService.BulkHardDeleteAsync(transactionIdsToDelete, false);
             }
             
-            foreach (var incomeTransactionToDelete in domainModelToDelete.IncomeTransferTransactions)
+            if (outgoingTransactionIdsToDelete.Count != 0)
             {
-                await transactionService.HardDeleteAsync(incomeTransactionToDelete.Id, false);
+                await transactionService.BulkHardDeleteAsync(outgoingTransactionIdsToDelete, false);
             }
             
-            foreach (var outgoingTransactionToDelete in domainModelToDelete.OutgoingTransferTransactions)
+            if (incomeTransactionIdsToDelete.Count != 0)
             {
-                await transactionService.HardDeleteAsync(outgoingTransactionToDelete.Id, false);
+                await transactionService.BulkHardDeleteAsync(incomeTransactionIdsToDelete, false);
             }
             
             await unitOfWork.WalletRepository.HardDeleteAsync(domainModelToDelete);
@@ -183,7 +186,10 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException("One or more IDs are empty");
             }
 
-            var domainModelsToDelete = await unitOfWork.WalletRepository.GetByIdsAsync(ids, $"{nameof(Wallet.Transactions)},{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
+            var domainModelsToDelete = await unitOfWork.WalletRepository.GetByIdsAsync(ids, 
+                $"{nameof(Wallet.Transactions)}," +
+                $"{nameof(Wallet.IncomeTransferTransactions)}," +
+                $"{nameof(Wallet.OutgoingTransferTransactions)}");
             if (domainModelsToDelete is null || domainModelsToDelete.Count == 0)
             {
                 throw new KeyNotFoundException($"Unable to get wallets from database by ids: {string.Join(", ", ids)}");
@@ -192,9 +198,20 @@ namespace WealthTrack.Business.Services.Implementations
             var transactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.Transactions).Select(t => t.Id).ToList();
             var outgoingTransactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.OutgoingTransferTransactions).Select(t => t.Id).ToList();
             var incomeTransactionIdsToDelete = domainModelsToDelete.SelectMany(w => w.IncomeTransferTransactions).Select(t => t.Id).ToList();
-            await transactionService.BulkHardDeleteAsync(transactionIdsToDelete, false);
-            await transactionService.BulkHardDeleteAsync(outgoingTransactionIdsToDelete, false);
-            await transactionService.BulkHardDeleteAsync(incomeTransactionIdsToDelete, false);
+            if (transactionIdsToDelete.Count != 0)
+            {
+                await transactionService.BulkHardDeleteAsync(transactionIdsToDelete, false);
+            }
+            
+            if (outgoingTransactionIdsToDelete.Count != 0)
+            {
+                await transactionService.BulkHardDeleteAsync(outgoingTransactionIdsToDelete, false);
+            }
+            
+            if (incomeTransactionIdsToDelete.Count != 0)
+            {
+                await transactionService.BulkHardDeleteAsync(incomeTransactionIdsToDelete, false);
+            }
             
             unitOfWork.WalletRepository.BulkHardDelete(domainModelsToDelete);
             foreach (var domainModelToDelete in domainModelsToDelete)
@@ -203,6 +220,93 @@ namespace WealthTrack.Business.Services.Implementations
                 await eventPublisher.PublishAsync(walletDeletedEventModel);
             }
 
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+
+        public async Task ArchiveAsync(Guid id, bool shouldBeSaved = true)
+        {
+            if (id == Guid.Empty)
+            {
+                throw new ArgumentException(nameof(id));
+            }
+
+            var domainModelToArchive = await unitOfWork.WalletRepository.GetByIdAsync(id, $"{nameof(Wallet.Transactions)},{nameof(Wallet.IncomeTransferTransactions)},{nameof(Wallet.OutgoingTransferTransactions)}");
+            if (domainModelToArchive is null)
+            {
+                throw new KeyNotFoundException($"Unable to get wallet from database by id - {id.ToString()}");
+            }
+            
+            var transactionIdsToArchive = domainModelToArchive.Transactions.Select(t => t.Id).ToList();
+            var outgoingTransactionIdsToArchive = domainModelToArchive.OutgoingTransferTransactions.Select(t => t.Id).ToList();
+            var incomeTransactionIdsToArchive = domainModelToArchive.IncomeTransferTransactions.Select(t => t.Id).ToList();
+            if (transactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(transactionIdsToArchive, false);
+            }
+            
+            if (outgoingTransactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(outgoingTransactionIdsToArchive, false);
+            }
+            
+            if (incomeTransactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(incomeTransactionIdsToArchive, false);
+            }
+
+            domainModelToArchive.Status = EntityStatus.Archived;
+            var walletArchivedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToArchive);
+            await eventPublisher.PublishAsync(walletArchivedEventModel);
+            if (shouldBeSaved)
+            {
+                await unitOfWork.SaveAsync();
+            }
+        }
+
+        public async Task BulkArchiveAsync(List<Guid> ids, bool shouldBeSaved = true)
+        {
+            if (ids.Any(id => id == Guid.Empty))
+            {
+                throw new ArgumentException("One or more IDs are empty");
+            }
+
+            var domainModelsToArchive = await unitOfWork.WalletRepository.GetByIdsAsync(ids, 
+                $"{nameof(Wallet.Transactions)}," +
+                $"{nameof(Wallet.IncomeTransferTransactions)}," +
+                $"{nameof(Wallet.OutgoingTransferTransactions)}");
+            if (domainModelsToArchive is null || domainModelsToArchive.Count == 0)
+            {
+                throw new KeyNotFoundException($"Unable to get wallets from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            var transactionIdsToArchive = domainModelsToArchive.SelectMany(w => w.Transactions).Select(t => t.Id).ToList();
+            var outgoingTransactionIdsToArchive = domainModelsToArchive.SelectMany(w => w.OutgoingTransferTransactions).Select(t => t.Id).ToList();
+            var incomeTransactionIdsToArchive = domainModelsToArchive.SelectMany(w => w.IncomeTransferTransactions).Select(t => t.Id).ToList();
+            if (transactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(transactionIdsToArchive, false);
+            }
+            
+            if (outgoingTransactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(outgoingTransactionIdsToArchive, false);
+            }
+            
+            if (incomeTransactionIdsToArchive.Count != 0)
+            {
+                await transactionService.BulkArchiveAsync(incomeTransactionIdsToArchive, false);
+            }
+            
+            domainModelsToArchive.ForEach(w => w.Status = EntityStatus.Archived);
+            foreach (var domainModelToArchive in domainModelsToArchive)
+            {
+                var walletArchivedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToArchive);
+                await eventPublisher.PublishAsync(walletArchivedEventModel);
+            }
+            
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();

@@ -2,6 +2,7 @@
 using WealthTrack.Data.Context;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.Repositories.Interfaces;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Data.Repositories.Implementations
 {
@@ -41,7 +42,7 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task<List<Budget>> GetAllAsync(string include = "")
         {
-            var query = context.Budgets.AsQueryable();
+            var query = context.Budgets.Where(b => b.Status != EntityStatus.Archived).AsQueryable();
             var includeProperties = string.IsNullOrWhiteSpace(include) ? [] : include.Split(",");
             foreach (var property in includeProperties)
             {

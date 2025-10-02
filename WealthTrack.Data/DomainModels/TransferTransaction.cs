@@ -1,4 +1,6 @@
-﻿namespace WealthTrack.Data.DomainModels
+﻿using WealthTrack.Shared.Enums;
+
+namespace WealthTrack.Data.DomainModels
 {
     public class TransferTransaction
     {
@@ -13,6 +15,8 @@
         public DateTimeOffset CreatedDate { get; set; }
         
         public DateTimeOffset ModifiedDate { get; set; }
+        
+        public EntityStatus Status { get; set; }
 
         public Guid SourceWalletId { get; set; }
 

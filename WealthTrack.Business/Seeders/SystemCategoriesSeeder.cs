@@ -22,7 +22,6 @@ namespace WealthTrack.Business.Seeders
                     IsSystem = true,
                     CreatedDate = DateTimeOffset.Now,
                     ModifiedDate = DateTimeOffset.Now,
-                    Status = CategoryStatus.Active
                 }
             };
 

@@ -42,6 +42,45 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         transactionsFromResponse.Count.Should().Be(expectedNumberOfTransactions);
     }
     
+    [Theory]
+    [InlineData(2,2,2,2)]
+    [InlineData(4,4,4,4)]
+    [InlineData(6,6,6,6)]
+    public async Task GetAll_ShouldReturnActiveTransactionsOnly(int numberOfActiveTransactions, int numberOfArchivedTransactions, int numberOfActiveTransfers, int numberOfArchivedTransfers)
+    {
+        // Arrange
+        var activeScenario = DataFactory.CreateMixOfTransactionsScenario(
+            numberOfActiveTransactions, 
+            numberOfActiveTransfers, 
+            configureTransaction: t => t.Status = EntityStatus.Active,
+            configureTransferTransaction: t => t.Status = EntityStatus.Active);
+        var archivedScenario = DataFactory.CreateMixOfTransactionsScenario(
+            numberOfArchivedTransactions, 
+            numberOfArchivedTransfers, 
+            configureTransaction: t => t.Status = EntityStatus.Archived,
+            configureTransferTransaction: t => t.Status = EntityStatus.Archived);
+        DbContext.Currencies.AddRange(activeScenario.currency, archivedScenario.currency);
+        DbContext.Categories.AddRange(activeScenario.category, archivedScenario.category);
+        DbContext.Budgets.AddRange(activeScenario.budget, archivedScenario.budget);
+        DbContext.Wallets.AddRange(activeScenario.wallets);
+        DbContext.Wallets.AddRange(archivedScenario.wallets);
+        DbContext.Transactions.AddRange(activeScenario.transactions);
+        DbContext.Transactions.AddRange(archivedScenario.transactions);
+        DbContext.TransferTransactions.AddRange(activeScenario.transferTransactions);
+        DbContext.TransferTransactions.AddRange(archivedScenario.transferTransactions);
+        await DbContext.SaveChangesAsync();
+        var expectedNumberOfTransactions = numberOfActiveTransactions + numberOfActiveTransfers;
+
+        // Act
+        var response = await Client.GetAsync("/api/transaction");
+        var transactionsFromResponse = await response.Content.ReadFromJsonAsync<List<TransactionDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        transactionsFromResponse.Should().NotBeNullOrEmpty();
+        transactionsFromResponse.Count.Should().Be(expectedNumberOfTransactions);
+    }
+    
     [Fact]
     public async Task GetAll_ShouldReturnTransactionsOrderedByTransactionDate()
     {
@@ -273,10 +312,53 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     }
     
     [Fact]
+    public async Task GetById_RegularTransaction_GetById_ShouldReturnArchiveTransaction()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransactionScenario(configureTransaction: t => t.Status = EntityStatus.Archived);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Transactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var response = await Client.GetAsync($"/api/transaction/{scenario.transaction.Id}");
+        var transactionFromResponse = await response.Content.ReadFromJsonAsync<TransactionDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        transactionFromResponse.Should().NotBeNull();
+        transactionFromResponse.Id.Should().Be(scenario.transaction.Id);
+    }
+    
+    [Fact]
     public async Task GetById_TransferTransactions_ShouldReturnTransactionWithCorrectId()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.TransferTransactions.Add(scenario.transaction);
+        await DbContext.SaveChangesAsync();
+
+        // Act
+        var response = await Client.GetAsync($"/api/transaction/{scenario.transaction.Id}");
+        var transactionFromResponse = await response.Content.ReadFromJsonAsync<TransactionDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        transactionFromResponse.Should().NotBeNull();
+        transactionFromResponse.Id.Should().Be(scenario.transaction.Id);
+    }
+    
+    [Fact]
+    public async Task GetById_TransferTransactions_ShouldReturnArchiveTransaction()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleTransferScenario(configureTransferTransaction: t => t.Status = EntityStatus.Archived);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
@@ -579,6 +661,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         created.TransactionDate.Should().Be(upsert.TransactionDate);
         created.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         created.ModifiedDate.Should().BeExactly(created.CreatedDate);
+        created.Status.Should().Be(EntityStatus.Active);
         created.Type.Should().Be(upsert.Type);
         created.CategoryId.Should().Be(upsert.CategoryId.Value);
         created.WalletId.Should().Be(upsert.WalletId.Value);
@@ -1002,6 +1085,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         createdTransfer.TransactionDate.Should().Be(upsert.TransactionDate);
         createdTransfer.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         createdTransfer.ModifiedDate.Should().BeExactly(createdTransfer.CreatedDate);
+        createdTransfer.Status.Should().Be(EntityStatus.Active);
         createdTransfer.SourceWalletId.Should().Be(upsert.SourceWalletId.Value);
         createdTransfer.TargetWalletId.Should().Be(upsert.TargetWalletId.Value);
     }
@@ -1071,7 +1155,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     public async Task Create_TransferTransaction_WithNullBody_ShouldReturnBadRequest()
     {
         // Act
-        var response = await Client.PostAsJsonAsync("/api/transaction/create", (TransactionUpsertApiModel)null!);
+        var response = await Client.PostAsJsonAsync("/api/transaction/transfer/create", (TransactionUpsertApiModel)null!);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -1352,6 +1436,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.Type.Should().Be(scenario.transaction.Type);
         updatedTransaction.CategoryId.Should().Be(scenario.transaction.CategoryId);
         updatedTransaction.WalletId.Should().Be(scenario.transaction.WalletId);
@@ -1392,6 +1477,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.Type.Should().Be(scenario.transaction.Type);
         updatedTransaction.CategoryId.Should().Be(scenario.transaction.CategoryId);
         updatedTransaction.WalletId.Should().Be(scenario.transaction.WalletId);
@@ -1432,6 +1518,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.Type.Should().Be(scenario.transaction.Type);
         updatedTransaction.CategoryId.Should().Be(scenario.transaction.CategoryId);
         updatedTransaction.WalletId.Should().Be(scenario.transaction.WalletId);
@@ -1473,6 +1560,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.Type.Should().Be(scenario.transaction.Type);
         updatedTransaction.CategoryId.Should().Be(upsert.CategoryId.Value);
         updatedTransaction.WalletId.Should().Be(scenario.transaction.WalletId);
@@ -1518,6 +1606,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.Type.Should().Be(scenario.transaction.Type);
         updatedTransaction.CategoryId.Should().Be(scenario.transaction.CategoryId);
         updatedTransaction.WalletId.Should().Be(upsert.WalletId.Value);
@@ -1968,6 +2057,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.SourceWalletId.Should().Be(scenario.transaction.SourceWalletId);
         updatedTransaction.TargetWalletId.Should().Be(scenario.transaction.TargetWalletId);
     }
@@ -2000,6 +2090,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.SourceWalletId.Should().Be(scenario.transaction.SourceWalletId);
         updatedTransaction.TargetWalletId.Should().Be(scenario.transaction.TargetWalletId);
     }
@@ -2033,6 +2124,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.SourceWalletId.Should().Be(scenario.transaction.SourceWalletId);
         updatedTransaction.TargetWalletId.Should().Be(scenario.transaction.TargetWalletId);
     }
@@ -2072,6 +2164,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.SourceWalletId.Should().Be(upsert.SourceWalletId.Value);
         updatedTransaction.TargetWalletId.Should().Be(scenario.transaction.TargetWalletId);
     }
@@ -2111,6 +2204,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedTransaction.CreatedDate.Should().BeExactly(scenario.transaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().NotBe(updatedTransaction.CreatedDate);
         updatedTransaction.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
+        updatedTransaction.Status.Should().Be(scenario.transaction.Status);
         updatedTransaction.SourceWalletId.Should().Be(scenario.transaction.SourceWalletId);
         updatedTransaction.TargetWalletId.Should().Be(upsert.TargetWalletId.Value);
     }
@@ -2629,11 +2723,15 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
 
     #region DELETE TESTS
 
-    [Fact]
-    public async Task HardDelete_RegularTransaction_WithCorrectData_ShouldDeleteTransaction()
+    [Theory]
+    [InlineData(EntityStatus.Active)]
+    [InlineData(EntityStatus.Archived)]
+    public async Task HardDelete_RegularTransaction_WithCorrectData_ShouldDeleteTransaction(EntityStatus transactionStatus)
     {
         // Arrange
-        var scenario = DataFactory.CreateSingleTransactionScenario();
+        var scenario = DataFactory.CreateSingleTransactionScenario(
+            configureTransaction: t => t.Status = transactionStatus
+        );
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
@@ -2649,7 +2747,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var deletedTransaction = await DbContext.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == scenario.transaction.Id);
         deletedTransaction.Should().BeNull();
     }
-
+    
     [Fact]
     public async Task HardDelete_RegularTransaction_ShouldNotDeleteWallet()
     {
@@ -2778,11 +2876,15 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         updatedWallet.OverallBalance.Should().Be(expectedBudgetBalance);
     }
     
-    [Fact]
-    public async Task HardDelete_TransferTransaction_WithCorrectData_ShouldDeleteTransaction()
+    [Theory]
+    [InlineData(EntityStatus.Active)]
+    [InlineData(EntityStatus.Archived)]
+    public async Task HardDelete_TransferTransaction_WithCorrectData_ShouldDeleteTransaction(EntityStatus transactionStatus)
     {
         // Arrange
-        var scenario = DataFactory.CreateSingleTransferScenario();
+        var scenario = DataFactory.CreateSingleTransferScenario(
+            configureTransferTransaction: t => t.Status = transactionStatus    
+        );
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);

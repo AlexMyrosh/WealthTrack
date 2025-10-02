@@ -577,7 +577,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         };
     
         // Act
-        var response = await Client.PostAsJsonAsync("/api/category/create", upsert);
+        var response = await Client.PostAsJsonAsync("/api/goal/create", upsert);
         
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -1173,7 +1173,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     #region DELETE TESTS
 
     [Fact]
-    public async Task HardDelete_WithCorrectData_ShouldDeletesGoal()
+    public async Task HardDelete_WithCorrectData_ShouldDeleteGoal()
     {
         // Arrange
         var goal = DataFactory.CreateGoal();
@@ -1204,6 +1204,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var existingCategories = await DbContext.Categories.AsNoTracking().ToListAsync();
+        existingCategories.Should().NotBeNullOrEmpty();
         existingCategories.Count.Should().Be(scenario.categories.Count);
     }
     

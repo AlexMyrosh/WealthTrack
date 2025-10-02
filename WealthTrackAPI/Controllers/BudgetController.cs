@@ -58,4 +58,12 @@ public class BudgetController(IBudgetService budgetService, IMapper mapper) : Co
         await budgetService.HardDeleteAsync(id);
         return Accepted();
     }
+    
+    // DELETE api/budget/archive/{id}
+    [HttpDelete("archive/{id}")]
+    public async Task<ActionResult> Archive(Guid id)
+    {
+        await budgetService.ArchiveAsync(id);
+        return Accepted();
+    }
 }
