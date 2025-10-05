@@ -29,6 +29,6 @@ namespace WealthTrack.API.ApiModels.Goal
 
         public string? IconName { get; set; }
 
-        public OperationType Type { get; set; }
+        public OperationType? Type { get; set; }
     }
 }

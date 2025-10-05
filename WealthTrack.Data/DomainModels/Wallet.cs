@@ -10,6 +10,7 @@ namespace WealthTrack.Data.DomainModels
 
         public decimal Balance { get; set; }
 
+        // TODO: rename to IsPartOfBudgetBalance
         public bool IsPartOfGeneralBalance { get; set; }
 
         public DateTimeOffset CreatedDate { get; set; }
@@ -30,8 +31,8 @@ namespace WealthTrack.Data.DomainModels
 
         public List<Transaction> Transactions { get; set; }
 
-        public List<TransferTransaction> IncomeTransferTransactions { get; set; }
+        public List<Transaction> IncomeTransferTransactions { get; set; }
 
-        public List<TransferTransaction> OutgoingTransferTransactions { get; set; }
+        public List<Transaction> OutgoingTransferTransactions { get; set; }
     }
 }

@@ -2,7 +2,6 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Net.Http.Json;
-using System.Runtime.ExceptionServices;
 using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.IntegrationTests.TestData;
@@ -64,6 +63,108 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         budgetsFromResponse.Should().NotBeNullOrEmpty();
         budgetsFromResponse.Should().HaveCount(numberOfActiveBudgets);
         budgetsFromResponse.Should().AllSatisfy(b => activeBudgetIds.Should().Contain(b.Id));
+    }
+    
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_ShouldCalculateOverallBalanceCorrectly(int numberOfBudgets, int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyBudgetsWithManyWalletsWithDifferentCurrencies(numberOfBudgets, numberOfWallets, configureWallet: w =>
+        {
+            w.IsPartOfGeneralBalance = true;
+            w.Status = EntityStatus.Active;
+        });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.AddRange(scenario.budgets);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.budgets.ToDictionary(b => b.Id, b => b.Wallets.Sum(w => w.Balance / w.Currency.ExchangeRate * b.Currency.ExchangeRate));
+        
+        // Act
+        var response = await Client.GetAsync("/api/budget");
+        var budgetsFromResponse = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetsFromResponse.Should().NotBeNullOrEmpty();
+        budgetsFromResponse.Should().AllSatisfy(b => b.OverallBalance.Should().BeApproximately(expectedOverallBalance[b.Id], 5));
+    }
+    
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_WhenWalletStatusIsArchived_ShouldNotIncludeWalletBalanceIntoBudgetOverallBalance(int numberOfBudgets, int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyBudgetsWithTwoSetsOfWalletsWithDifferentCurrencies(numberOfBudgets, numberOfWallets,
+            configureWallet1: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Active;
+            },
+            configureWallet2: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Archived;
+            });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.AddRange(scenario.budgets);
+        DbContext.Wallets.AddRange(scenario.firstSetOfWallets);
+        DbContext.Wallets.AddRange(scenario.secondSetOfWallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.budgets.ToDictionary(b => b.Id,
+            b => b.Wallets.Where(w => w is { IsPartOfGeneralBalance: true, Status: EntityStatus.Active })
+                .Sum(w => w.Balance / w.Currency.ExchangeRate * b.Currency.ExchangeRate));
+        
+        // Act
+        var response = await Client.GetAsync("/api/budget");
+        var budgetsFromResponse = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetsFromResponse.Should().NotBeNullOrEmpty();
+        budgetsFromResponse.Should().AllSatisfy(b => b.OverallBalance.Should().BeApproximately(expectedOverallBalance[b.Id], 5));
+    }
+    
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_WhenWalletStatusIsNotPartOfGeneralBalance_ShouldNotIncludeWalletBalanceIntoBudgetOverallBalance(int numberOfBudgets, int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyBudgetsWithTwoSetsOfWalletsWithDifferentCurrencies(numberOfBudgets, numberOfWallets,
+            configureWallet1: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Active;
+            },
+            configureWallet2: w =>
+            {
+                w.IsPartOfGeneralBalance = false;
+                w.Status = EntityStatus.Active;
+            });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.AddRange(scenario.budgets);
+        DbContext.Wallets.AddRange(scenario.firstSetOfWallets);
+        DbContext.Wallets.AddRange(scenario.secondSetOfWallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.budgets.ToDictionary(b => b.Id,
+            b => b.Wallets.Where(w => w is { IsPartOfGeneralBalance: true, Status: EntityStatus.Active })
+                .Sum(w => w.Balance / w.Currency.ExchangeRate * b.Currency.ExchangeRate));
+        
+        // Act
+        var response = await Client.GetAsync("/api/budget");
+        var budgetsFromResponse = await response.Content.ReadFromJsonAsync<List<BudgetDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetsFromResponse.Should().NotBeNullOrEmpty();
+        budgetsFromResponse.Should().AllSatisfy(b => b.OverallBalance.Should().BeApproximately(expectedOverallBalance[b.Id], 5));
     }
     
     [Fact]
@@ -196,7 +297,7 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
     }
     
     [Fact]
-    public async Task GetById_ShouldReturnArchiveBudget()
+    public async Task GetById_WhenIdIsFromArchivedBudget_ShouldReturnArchivedBudget()
     {
         // Arrange
         var scenario = DataFactory.CreateBudgetWithDependencies(b => b.Status = EntityStatus.Archived);
@@ -212,6 +313,104 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         budgetFromResponse.Should().NotBeNull();
         budgetFromResponse.Id.Should().Be(scenario.budget.Id);
+    }
+    
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetById_ShouldCalculateOverallBalanceCorrectly(int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetAndWalletsWithDifferentCurrencies(numberOfWallets, configureWallet: w =>
+        {
+            w.IsPartOfGeneralBalance = true;
+            w.Status = EntityStatus.Active;
+        });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.wallets.Sum(w => w.Balance / w.Currency.ExchangeRate * scenario.budget.Currency.ExchangeRate);
+        
+        // Act
+        var response = await Client.GetAsync($"/api/budget/{scenario.budget.Id}");
+        var budgetFromResponse = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetFromResponse.Should().NotBeNull();
+        budgetFromResponse.OverallBalance.Should().BeApproximately(expectedOverallBalance, 5);
+    }
+    
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetById_WhenWalletStatusIsArchived_ShouldNotIncludeWalletBalanceIntoBudgetOverallBalance(int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithTwoSetsOfWalletsWithDifferentCurrencies(numberOfWallets,
+            configureWallet1: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Active;
+            },
+            configureWallet2: w =>
+        {
+            w.IsPartOfGeneralBalance = false;
+            w.Status = EntityStatus.Active;
+        });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.firstSetOfWallets);
+        DbContext.Wallets.AddRange(scenario.secondSetOfWallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.firstSetOfWallets.Sum(w => w.Balance / w.Currency.ExchangeRate * scenario.budget.Currency.ExchangeRate);
+        
+        // Act
+        var response = await Client.GetAsync($"/api/budget/{scenario.budget.Id}");
+        var budgetFromResponse = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetFromResponse.Should().NotBeNull();
+        budgetFromResponse.OverallBalance.Should().BeApproximately(expectedOverallBalance, 5);
+    }
+    
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetById_WhenWalletStatusIsNotPartOfGeneralBalance_ShouldNotIncludeWalletBalanceIntoBudgetOverallBalance(int numberOfWallets)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateBudgetWithTwoSetsOfWalletsWithDifferentCurrencies(numberOfWallets,
+            configureWallet1: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Active;
+            },
+            configureWallet2: w =>
+            {
+                w.IsPartOfGeneralBalance = true;
+                w.Status = EntityStatus.Archived;
+            });
+        DbContext.Currencies.AddRange(scenario.currencies);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.firstSetOfWallets);
+        DbContext.Wallets.AddRange(scenario.secondSetOfWallets);
+        await DbContext.SaveChangesAsync();
+        var expectedOverallBalance = scenario.firstSetOfWallets.Sum(w => w.Balance / w.Currency.ExchangeRate * scenario.budget.Currency.ExchangeRate);
+        
+        // Act
+        var response = await Client.GetAsync($"/api/budget/{scenario.budget.Id}");
+        var budgetFromResponse = await response.Content.ReadFromJsonAsync<BudgetDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        budgetFromResponse.Should().NotBeNull();
+        budgetFromResponse.OverallBalance.Should().BeApproximately(expectedOverallBalance, 5);
     }
 
     [Fact]
@@ -383,7 +582,6 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         createdBudget.Should().NotBeNull();
         createdBudget.Name.Should().Be(budgetToCreate.Name);
         createdBudget.CurrencyId.Should().Be(budgetToCreate.CurrencyId.Value);
-        createdBudget.OverallBalance.Should().Be(0M);
         createdBudget.Status.Should().Be(EntityStatus.Active);
         createdBudget.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         createdBudget.ModifiedDate.Should().BeExactly(createdBudget.CreatedDate);
@@ -520,7 +718,6 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         var updatedBudget = await DbContext.Budgets.AsNoTracking().Include(b => b.Wallets).FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
         updatedBudget.Should().NotBeNull();
         updatedBudget.Name.Should().Be(budgetToUpdate.Name);
-        updatedBudget.OverallBalance.Should().Be(scenario.budget.OverallBalance);
         updatedBudget.CreatedDate.Should().BeExactly(scenario.budget.CreatedDate);
         updatedBudget.ModifiedDate.Should().NotBe(updatedBudget.CreatedDate);
         updatedBudget.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
@@ -553,7 +750,6 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         var updatedBudget = await DbContext.Budgets.AsNoTracking().Include(b => b.Wallets).FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
         updatedBudget.Should().NotBeNull();
         updatedBudget.Name.Should().Be(scenario.budget.Name);
-        updatedBudget.OverallBalance.Should().Be(scenario.budget.OverallBalance);
         updatedBudget.CreatedDate.Should().BeExactly(scenario.budget.CreatedDate);
         updatedBudget.ModifiedDate.Should().NotBe(updatedBudget.CreatedDate);
         updatedBudget.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
@@ -752,7 +948,7 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
+        DbContext.Transactions.AddRange(scenario.transferTransactions);
         DbContext.Transactions.AddRange(scenario.transactions);
         await DbContext.SaveChangesAsync();
 
@@ -761,9 +957,7 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
 
         // Assert
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var deletedTransferTransactions = await DbContext.TransferTransactions.AsNoTracking().ToListAsync();
         var deletedTransactions = await DbContext.Transactions.AsNoTracking().ToListAsync();
-        deletedTransferTransactions.Should().BeNullOrEmpty();
         deletedTransactions.Should().BeNullOrEmpty();
     }
     
@@ -783,49 +977,6 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
         var existingCurrency = await DbContext.Currencies.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.currency.Id);
         existingCurrency.Should().NotBeNull();
-    }
-    
-    [Fact]
-    public async Task HardDelete_WithCorrectData_ShouldNotDeleteCategory()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionScenario();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.AddRange(scenario.wallet);
-        DbContext.Transactions.AddRange(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var deleteResponse = await Client.DeleteAsync($"/api/budget/hard_delete/{scenario.budget.Id}");
-
-        // Assert
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var existingCategory = await DbContext.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == scenario.category.Id);
-        existingCategory.Should().NotBeNull();
-    }
-    
-    [Fact]
-    public async Task HardDelete_WithCorrectData_ShouldNotDeleteGoal()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionWithApplicableGoal();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Goals.Add(scenario.goal);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var deleteResponse = await Client.DeleteAsync($"/api/budget/hard_delete/{scenario.budget.Id}");
-
-        // Assert
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var existingGoal = await DbContext.Goals.AsNoTracking().FirstOrDefaultAsync(g => g.Id == scenario.goal.Id);
-        existingGoal.Should().NotBeNull();
     }
     
     [Fact]
@@ -912,7 +1063,7 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
         DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.TransferTransactions.AddRange(scenario.transferTransactions);
+        DbContext.Transactions.AddRange(scenario.transferTransactions);
         DbContext.Transactions.AddRange(scenario.transactions);
         await DbContext.SaveChangesAsync();
 
@@ -921,11 +1072,8 @@ public class BudgetControllerTests(EmptyWebAppFactory factory) : IntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var archivedTransferTransactions = await DbContext.TransferTransactions.AsNoTracking().ToListAsync();
         var archivedTransactions = await DbContext.Transactions.AsNoTracking().ToListAsync();
-        archivedTransferTransactions.Should().NotBeNullOrEmpty();
         archivedTransactions.Should().NotBeNullOrEmpty();
-        archivedTransferTransactions.Should().AllSatisfy(t => t.Status.Should().Be(EntityStatus.Archived));
         archivedTransactions.Should().AllSatisfy(t => t.Status.Should().Be(EntityStatus.Archived));
     }
     

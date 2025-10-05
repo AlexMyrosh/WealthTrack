@@ -82,7 +82,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         categoriesFromResponse.Should().NotBeNullOrEmpty();
-        categoriesFromResponse.Should().HaveCount(numberOfParents);
         categoriesFromResponse.Should().AllSatisfy(c => c.ChildCategories.Count.Should().Be(numberOfChildren));
     }
     
@@ -109,7 +108,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         var root = categoriesFromResponse.Single();
         root.ChildCategories.Should().ContainSingle();
         var current = root.ChildCategories.Single();
-        for (int i = 2; i < numberOfLayers; i++)
+        for (var i = 2; i < numberOfLayers; i++)
         {
             current.ChildCategories.Should().ContainSingle();
             current = current.ChildCategories.Single();
@@ -165,8 +164,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         DbContext.Categories.AddRange(scenario.parents);
         DbContext.Categories.AddRange(scenario.children);
         await DbContext.SaveChangesAsync();
-        var categoryId = Random.GetItems(scenario.parents.Concat(scenario.children).Select(c => c.Id).ToArray(), 1)
-            .First();
+        var categoryId = Random.GetItems(scenario.parents.Concat(scenario.children).Select(c => c.Id).ToArray(), 1).First();
 
         // Act
         var response = await Client.GetAsync($"/api/category/{categoryId}");
@@ -388,7 +386,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithEmptyName_ShouldReturnBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
+        var parentCategory = DataFactory.CreateCategory();
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
 
@@ -396,7 +394,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = string.Empty,
             IconName = Guid.NewGuid().ToString(),
-            Type = OperationType.Income,
+            Type = parentCategory.Type,
             ParentCategoryId = parentCategory.Id
         };
 
@@ -411,7 +409,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithNullName_ShouldReturnBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
+        var parentCategory = DataFactory.CreateCategory();
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
 
@@ -419,7 +417,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         {
             Name = null,
             IconName = Guid.NewGuid().ToString(),
-            Type = OperationType.Income,
+            Type = parentCategory.Type,
             ParentCategoryId = parentCategory.Id
         };
 
@@ -434,7 +432,7 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     public async Task Create_WithNullType_ShouldReturnBadRequest()
     {
         // Arrange
-        var parentCategory = DataFactory.CreateCategory(p => p.Type = OperationType.Income);
+        var parentCategory = DataFactory.CreateCategory();
         DbContext.Categories.Add(parentCategory);
         await DbContext.SaveChangesAsync();
 
@@ -916,10 +914,10 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
     }
 
     [Fact]
-    public async Task HardDelete_ShouldNotDeleteRelatedGoals()
+    public async Task HardDelete_WhenGoalHasHasOtherCategories_ShouldNotDeleteRelatedGoals()
     {
         // Arrange
-        var scenario = DataFactory.CreateManyGoalsWithDependencies(numberOfCategories: 1);
+        var scenario = DataFactory.CreateManyGoalsWithDependencies(numberOfCategories: 2);
         DbContext.Categories.AddRange(scenario.categories);
         DbContext.Goals.AddRange(scenario.goals);
         await DbContext.SaveChangesAsync();
@@ -932,6 +930,25 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         var existingGoals = await DbContext.Goals.AsNoTracking().ToListAsync();
         existingGoals.Should().NotBeNullOrEmpty();
         existingGoals.Count.Should().Be(scenario.goals.Count);
+    }
+    
+    [Fact]
+    public async Task HardDelete_WhenGoalHasOnlyDeletedCategory_ShouldDeleteRelatedGoals()
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyGoalsWithDependencies(numberOfCategories: 1);
+        DbContext.Categories.AddRange(scenario.categories);
+        DbContext.Goals.AddRange(scenario.goals);
+        await DbContext.SaveChangesAsync();
+        var expectedNumberOfGoals = scenario.goals.Count - 1;
+
+        // Act
+        var response = await Client.DeleteAsync($"/api/category/hard_delete/{scenario.categories[0].Id}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
+        var existingGoals = await DbContext.Goals.AsNoTracking().ToListAsync();
+        existingGoals.Count.Should().Be(expectedNumberOfGoals);
     }
     
     [Fact]

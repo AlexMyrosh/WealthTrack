@@ -6,6 +6,7 @@ using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 using WealthTrack.Shared.Enums;
+using WealthTrack.Shared.Extensions;
 
 namespace WealthTrack.Business.Services.Implementations
 {
@@ -68,8 +69,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             var createdEntityId = await unitOfWork.GoalRepository.CreateAsync(domainModel);
-            var goalCreatedEventModel = mapper.Map<GoalCreatedEvent>(domainModel);
-            await eventPublisher.PublishAsync(goalCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -96,13 +95,18 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var domainModel = await unitOfWork.GoalRepository.GetByIdAsync(id, include);
-            
-            // TODO: Add filters to find only necessary transactions
-            var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
             var result = mapper.Map<GoalDetailsBusinessModel>(domainModel);
             if (result is not null)
             {
-                result.ActualMoneyAmount = CalculateActualMoneyAmount(result, transactions);
+                var transactions = await unitOfWork.TransactionRepository.GetAllAsync(
+                    filter: t => ((t.Type == TransactionType.Income && result.Type == OperationType.Income) ||
+                                  (t.Type == TransactionType.Expense && result.Type == OperationType.Expense)) &&
+                                 t.CategoryId.HasValue &&
+                                 result.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
+                                 t.TransactionDate >= result.StartDate && t.TransactionDate <= result.EndDate &&
+                                 t.TransactionDate <= DateTimeOffset.UtcNow
+                );
+                result.ActualMoneyAmount = transactions.Sum(t => t.Amount);
                 if (isIncludeUpdated)
                 {
                     result.Categories = new List<CategoryRelatedToGoalDetailsBusinessModel>();
@@ -130,17 +134,22 @@ namespace WealthTrack.Business.Services.Implementations
             
             var domainModels = await unitOfWork.GoalRepository.GetAllAsync(include);
             var result = mapper.Map<List<GoalDetailsBusinessModel>>(domainModels);
-            
-            // TODO: Add filters to find only necessary transactions
-            var transactions = await unitOfWork.TransactionRepository.GetAllAsync();
-            result.ForEach(g =>
+            foreach (var businessModel in result)
             {
-                g.ActualMoneyAmount = CalculateActualMoneyAmount(g, transactions);
+                var transactions = await unitOfWork.TransactionRepository.GetAllAsync(
+                    filter: t => t.Type == businessModel.Type.ToTransactionType() &&
+                                 t.CategoryId.HasValue &&
+                                 businessModel.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
+                                 t.TransactionDate >= businessModel.StartDate &&
+                                 t.TransactionDate <= businessModel.EndDate &&
+                                 t.TransactionDate <= DateTimeOffset.UtcNow
+                );
+                businessModel.ActualMoneyAmount = transactions.Sum(t => t.Amount);
                 if (isIncludeUpdated)
                 {
-                    g.Categories = new List<CategoryRelatedToGoalDetailsBusinessModel>();
+                    businessModel.Categories = new List<CategoryRelatedToGoalDetailsBusinessModel>();
                 }
-            });
+            }
             
             return result;
         }
@@ -187,8 +196,6 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException("The type of selected categories should align with goal's type");
             }
             
-            var goalCreatedEventModel = mapper.Map<GoalUpdatedEvent>(originalModel);
-            await eventPublisher.PublishAsync(goalCreatedEventModel);
             unitOfWork.GoalRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
@@ -255,16 +262,6 @@ namespace WealthTrack.Business.Services.Implementations
         private bool IsGoalHasCategoriesWithTheSameType(OperationType  goalType, List<Category> categories)
         {
             return !categories.Exists(c => c.Type != goalType);
-        }
-        
-        private decimal CalculateActualMoneyAmount(GoalDetailsBusinessModel goal, List<Transaction> transactions)
-        {
-            return transactions.Where(
-                t => t.Type == goal.Type &&
-                     t.CategoryId.HasValue &&
-                     goal.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
-                     t.TransactionDate >= goal.StartDate && t.TransactionDate <= goal.EndDate
-            ).Sum(t => t.Amount);
         }
     }
 }

@@ -22,9 +22,9 @@ namespace WealthTrack.API.ApiModels.Wallet
 
         public List<TransactionRelatedToWalletDetailsApiModel> Transactions { get; set; }
         
-        public List<TransferTransactionRelatedToWalletDetailsApiModel> IncomeTransferTransactions { get; set; }
+        public List<TransactionRelatedToWalletDetailsApiModel> IncomeTransferTransactions { get; set; }
 
-        public List<TransferTransactionRelatedToWalletDetailsApiModel> OutgoingTransferTransactions { get; set; }
+        public List<TransactionRelatedToWalletDetailsApiModel> OutgoingTransferTransactions { get; set; }
     }
 
     public class CurrencyRelatedToWalletDetailsApiModel
@@ -38,6 +38,8 @@ namespace WealthTrack.API.ApiModels.Wallet
         public string Symbol { get; set; }
 
         public decimal ExchangeRate { get; set; }
+        
+        public CurrencyType Type { get; set; }
     }
 
     public class BudgetRelatedToWalletDetailsApiModel
@@ -47,6 +49,8 @@ namespace WealthTrack.API.ApiModels.Wallet
         public string Name { get; set; }
 
         public decimal OverallBalance { get; set; }
+        
+        public EntityStatus Status { get; set; }
     }
 
     public class TransactionRelatedToWalletDetailsApiModel
@@ -60,16 +64,7 @@ namespace WealthTrack.API.ApiModels.Wallet
         public DateTimeOffset TransactionDate { get; set; }
 
         public OperationType Type { get; set; }
-    }
-
-    public class TransferTransactionRelatedToWalletDetailsApiModel
-    {
-        public Guid Id { get; set; }
-
-        public decimal Amount { get; set; }
-
-        public string? Description { get; set; }
-
-        public DateTimeOffset TransactionDate { get; set; }
+        
+        public EntityStatus Status { get; set; }
     }
 }

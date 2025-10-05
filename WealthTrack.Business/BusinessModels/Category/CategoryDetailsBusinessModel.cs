@@ -11,29 +11,22 @@ namespace WealthTrack.Business.BusinessModels.Category
         public string? IconName { get; set; }
 
         public OperationType? Type { get; set; }
+        
+        public bool IsSystem { get; set; }
 
-        public ParentCategoryDetailsBusinessModel ParentCategory { get; set; }
+        public CategoryRelatedToCategoryDetailsBusinessModel? ParentCategory { get; set; }
 
-        public List<ChildCategoryDetailsBusinessModel> ChildCategories { get; set; }
+        public List<CategoryRelatedToCategoryDetailsBusinessModel> ChildCategories { get; set; }
     }
 
-    public class ParentCategoryDetailsBusinessModel
+    public class CategoryRelatedToCategoryDetailsBusinessModel
     {
         public Guid Id { get; set; }
 
         public string Name { get; set; }
 
         public string? IconName { get; set; }
-    }
-
-    public class ChildCategoryDetailsBusinessModel
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
-        public string? IconName { get; set; }
-
-        public List<ChildCategoryDetailsBusinessModel> ChildCategories { get; set; }
+        
+        public List<CategoryRelatedToCategoryDetailsBusinessModel> ChildCategories { get; set; }
     }
 }

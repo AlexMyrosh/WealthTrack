@@ -31,14 +31,65 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
+            var isWalletWasIncluded = include.Contains(nameof(Budget.Wallets));
+            var isCurrencyWasIncluded = include.Contains(nameof(Budget.Currency));
+            if (string.IsNullOrWhiteSpace(include))
+            {
+                include += $"{nameof(Budget.Wallets)}.{nameof(Wallet.Currency)},{nameof(Budget.Currency)}";
+            }
+            else
+            {
+                include += $",{nameof(Budget.Wallets)}.{nameof(Wallet.Currency)},{nameof(Budget.Currency)}";
+            }
+
             var domainModel = await unitOfWork.BudgetRepository.GetByIdAsync(id, include);
+            if (domainModel is not null)
+            {
+                domainModel.OverallBalance = CalculateOverallBalance(domainModel);
+            }
+            
             var result = mapper.Map<BudgetDetailsBusinessModel>(domainModel);
+            if (result != null && !isWalletWasIncluded)
+            {
+                result.Wallets = null;
+            }
+
+            if (result != null && !isCurrencyWasIncluded)
+            {
+                result.Currency = null;
+            }
+            
             return result;
         }
 
         public async Task<List<BudgetDetailsBusinessModel>> GetAllAsync(string include = "")
         {
+            var isWalletWasIncluded = include.Contains(nameof(Budget.Wallets));
+            var isCurrencyWasIncluded = include.Contains(nameof(Budget.Currency));
+            if (string.IsNullOrWhiteSpace(include))
+            {
+                include += $"{nameof(Budget.Wallets)}.{nameof(Wallet.Currency)},{nameof(Budget.Currency)}";
+            }
+            else
+            {
+                include += $",{nameof(Budget.Wallets)}.{nameof(Wallet.Currency)},{nameof(Budget.Currency)}";
+            }
+            
             var domainModels = await unitOfWork.BudgetRepository.GetAllAsync(include);
+            foreach (var domainModel in domainModels)
+            {
+                domainModel.OverallBalance = CalculateOverallBalance(domainModel);
+                if (!isWalletWasIncluded)
+                {
+                    domainModel.Wallets = null;
+                }
+
+                if (!isCurrencyWasIncluded)
+                {
+                    domainModel.Currency = null;
+                }
+            }
+            
             var result = mapper.Map<List<BudgetDetailsBusinessModel>>(domainModels);
             return result;
         }
@@ -138,6 +189,38 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 await unitOfWork.SaveAsync();
             }
+        }
+        
+        private decimal CalculateOverallBalance(Budget budget)
+        {
+            if (budget.Currency == null)
+            {
+                throw new InvalidOperationException("Budget must have a defined currency.");
+            }
+
+            if (budget.Wallets.Count == 0)
+            {
+                return 0m;
+            }
+
+            var overallBalance = 0m;
+            foreach (var wallet in budget.Wallets)
+            {
+                if (wallet.Status == EntityStatus.Archived || !wallet.IsPartOfGeneralBalance)
+                {
+                    continue;
+                }
+
+                if (wallet.Currency == null)
+                {
+                    throw new InvalidOperationException($"Wallet {wallet.Name} must have a defined currency.");
+                }
+                
+                var convertedBalance = wallet.Balance / wallet.Currency.ExchangeRate * budget.Currency.ExchangeRate;
+                overallBalance += convertedBalance;
+            }
+
+            return overallBalance;
         }
     }
 }

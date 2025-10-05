@@ -12,14 +12,7 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHand
             {
                 throw new ArgumentException(nameof(eventMessage));
             }
-
-            // if (eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old &&
-            //     eventMessage.SourceWalletId_New is null || eventMessage.SourceWalletId_New == eventMessage.SourceWalletId_Old &&
-            //     eventMessage.TargetWalletId_New is null || eventMessage.TargetWalletId_New == eventMessage.TargetWalletId_Old)
-            // {
-            //     return;
-            // }
-
+            
             var oldSourceWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.SourceWalletId_Old);
             if (oldSourceWallet == null)
             {
@@ -47,17 +40,9 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHand
                 {
                     throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.SourceWalletId_New.ToString()}");
                 }
-
-                var balanceBeforeUpdate = newSourceWallet.Balance;
+                
                 oldSourceWallet.Balance += eventMessage.Amount_New ?? eventMessage.Amount_Old;
                 newSourceWallet.Balance -= eventMessage.Amount_New ?? eventMessage.Amount_Old;
-                await eventPublisher.PublishAsync(new WalletUpdatedEvent
-                {
-                    WalletId = eventMessage.SourceWalletId_New.Value,
-                    BudgetId_Old = newSourceWallet.BudgetId,
-                    Balance_Old = balanceBeforeUpdate,
-                    IsPartOfGeneralBalance_Old = newSourceWallet.IsPartOfGeneralBalance
-                });
             }
 
             // Case 3. Target wallet has changed
@@ -68,17 +53,9 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHand
                 {
                     throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.TargetWalletId_New.ToString()}");
                 }
-
-                var balanceBeforeUpdate = newTargetWallet.Balance;
+                
                 oldTargetWallet.Balance -= eventMessage.Amount_New ?? eventMessage.Amount_Old;
                 newTargetWallet.Balance += eventMessage.Amount_New ?? eventMessage.Amount_Old;
-                await eventPublisher.PublishAsync(new WalletUpdatedEvent
-                {
-                    WalletId = eventMessage.TargetWalletId_New.Value,
-                    BudgetId_Old = newTargetWallet.BudgetId,
-                    Balance_Old = balanceBeforeUpdate,
-                    IsPartOfGeneralBalance_Old = newTargetWallet.IsPartOfGeneralBalance
-                });
             }
         }
     }

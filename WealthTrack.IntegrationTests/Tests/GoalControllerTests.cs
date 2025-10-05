@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using FluentAssertions;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Shared.Enums;
+using WealthTrack.Shared.Extensions;
 
 namespace WealthTrack.IntegrationTests.Tests;
 
@@ -26,7 +27,7 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         DbContext.Categories.AddRange(scenario.categories);
         DbContext.Goals.AddRange(scenario.goals);
         await DbContext.SaveChangesAsync();
-        var goalIds = scenario.goals.Select(b => b.Id).ToList();
+        var goalIds = scenario.goals.Select(g => g.Id).ToList();
             
         // Act
         var response = await Client.GetAsync("/api/goal");
@@ -82,14 +83,17 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     public async Task GetAll_ShouldReturnGoalsWithCorrectActualMoneyAmount(int numberOfGoals, int numberOfTransactions)
     {
         // Arrange
-        var scenario = DataFactory.CreateManyGoalsWithManyApplicableTransactions(numberOfGoals, numberOfTransactions);
+        var scenario = DataFactory.CreateManyGoalsWithManyTransactions(numberOfGoals, numberOfTransactions, numberOfTransactions, numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.Wallets.AddRange(scenario.wallets);
+        DbContext.Transactions.AddRange(scenario.applicableTransactions);
+        DbContext.Transactions.AddRange(scenario.notApplicableTransactions);
+        DbContext.Transactions.AddRange(scenario.transferTransactions);
         DbContext.Goals.AddRange(scenario.goals);
         await DbContext.SaveChangesAsync();
+        var expectedGoalActualMoneyAmount = scenario.goals.ToDictionary(g => g.Id, g => CalculateActualMoneyAmount(g, scenario.applicableTransactions));
         
         // Act
         var response = await Client.GetAsync("/api/goal");
@@ -98,7 +102,35 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         goalsFromResponse.Should().NotBeNullOrEmpty();
-        goalsFromResponse.Should().AllSatisfy(g => g.ActualMoneyAmount.Should().Be(CalculateActualMoneyAmount(scenario.goals.First(g2 => g2.Id == g.Id), scenario.transactions)));
+        goalsFromResponse.Should().AllSatisfy(g => g.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount[g.Id]));
+    }
+    
+    [Theory]
+    [InlineData(1, 1)]
+    [InlineData(3, 3)]
+    [InlineData(5, 5)]
+    public async Task GetAll_ShouldCalculateActualMoneyAmountOnlyForTransactionsWithPastDate(int numberOfGoals, int numberOfTransactions)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateManyGoalsWithPastAndFutureApplicableTransactions(numberOfGoals, numberOfTransactions, numberOfTransactions);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.AddRange(scenario.categories);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.AddRange(scenario.wallet);
+        DbContext.Transactions.AddRange(scenario.pastDateTransactions);
+        DbContext.Transactions.AddRange(scenario.futureTransactions);
+        DbContext.Goals.AddRange(scenario.goals);
+        await DbContext.SaveChangesAsync();
+        var expectedGoalActualMoneyAmount = scenario.goals.ToDictionary(g => g.Id, g => CalculateActualMoneyAmount(g, scenario.pastDateTransactions));
+        
+        // Act
+        var response = await Client.GetAsync("/api/goal");
+        var goalsFromResponse = await response.Content.ReadFromJsonAsync<List<GoalDetailsApiModel>>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        goalsFromResponse.Should().NotBeNullOrEmpty();
+        goalsFromResponse.Should().AllSatisfy(g => g.ActualMoneyAmount.Should().Be(expectedGoalActualMoneyAmount[g.Id]));
     }
     
     [Fact]
@@ -191,10 +223,39 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         DbContext.Categories.Add(scenario.category);
         DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
-        DbContext.Transactions.AddRange(scenario.transactions);
+        DbContext.Transactions.AddRange(scenario.applicableTransactions);
+        DbContext.Transactions.AddRange(scenario.notApplicableTransactions);
         DbContext.Goals.Add(scenario.goal);
         await DbContext.SaveChangesAsync();
-        var expectedActualMoneyAmount = CalculateActualMoneyAmount(scenario.goal, scenario.transactions);
+        var expectedActualMoneyAmount = CalculateActualMoneyAmount(scenario.goal, scenario.applicableTransactions);
+        
+        // Act
+        var response = await Client.GetAsync($"/api/goal/{scenario.goal.Id}");
+        var goalFromResponse = await response.Content.ReadFromJsonAsync<GoalDetailsApiModel>();
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        goalFromResponse.Should().NotBeNull();
+        goalFromResponse.ActualMoneyAmount.Should().Be(expectedActualMoneyAmount);
+    }
+    
+    [Theory]
+    [InlineData(1)]
+    [InlineData(3)]
+    [InlineData(5)]
+    public async Task GetById_ShouldCalculateActualMoneyAmountForPastTransactionsOnly(int numberOfTransactions)
+    {
+        // Arrange
+        var scenario = DataFactory.CreateSingleGoalWithPastAndFutureApplicableTransactions(numberOfTransactions);
+        DbContext.Currencies.Add(scenario.currency);
+        DbContext.Categories.Add(scenario.category);
+        DbContext.Budgets.Add(scenario.budget);
+        DbContext.Wallets.Add(scenario.wallet);
+        DbContext.Transactions.AddRange(scenario.pastTransactions);
+        DbContext.Transactions.AddRange(scenario.futureTransactions);
+        DbContext.Goals.Add(scenario.goal);
+        await DbContext.SaveChangesAsync();
+        var expectedActualMoneyAmount = CalculateActualMoneyAmount(scenario.goal, scenario.pastTransactions);
         
         // Act
         var response = await Client.GetAsync($"/api/goal/{scenario.goal.Id}");
@@ -1242,8 +1303,9 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
     
     private decimal CalculateActualMoneyAmount(Goal goal, List<Transaction> transactions)
     {
-        return transactions.Where(
-            t => t.Type == goal.Type &&
+        var regularTransactions = transactions.Where(t => t.Type != TransactionType.Transfer).ToList();
+        return regularTransactions.Where(
+            t => t.Type == goal.Type.ToTransactionType() &&
                  t.CategoryId.HasValue &&
                  goal.Categories.Select(c => c.Id).Contains(t.CategoryId.Value) &&
                  t.TransactionDate >= goal.StartDate && t.TransactionDate <= goal.EndDate

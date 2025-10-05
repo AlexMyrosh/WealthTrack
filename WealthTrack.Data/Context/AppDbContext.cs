@@ -8,7 +8,6 @@ namespace WealthTrack.Data.Context
         public DbSet<Category> Categories { get; set; }
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
-        public DbSet<TransferTransaction> TransferTransactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Goal> Goals { get; set; }
@@ -24,20 +23,21 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(100);
 
                 entity.Property(e => e.IconName)
-                    .HasMaxLength(50);
+                    .HasMaxLength(100);
+                
+                entity.Property(e => e.Type)
+                    .HasConversion<string>();
+
+                entity.Property(e => e.IsSystem)
+                    .IsRequired()
+                    .HasDefaultValue(false);
 
                 entity.Property(e => e.CreatedDate)
                     .IsRequired();
 
                 entity.Property(e => e.ModifiedDate)
                     .IsRequired();
-
-                entity.Property(e => e.Type)
-                    .HasConversion<string>();
-
-                entity.Property(e => e.IsSystem)
-                    .HasDefaultValue(false);
-
+                
                 entity.HasOne(e => e.ParentCategory)
                     .WithMany(e => e.ChildCategories)
                     .HasForeignKey(e => e.ParentCategoryId)
@@ -54,21 +54,23 @@ namespace WealthTrack.Data.Context
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasIndex(e => e.Code)
-                    .IsUnique();
+                entity.Property(e => e.Code)
+                    .IsRequired()
+                    .HasMaxLength(100);
 
-                entity.HasIndex(e => e.Name)
-                    .IsUnique();
-
-                entity.Property(e => e.ExchangeRate)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
-
+                entity.Property(e => e.Name)
+                    .IsRequired()
+                    .HasMaxLength(100);
+                
                 entity.Property(e => e.Symbol)
                     .IsRequired()
                     .IsUnicode()
                     .HasMaxLength(10);
 
+                entity.Property(e => e.ExchangeRate)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+                
                 entity.Property(e => e.Type)
                     .IsRequired()
                     .HasConversion<string>();
@@ -112,6 +114,9 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.CurrencyId)
                     .IsRequired();
+                
+                entity.Property(e => e.BudgetId)
+                    .IsRequired();
 
                 entity.HasOne(e => e.Currency)
                     .WithMany(e => e.Wallets)
@@ -139,19 +144,25 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.Description)
                     .HasMaxLength(1000);
-
-                entity.Property(e => e.CreatedDate)
-                    .IsRequired();
-
+                
                 entity.Property(e => e.TransactionDate)
                     .IsRequired();
 
+                entity.HasIndex(e => e.TransactionDate);
+
+                entity.Property(e => e.CreatedDate)
+                    .IsRequired();
+                
+                entity.Property(e => e.ModifiedDate)
+                    .IsRequired();
+                
                 entity.Property(e => e.Type)
-                    .HasConversion<string>();
+                    .HasConversion<string>()
+                    .IsRequired();
                 
                 entity.Property(e => e.Status)
-                    .IsRequired()
-                    .HasConversion<string>();
+                    .HasConversion<string>()
+                    .IsRequired();
 
                 entity.HasOne(e => e.Category)
                     .WithMany(e => e.Transactions)
@@ -162,35 +173,7 @@ namespace WealthTrack.Data.Context
                     .WithMany(e => e.Transactions)
                     .HasForeignKey(e => e.WalletId)
                     .OnDelete(DeleteBehavior.NoAction);
-            });
-
-            modelBuilder.Entity<TransferTransaction>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Amount)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
-
-                entity.Property(e => e.Description)
-                    .HasMaxLength(1000);
-
-                entity.Property(e => e.CreatedDate)
-                    .IsRequired();
-
-                entity.Property(e => e.TransactionDate)
-                    .IsRequired();
                 
-                entity.Property(e => e.Status)
-                    .IsRequired()
-                    .HasConversion<string>();
-
-                entity.Property(e => e.SourceWalletId)
-                    .IsRequired();
-
-                entity.Property(e => e.TargetWalletId)
-                    .IsRequired();
-
                 entity.HasOne(e => e.SourceWallet)
                     .WithMany(w => w.OutgoingTransferTransactions)
                     .HasForeignKey(e => e.SourceWalletId)
@@ -201,7 +184,7 @@ namespace WealthTrack.Data.Context
                     .HasForeignKey(e => e.TargetWalletId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
-
+            
             modelBuilder.Entity<Budget>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -209,10 +192,6 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);
-
-                entity.Property(e => e.OverallBalance)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
 
                 entity.Property(e => e.CreatedDate)
                     .IsRequired();
@@ -226,6 +205,11 @@ namespace WealthTrack.Data.Context
 
                 entity.Property(e => e.CurrencyId)
                     .IsRequired();
+                
+                entity.HasOne(e => e.Currency)
+                    .WithMany(e => e.Budgets)
+                    .HasForeignKey(e => e.CurrencyId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasMany(e => e.Wallets)
                     .WithOne(e => e.Budget)
@@ -245,6 +229,14 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.Name)
                     .IsRequired()
                     .HasMaxLength(100);
+                
+                entity.Property(e => e.PlannedMoneyAmount)
+                    .HasColumnType("decimal(18,9)")
+                    .IsRequired();
+                
+                entity.Property(e => e.Type)
+                    .IsRequired()
+                    .HasConversion<string>();
 
                 entity.Property(e => e.StartDate)
                     .IsRequired();
@@ -258,22 +250,30 @@ namespace WealthTrack.Data.Context
                 entity.Property(e => e.ModifiedDate)
                     .IsRequired();
 
-                entity.Property(e => e.PlannedMoneyAmount)
-                    .HasColumnType("decimal(18,9)")
-                    .IsRequired();
-                
-                entity.Property(e => e.Type)
-                    .IsRequired()
-                    .HasConversion<string>();
-
                 entity.HasMany(s => s.Categories)
                     .WithMany(c => c.Goals)
                     .UsingEntity<Dictionary<string, object>>(
                         "GoalCategory",
-                        j => j.HasOne<Category>().WithMany().HasForeignKey("CategoryId").IsRequired(),
-                        j => j.HasOne<Goal>().WithMany().HasForeignKey("GoalId").IsRequired()
-                    );
-                
+                        j => j
+                            .HasOne<Category>()
+                            .WithMany()
+                            .HasForeignKey("CategoryId")
+                            .IsRequired()
+                            .OnDelete(DeleteBehavior.Cascade),
+                        j => j
+                            .HasOne<Goal>()
+                            .WithMany()
+                            .HasForeignKey("GoalId")
+                            .IsRequired()
+                            .OnDelete(DeleteBehavior.Cascade),
+                        j =>
+                        {
+                            j.HasKey("GoalId", "CategoryId");
+                            j.ToTable("GoalCategory");
+                            j.HasIndex("GoalId");
+                            j.HasIndex("CategoryId");
+                        });
+
                 entity.ToTable(t =>
                 {
                     t.HasCheckConstraint("CK_Goal_Name_NotEmpty", $"LEN([{nameof(Goal.Name)}]) > 0");

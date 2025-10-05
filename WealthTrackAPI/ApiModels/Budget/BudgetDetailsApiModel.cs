@@ -9,6 +9,8 @@ namespace WealthTrack.API.ApiModels.Budget
         public string Name { get; set; }
 
         public decimal OverallBalance { get; set; }
+        
+        public EntityStatus Status { get; set; }
 
         public CurrencyRelatedToBudgetDetailsApiModel Currency { get; set; }
 
@@ -26,6 +28,8 @@ namespace WealthTrack.API.ApiModels.Budget
         public string Symbol { get; set; }
 
         public decimal ExchangeRate { get; set; }
+        
+        public CurrencyType Type { get; set; }
     }
 
     public class WalletRelatedToBudgetDetailsApiModel

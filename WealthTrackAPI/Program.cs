@@ -5,18 +5,12 @@ using WealthTrack.API.AutoMapper;
 using WealthTrack.API.FluentValidationRules;
 using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
-using WealthTrack.Business.EventHandlers.CategoryDeletedEventHandlers;
-using WealthTrack.Business.EventHandlers.GoalCreatedEventHandlers;
-using WealthTrack.Business.EventHandlers.GoalUpdatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransferTransactionCreatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransferTransactionDeletedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransferTransactionUpdatedEventHandlers;
-using WealthTrack.Business.EventHandlers.WalletCreatedEventHandlers;
-using WealthTrack.Business.EventHandlers.WalletDeletedEventHandlers;
-using WealthTrack.Business.EventHandlers.WalletUpdatedEventHandlers;
 using WealthTrack.Business.Events;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
@@ -93,25 +87,12 @@ namespace WealthTrack.API
             services.AddFluentValidationClientsideAdapters();
 
             services.AddScoped<IEventHandler<TransactionCreatedEvent>, WalletUpdateOnTransactionCreationEventHandler>();
-            services.AddScoped<IEventHandler<TransactionCreatedEvent>, GoalUpdateOnTransactionCreationEventHandler>();
             services.AddScoped<IEventHandler<TransactionUpdatedEvent>, WalletUpdateOnTransactionUpdateEventHandler>();
-            services.AddScoped<IEventHandler<TransactionUpdatedEvent>, GoalUpdateOnTransactionUpdateEventHandler>();
             services.AddScoped<IEventHandler<TransactionDeletedEvent>, WalletUpdateOnTransactionDeletionEventHandler>();
-            services.AddScoped<IEventHandler<TransactionDeletedEvent>, GoalUpdateOnTransactionDeletionEventHandler>();
 
             services.AddScoped<IEventHandler<TransferTransactionCreatedEvent>, WalletUpdateOnTransferTransactionCreateEventHandler>();
             services.AddScoped<IEventHandler<TransferTransactionUpdatedEvent>, WalletUpdateOnTransferTransactionUpdateEventHandler>();
             services.AddScoped<IEventHandler<TransferTransactionDeletedEvent>, WalletUpdateOnTransferTransactionDeletionEventHandler>();
-
-            services.AddScoped<IEventHandler<WalletCreatedEvent>, BudgetUpdateOnWalletCreationEventHandler>();
-            services.AddScoped<IEventHandler<WalletUpdatedEvent>, BudgetUpdateOnWalletUpdateEventHandler>();
-            services.AddScoped<IEventHandler<WalletDeletedEvent>, BudgetUpdateOnWalletDeletionEventHandler>();
-            services.AddScoped<IEventHandler<WalletDeletedEvent>, GoalUpdateOnWalletDeletionEventHandler>();
-            
-            services.AddScoped<IEventHandler<GoalUpdatedEvent>, GoalUpdateOnGoalUpdateEventHandler>();
-            services.AddScoped<IEventHandler<GoalCreatedEvent>, GoalUpdateOnGoalCreationEventHandler>();
-
-            services.AddScoped<IEventHandler<CategoryDeletedEvent>, GoalUpdateOnCategoryDeletionEventHandler>();
 
             services.AddScoped<IEventPublisher, EventPublisher>();
         }
@@ -120,6 +101,7 @@ namespace WealthTrack.API
         {
             await using var scope = services.CreateAsyncScope();
             var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await dbContext.Database.EnsureDeletedAsync();
             await dbContext.Database.EnsureCreatedAsync();
 
             var currencySeeder = scope.ServiceProvider.GetRequiredService<CurrenciesSeeder>();

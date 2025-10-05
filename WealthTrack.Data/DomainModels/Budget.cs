@@ -1,4 +1,5 @@
-﻿using WealthTrack.Shared.Enums;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Data.DomainModels
 {
@@ -7,7 +8,8 @@ namespace WealthTrack.Data.DomainModels
         public Guid Id { get; set; }
         
         public string Name { get; set; }
-
+        
+        [NotMapped]
         public decimal OverallBalance { get; set; }
 
         public DateTimeOffset CreatedDate { get; set; }

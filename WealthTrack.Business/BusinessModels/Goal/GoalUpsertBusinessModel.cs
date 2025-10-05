@@ -15,7 +15,5 @@ namespace WealthTrack.Business.BusinessModels.Goal
         public DateTimeOffset? EndDate { get; set; }
 
         public List<Guid>? CategoryIds { get; set; }
-
-        public List<Guid>? WalletIds { get; set; }
     }
 }

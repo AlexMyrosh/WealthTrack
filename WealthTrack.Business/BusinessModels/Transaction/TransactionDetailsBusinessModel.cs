@@ -12,7 +12,9 @@ namespace WealthTrack.Business.BusinessModels.Transaction
 
         public DateTimeOffset TransactionDate { get; set; }
 
-        public OperationType? Type { get; set; }
+        public TransactionType Type { get; set; }
+        
+        public EntityStatus Status { get; set; }
 
         public CategoryRelatedToTransactionDetailsBusinessModel Category { get; set; }
 
@@ -30,6 +32,10 @@ namespace WealthTrack.Business.BusinessModels.Transaction
         public string Name { get; set; }
 
         public string? IconName { get; set; }
+        
+        public OperationType? Type { get; set; }
+        
+        public bool IsSystem { get; set; }
     }
 
     public class WalletRelatedToTransactionDetailsBusinessModel

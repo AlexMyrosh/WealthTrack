@@ -9,6 +9,8 @@ namespace WealthTrack.Business.BusinessModels.Budget
         public string Name { get; set; }
 
         public decimal OverallBalance { get; set; }
+        
+        public EntityStatus Status { get; set; }
 
         public CurrencyRelatedToBudgetDetailsBusinessModel Currency { get; set; }
 
@@ -24,6 +26,10 @@ namespace WealthTrack.Business.BusinessModels.Budget
         public string Name { get; set; }
 
         public string Symbol { get; set; }
+        
+        public decimal ExchangeRate { get; set; }
+
+        public CurrencyType Type { get; set; }
     }
 
     public class WalletRelatedToBudgetDetailsBusinessModel

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using WealthTrack.API.ApiModels.General;
 using WealthTrack.API.ApiModels.Transaction;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Services.Interfaces;
@@ -12,11 +13,24 @@ public class TransactionController(ITransactionService transactionService, IMapp
 {
     // GET: api/transaction
     [HttpGet]
-    public async Task<ActionResult<List<TransactionDetailsApiModel>>> GetAll([FromQuery] string include = "")
+    public async Task<ActionResult<List<TransactionDetailsApiModel>>> GetAll(
+        [FromQuery] string include = "", 
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
-        var businessModels = await transactionService.GetAllAsync(include);
+        var totalCount = await transactionService.GetCountAsync();
+        var businessModels = await transactionService.GetPageAsync(pageNumber, pageSize, include);
         var apiModels = mapper.Map<List<TransactionDetailsApiModel>>(businessModels);
-        return Ok(apiModels);
+        var result = new PaginatedApiModel<TransactionDetailsApiModel>
+        {
+            Items = apiModels,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
+
+        return Ok(result);
     }
 
     // GET api/transaction/{id}

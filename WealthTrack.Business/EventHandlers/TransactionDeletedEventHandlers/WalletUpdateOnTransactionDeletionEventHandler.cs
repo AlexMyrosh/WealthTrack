@@ -25,7 +25,6 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId.ToString()}");
             }
 
-            var walletBalanceBeforeUpdate = wallet.Balance;
             switch (eventMessage.Type)
             {
                 case OperationType.Expense:
@@ -37,15 +36,6 @@ namespace WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers
                 default:
                     throw new NotSupportedException($"Transaction type \"{eventMessage.Type.ToString()}\" is not supported");
             }
-
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-                WalletId = wallet.Id,
-                BudgetId_Old = wallet.BudgetId,
-                Balance_Old = walletBalanceBeforeUpdate,
-                Balance_New = wallet.Balance,
-                IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
-            });
         }
     }
 }

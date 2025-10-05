@@ -19,8 +19,6 @@ namespace WealthTrack.Business.BusinessModels.Goal
         public DateTimeOffset EndDate { get; set; }
 
         public List<CategoryRelatedToGoalDetailsBusinessModel> Categories { get; set; }
-
-        public List<WalletRelatedToGoalDetailsBusinessModel> Wallets { get; set; }
     }
 
     public class CategoryRelatedToGoalDetailsBusinessModel
@@ -31,13 +29,6 @@ namespace WealthTrack.Business.BusinessModels.Goal
 
         public string? IconName { get; set; }
 
-        public OperationType Type { get; set; }
-    }
-
-    public class WalletRelatedToGoalDetailsBusinessModel
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
+        public OperationType? Type { get; set; }
     }
 }

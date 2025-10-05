@@ -1,4 +1,6 @@
-﻿namespace WealthTrack.API.ApiModels.Currency
+﻿using WealthTrack.Shared.Enums;
+
+namespace WealthTrack.API.ApiModels.Currency
 {
     public class CurrencyDetailsApiModel
     {
@@ -11,5 +13,7 @@
         public string Symbol { get; set; }
 
         public decimal ExchangeRate { get; set; }
+        
+        public CurrencyType Type { get; set; }
     }
 }

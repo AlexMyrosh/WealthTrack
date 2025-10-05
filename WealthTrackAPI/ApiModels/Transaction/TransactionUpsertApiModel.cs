@@ -10,7 +10,7 @@ namespace WealthTrack.API.ApiModels.Transaction
 
         public DateTimeOffset? TransactionDate { get; set; }
 
-        public OperationType? Type { get; set; }
+        public TransactionType? Type { get; set; }
 
         public Guid? CategoryId { get; set; }
 

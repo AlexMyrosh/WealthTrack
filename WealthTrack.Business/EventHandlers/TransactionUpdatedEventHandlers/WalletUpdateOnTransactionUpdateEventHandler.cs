@@ -14,23 +14,15 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
             {
                 throw new ArgumentException(nameof(eventMessage));
             }
-
-            // if (eventMessage.TransactionType_New is null || eventMessage.TransactionType_New == eventMessage.TransactionType_Old &&
-            //     eventMessage.WalletId_New is null || eventMessage.WalletId_New == eventMessage.WalletId_Old &&
-            //     eventMessage.Amount_New is null || eventMessage.Amount_New == eventMessage.Amount_Old)
-            // {
-            //     return;
-            // }
-
+            
             Wallet wallet;
-            var oldWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_Old);
+            var oldWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_Old.Value);
             if (oldWallet == null)
             {
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId_Old.ToString()}");
             }
 
             // Case 1. Wallet was changed
-            decimal walletBalanceBeforeUpdate = oldWallet.Balance;
             if (eventMessage.WalletId_New.HasValue && eventMessage.WalletId_New != eventMessage.WalletId_Old)
             {
                 var newWallet = await unitOfWork.WalletRepository.GetByIdAsync(eventMessage.WalletId_New.Value);
@@ -38,15 +30,14 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 {
                     throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.WalletId_New.ToString()}");
                 }
-
-                walletBalanceBeforeUpdate = newWallet.Balance;
+                
                 switch (eventMessage.TransactionType_Old)
                 {
-                    case OperationType.Income:
+                    case TransactionType.Income:
                         oldWallet.Balance -= eventMessage.Amount_Old;
                         newWallet.Balance += eventMessage.Amount_Old;
                         break;
-                    case OperationType.Expense:
+                    case TransactionType.Expense:
                         oldWallet.Balance += eventMessage.Amount_Old;
                         newWallet.Balance -= eventMessage.Amount_Old;
                         break;
@@ -67,11 +58,11 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 switch (eventMessage.TransactionType_New)
                 {
                     // Expense -> Income
-                    case OperationType.Income:
+                    case TransactionType.Income:
                         wallet.Balance += eventMessage.Amount_Old * 2;
                         break;
                     // Income -> Expense
-                    case OperationType.Expense:
+                    case TransactionType.Expense:
                         wallet.Balance -= eventMessage.Amount_Old * 2;
                         break;
                     default:
@@ -85,39 +76,16 @@ namespace WealthTrack.Business.EventHandlers.TransactionUpdatedEventHandlers
                 var transactionType = eventMessage.TransactionType_New ?? eventMessage.TransactionType_Old;
                 switch (transactionType)
                 {
-                    case OperationType.Income:
+                    case TransactionType.Income:
                         wallet.Balance -= eventMessage.Amount_Old - eventMessage.Amount_New.Value;
                         break;
-                    case OperationType.Expense:
+                    case TransactionType.Expense:
                         wallet.Balance += eventMessage.Amount_Old - eventMessage.Amount_New.Value;
                         break;
                     default:
                         throw new NotSupportedException($"Transaction type \"{transactionType.ToString()}\" is not supported");
                 }
             }
-
-            // Send event notification that new wallet was updated
-            // if (eventMessage.WalletId_New.HasValue)
-            // {
-            //     await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            //     {
-            //         WalletId = wallet.Id,
-            //         BudgetId_Old = wallet.BudgetId,
-            //         Balance_Old = walletBalanceBeforeUpdate,
-            //         Balance_New = wallet.Balance,
-            //         IsPartOfGeneralBalance_Old = wallet.IsPartOfGeneralBalance
-            //     });
-            // }
-
-            // Send event notification that old wallet was updated
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-                WalletId = eventMessage.WalletId_Old,
-                BudgetId_Old = oldWallet.BudgetId,
-                Balance_Old = walletBalanceBeforeUpdate,
-                Balance_New = wallet.Balance,
-                IsPartOfGeneralBalance_Old = oldWallet.IsPartOfGeneralBalance
-            });
         }
     }
 }

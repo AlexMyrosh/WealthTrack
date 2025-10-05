@@ -114,7 +114,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException(nameof(id));
             }
 
-            var domainModelToDelete = await unitOfWork.CategoryRepository.GetByIdAsync(id, $"{nameof(Category.ChildCategories)}");
+            var domainModelToDelete = await unitOfWork.CategoryRepository.GetByIdAsync(id, $"{nameof(Category.ChildCategories)},{nameof(Category.Goals)}");
             if (domainModelToDelete is null)
             {
                 throw new KeyNotFoundException($"Unable to get category from database by id - {id.ToString()}");
@@ -127,8 +127,15 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             unitOfWork.CategoryRepository.HardDelete(domainModelToDelete);
-            var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(domainModelToDelete);
-            await eventPublisher.PublishAsync(categoryDeletedEventModel);
+            foreach (var goal in domainModelToDelete.Goals)
+            {
+                var goalEntity = await unitOfWork.GoalRepository.GetByIdAsync(goal.Id, nameof(Goal.Categories));
+                if (goalEntity != null && goalEntity.Categories.Count == 1)
+                {
+                    unitOfWork.GoalRepository.HardDelete(goalEntity);
+                }
+            }
+            
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();
@@ -155,12 +162,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             unitOfWork.CategoryRepository.BulkHardDelete(domainModelsToDelete);
-            foreach (var domainModelToDelete in domainModelsToDelete)
-            {
-                var categoryDeletedEventModel = mapper.Map<CategoryDeletedEvent>(domainModelToDelete);
-                await eventPublisher.PublishAsync(categoryDeletedEventModel);
-            }
-            
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();

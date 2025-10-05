@@ -8,8 +8,6 @@ namespace WealthTrack.Data.UnitOfWork
 
         public ITransactionRepository TransactionRepository { get; }
 
-        public ITransferTransactionRepository TransferTransactionRepository { get; }
-
         public ICurrencyRepository CurrencyRepository { get; }
 
         public IWalletRepository WalletRepository { get; }

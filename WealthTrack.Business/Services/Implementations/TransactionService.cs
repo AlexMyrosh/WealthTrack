@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
@@ -7,6 +8,7 @@ using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 using WealthTrack.Shared.Enums;
+using WealthTrack.Shared.Extensions;
 using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations
@@ -28,7 +30,8 @@ namespace WealthTrack.Business.Services.Implementations
                     throw new ArgumentException($"Category with id {model.CategoryId} not found");    
                 }
                 
-                if (model.Type != category.Type)
+                if ((model.Type == TransactionType.Income && category.Type != OperationType.Income) ||
+                    (model.Type == TransactionType.Expense && category.Type != OperationType.Expense))
                 {
                     throw new ArgumentException("Transaction type is not aligned with the category's type");
                 }
@@ -42,6 +45,11 @@ namespace WealthTrack.Business.Services.Implementations
             if (!model.TransactionDate.HasValue)
             {
                 throw new ArgumentException("TransactionDate value is missing");
+            }
+            
+            if (!model.Type.HasValue || !Enum.IsDefined(typeof(TransactionType), model.Type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(model.Type));
             }
 
             var domainModel = mapper.Map<Transaction>(model);
@@ -71,15 +79,25 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException("TransactionDate value is missing");
             }
 
-            var domainModel = mapper.Map<TransferTransaction>(model);
-            if (!await IsWalletsHaveTheSameBudget(domainModel.SourceWalletId, domainModel.TargetWalletId))
+            if (!model.SourceWalletId.HasValue)
+            {
+                throw new ArgumentException("SourceWalletId value is missing");
+            }
+            
+            if (!model.TargetWalletId.HasValue)
+            {
+                throw new ArgumentException("TargetWalletId value is missing");
+            }
+            
+            if (!await IsWalletsHaveTheSameBudget(model.SourceWalletId.Value, model.TargetWalletId.Value))
             {
                 throw new ArgumentException("Source and Target wallets are from different budgets");
             }
-            
+
+            var domainModel = mapper.Map<Transaction>(model);
             domainModel.CreatedDate = DateTimeOffset.Now;
             domainModel.ModifiedDate = domainModel.CreatedDate;
-            var createdEntityId = await unitOfWork.TransferTransactionRepository.CreateAsync(domainModel);
+            var createdEntityId = await unitOfWork.TransactionRepository.CreateAsync(domainModel);
             var transferTransactionCreatedEventModel = mapper.Map<TransferTransactionCreatedEvent>(domainModel);
             await eventPublisher.PublishAsync(transferTransactionCreatedEventModel);
             await unitOfWork.SaveAsync();
@@ -94,30 +112,30 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var regular = await unitOfWork.TransactionRepository.GetByIdAsync(id, include);
-            if (regular != null)
-            {
-                return mapper.Map<TransactionDetailsBusinessModel>(regular);
-            }
-
-            var transfer = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id, include);
-            if (transfer != null)
-            {
-                return mapper.Map<TransactionDetailsBusinessModel>(transfer);
-            }
-
-            return null;
+            var result = mapper.Map<TransactionDetailsBusinessModel>(regular);
+            return result;
         }
 
-        public async Task<List<TransactionDetailsBusinessModel>> GetAllAsync(string include = "")
+        public async Task<int> GetCountAsync()
         {
-            var transactionDomainModels = await unitOfWork.TransactionRepository.GetAllAsync(include);
-            var transferTransactionDomainModels = await unitOfWork.TransferTransactionRepository.GetAllAsync(include);
-            var transactionBusinessModels = mapper.Map<List<TransactionDetailsBusinessModel>>(transactionDomainModels);
-            var transferTransactionBusinessModels = mapper.Map<List<TransactionDetailsBusinessModel>>(transferTransactionDomainModels);
-            var result = transactionBusinessModels
-                .Concat(transferTransactionBusinessModels)
-                .OrderByDescending(t => t.TransactionDate)
-                .ToList();
+            var result = await unitOfWork.TransactionRepository.GetCountAsync();
+            return result;
+        }
+
+        public async Task<List<TransactionDetailsBusinessModel>> GetPageAsync(int pageNumber, int pageSize, string include = "")
+        {
+            if (pageNumber <= 0)
+            {
+                throw new ArgumentException("Page number must be greater than zero");
+            }
+
+            if (pageSize <= 0)
+            {
+                throw new ArgumentException("Page size must be greater than zero");
+            }
+            
+            var domainModel = await unitOfWork.TransactionRepository.GetPageAsync(pageNumber, pageSize, include);
+            var result = mapper.Map<List<TransactionDetailsBusinessModel>>(domainModel);
             return result;
         }
 
@@ -142,6 +160,11 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new  ArgumentException($"Wallet with id {model.WalletId.Value} not found");
             }
+            
+            if (model.Type.HasValue && !Enum.IsDefined(typeof(TransactionType), model.Type))
+            {
+                throw new ArgumentOutOfRangeException(nameof(model.Type));
+            }
 
             var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id, "Wallet");
             if (originalModel is null)
@@ -149,7 +172,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
             
-            if (model.WalletId.HasValue && !await IsWalletsHaveTheSameBudget(model.WalletId.Value, originalModel.WalletId))
+            if (model.WalletId.HasValue && originalModel.WalletId.HasValue && !await IsWalletsHaveTheSameBudget(model.WalletId.Value, originalModel.WalletId.Value))
             {
                 throw new ArgumentException("Source and Target wallets are from different budgets");
             }
@@ -177,7 +200,8 @@ namespace WealthTrack.Business.Services.Implementations
                     throw new ArgumentException($"Category with id {model.CategoryId} not found");    
                 }
                 
-                if (originalModel.Type != category.Type)
+                if ((originalModel.Type == TransactionType.Income && category.Type != OperationType.Income) ||
+                    (originalModel.Type == TransactionType.Expense && category.Type != OperationType.Expense))
                 {
                     throw new ArgumentException("Transaction type is not aligned with the category's type");
                 }
@@ -210,7 +234,7 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException("Amount value is not correct");
             }
 
-            var originalModel = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
+            var originalModel = await unitOfWork.TransactionRepository.GetByIdAsync(id);
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
@@ -221,19 +245,19 @@ namespace WealthTrack.Business.Services.Implementations
                 Amount_New = model.Amount,
                 Amount_Old = originalModel.Amount,
                 SourceWalletId_New = model.SourceWalletId,
-                SourceWalletId_Old = originalModel.SourceWalletId,
+                SourceWalletId_Old = originalModel.SourceWalletId.Value,
                 TargetWalletId_New = model.TargetWalletId,
-                TargetWalletId_Old = originalModel.TargetWalletId,
+                TargetWalletId_Old = originalModel.TargetWalletId.Value,
             });
             
             mapper.Map(model, originalModel);
-            if (!await IsWalletsHaveTheSameBudget(originalModel.SourceWalletId, originalModel.TargetWalletId))
+            if (!await IsWalletsHaveTheSameBudget(originalModel.SourceWalletId.Value, originalModel.TargetWalletId.Value))
             {
                 throw new ArgumentException("Source and Target wallets are from different budgets");
             }
             
             originalModel.ModifiedDate = DateTimeOffset.Now;
-            unitOfWork.TransferTransactionRepository.Update(originalModel);
+            unitOfWork.TransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
         }
 
@@ -248,6 +272,11 @@ namespace WealthTrack.Business.Services.Implementations
             if (originalModel is null)
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+            }
+
+            if (originalModel.Type == TransactionType.Transfer)
+            {
+                throw new ArgumentException("This operation is not supported for transfer transactions");
             }
             
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
@@ -279,27 +308,22 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var domainModelToDelete = await unitOfWork.TransactionRepository.GetByIdAsync(id);
-            if (domainModelToDelete is not null)
+            if (domainModelToDelete is null)
             {
-                unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
-                var transactionDeletedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToDelete);
-                await eventPublisher.PublishAsync(transactionDeletedEventModel);
+                throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+            }
+            
+            unitOfWork.TransactionRepository.HardDelete(domainModelToDelete);
+            if (domainModelToDelete.Type == TransactionType.Transfer)
+            {
+                var transactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(transactionArchivedEventModel);
             }
             else
             {
-                var transferTransactionDomainModelToDelete = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
-                if (transferTransactionDomainModelToDelete is not null)
-                {
-                    unitOfWork.TransferTransactionRepository.HardDelete(transferTransactionDomainModelToDelete);
-                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToDelete);
-                    await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
-                }
-                else
-                {
-                    throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
-                }
+                var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToDelete);
+                await eventPublisher.PublishAsync(transactionArchivedEventModel);
             }
-            
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();
@@ -314,30 +338,24 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var transactionDomainModelsToDelete = await unitOfWork.TransactionRepository.GetByIdsAsync(ids);
-            if (transactionDomainModelsToDelete.Count != 0)
-            {
-                unitOfWork.TransactionRepository.BulkHardDelete(transactionDomainModelsToDelete);
-                foreach (var transactionDomainModelToDelete in transactionDomainModelsToDelete)
-                {
-                    var transactionDeletedEventModel = mapper.Map<TransactionDeletedEvent>(transactionDomainModelToDelete);
-                    await eventPublisher.PublishAsync(transactionDeletedEventModel);
-                }
-            }
-            
-            var transferTransactionDomainModelsToDelete = await unitOfWork.TransferTransactionRepository.GetByIdsAsync(ids);
-            if (transferTransactionDomainModelsToDelete.Count != 0)
-            {
-                unitOfWork.TransferTransactionRepository.BulkHardDelete(transferTransactionDomainModelsToDelete);
-                foreach (var transferTransactionDomainModelToDelete in transferTransactionDomainModelsToDelete)
-                {
-                    var transferTransactionDeletedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToDelete);
-                    await eventPublisher.PublishAsync(transferTransactionDeletedEventModel);
-                }
-            }
-
-            if (transactionDomainModelsToDelete.Count == 0 && transferTransactionDomainModelsToDelete.Count == 0)
+            if (transactionDomainModelsToDelete.Count == 0)
             {
                 throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            unitOfWork.TransactionRepository.BulkHardDelete(transactionDomainModelsToDelete);
+            foreach (var transactionDomainModelToDelete in transactionDomainModelsToDelete)
+            {
+                if (transactionDomainModelToDelete.Type == TransactionType.Transfer)
+                {
+                    var transactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transactionDomainModelToDelete);
+                    await eventPublisher.PublishAsync(transactionArchivedEventModel);
+                }
+                else
+                {
+                    var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(transactionDomainModelToDelete);
+                    await eventPublisher.PublishAsync(transactionArchivedEventModel);
+                }
             }
             
             if (shouldBeSaved)
@@ -354,25 +372,21 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var domainModelToArchive = await unitOfWork.TransactionRepository.GetByIdAsync(id);
-            if (domainModelToArchive is not null)
+            if (domainModelToArchive is null)
             {
-                domainModelToArchive.Status = EntityStatus.Archived;
-                var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToArchive);
+                throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
+            }
+            
+            domainModelToArchive.Status = EntityStatus.Archived;
+            if (domainModelToArchive.Type == TransactionType.Transfer)
+            {
+                var transactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(domainModelToArchive);
                 await eventPublisher.PublishAsync(transactionArchivedEventModel);
             }
             else
             {
-                var transferTransactionDomainModelToArchive = await unitOfWork.TransferTransactionRepository.GetByIdAsync(id);
-                if (transferTransactionDomainModelToArchive is not null)
-                {
-                    transferTransactionDomainModelToArchive.Status = EntityStatus.Archived;
-                    var transferTransactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToArchive);
-                    await eventPublisher.PublishAsync(transferTransactionArchivedEventModel);
-                }
-                else
-                {
-                    throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
-                }
+                var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(domainModelToArchive);
+                await eventPublisher.PublishAsync(transactionArchivedEventModel);
             }
             
             if (shouldBeSaved)
@@ -389,30 +403,25 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             var transactionDomainModelsToArchive = await unitOfWork.TransactionRepository.GetByIdsAsync(ids);
-            if (transactionDomainModelsToArchive.Count != 0)
+            
+            if (transactionDomainModelsToArchive.Count == 0)
             {
-                transactionDomainModelsToArchive.ForEach(t => t.Status = EntityStatus.Archived);
-                foreach (var transactionDomainModelToArchive in transactionDomainModelsToArchive)
+                throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
+            }
+            
+            transactionDomainModelsToArchive.ForEach(t => t.Status = EntityStatus.Archived);
+            foreach (var transactionDomainModelToArchive in transactionDomainModelsToArchive)
+            {
+                if (transactionDomainModelToArchive.Type == TransactionType.Transfer)
+                {
+                    var transactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transactionDomainModelToArchive);
+                    await eventPublisher.PublishAsync(transactionArchivedEventModel);
+                }
+                else
                 {
                     var transactionArchivedEventModel = mapper.Map<TransactionDeletedEvent>(transactionDomainModelToArchive);
                     await eventPublisher.PublishAsync(transactionArchivedEventModel);
                 }
-            }
-            
-            var transferTransactionDomainModelsToArchive = await unitOfWork.TransferTransactionRepository.GetByIdsAsync(ids);
-            if (transferTransactionDomainModelsToArchive.Count != 0)
-            {
-                transferTransactionDomainModelsToArchive.ForEach(t => t.Status = EntityStatus.Archived);
-                foreach (var transferTransactionDomainModelToArchive in transferTransactionDomainModelsToArchive)
-                {
-                    var transferTransactionArchivedEventModel = mapper.Map<TransferTransactionDeletedEvent>(transferTransactionDomainModelToArchive);
-                    await eventPublisher.PublishAsync(transferTransactionArchivedEventModel);
-                }
-            }
-
-            if (transactionDomainModelsToArchive.Count == 0 && transferTransactionDomainModelsToArchive.Count == 0)
-            {
-                throw new KeyNotFoundException($"Unable to get transactions from database by ids: {string.Join(", ", ids)}");
             }
             
             if (shouldBeSaved)

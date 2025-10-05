@@ -29,28 +29,9 @@ namespace WealthTrack.Business.EventHandlers.TransferTransactionDeletedEventHand
             {
                 throw new KeyNotFoundException($"Unable to get wallet from database by id - {eventMessage.TargetWalletId.ToString()}");
             }
-
-            var sourceWalletBalanceBeforeUpdate = sourceWalletEntity.Balance;
-            var targetWalletBalanceBeforeUpdate = targetWalletEntity.Balance;
+            
             sourceWalletEntity.Balance += eventMessage.Amount;
             targetWalletEntity.Balance -= eventMessage.Amount;
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-                WalletId = sourceWalletEntity.Id,
-                BudgetId_Old = sourceWalletEntity.BudgetId,
-                Balance_Old = sourceWalletBalanceBeforeUpdate,
-                Balance_New = sourceWalletEntity.Balance,
-                IsPartOfGeneralBalance_Old = sourceWalletEntity.IsPartOfGeneralBalance
-            });
-
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-                WalletId = targetWalletEntity.Id,
-                BudgetId_Old = targetWalletEntity.BudgetId,
-                Balance_Old = targetWalletBalanceBeforeUpdate,
-                Balance_New = targetWalletEntity.Balance,
-                IsPartOfGeneralBalance_Old = targetWalletEntity.IsPartOfGeneralBalance
-            });
         }
     }
 }

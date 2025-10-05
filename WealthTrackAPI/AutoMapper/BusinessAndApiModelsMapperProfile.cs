@@ -18,12 +18,25 @@ namespace WealthTrack.API.AutoMapper
     {
         public BusinessAndApiModelsMapperProfile()
         {
-            // Categories
+            // Budget
+            CreateMap<BudgetUpsertApiModel, BudgetUpsertBusinessModel>();
+            CreateMap<BudgetDetailsBusinessModel, BudgetDetailsApiModel>();
+            CreateMap<CurrencyRelatedToBudgetDetailsBusinessModel, CurrencyRelatedToBudgetDetailsApiModel>();
+            CreateMap<WalletRelatedToBudgetDetailsBusinessModel, WalletRelatedToBudgetDetailsApiModel>();
+            
+            // Category
             CreateMap<CategoryUpsertApiModel, CategoryUpsertBusinessModel>();
             CreateMap<CategoryDetailsBusinessModel, CategoryDetailsApiModel>();
-            CreateMap<ParentCategoryDetailsBusinessModel, ParentCategoryDetailsApiModel>();
-            CreateMap<ChildCategoryDetailsBusinessModel, ChildCategoryDetailsApiModel>();
+            CreateMap<CategoryRelatedToCategoryDetailsBusinessModel, CategoryRelatedToCategoryDetailsApiModel>();
 
+            // Currency
+            CreateMap<CurrencyDetailsBusinessModel, CurrencyDetailsApiModel>();
+            
+            // Goal
+            CreateMap<GoalUpsertApiModel, GoalUpsertBusinessModel>();
+            CreateMap<GoalDetailsBusinessModel, GoalDetailsApiModel>();
+            CreateMap<CategoryRelatedToGoalDetailsBusinessModel, CategoryRelatedToGoalDetailsApiModel>();
+            
             // Transactions
             CreateMap<TransactionUpsertApiModel, TransactionUpsertBusinessModel>();
             CreateMap<TransferTransactionUpsertApiModel, TransferTransactionUpsertBusinessModel>();
@@ -37,21 +50,6 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<CurrencyRelatedToWalletDetailsBusinessModel, CurrencyRelatedToWalletDetailsApiModel>();
             CreateMap<BudgetRelatedToWalletDetailsBusinessModel, BudgetRelatedToWalletDetailsApiModel>();
             CreateMap<TransactionRelatedToWalletDetailsBusinessModel, TransactionRelatedToWalletDetailsApiModel>();
-            CreateMap<TransferTransactionRelatedToWalletDetailsBusinessModel, TransferTransactionRelatedToWalletDetailsApiModel>();
-
-            // Currencies
-            CreateMap<CurrencyDetailsBusinessModel, CurrencyDetailsApiModel>();
-
-            // Budgets
-            CreateMap<BudgetUpsertApiModel, BudgetUpsertBusinessModel>();
-            CreateMap<BudgetDetailsBusinessModel, BudgetDetailsApiModel>();
-            CreateMap<CurrencyRelatedToBudgetDetailsBusinessModel, CurrencyRelatedToBudgetDetailsApiModel>();
-            CreateMap<WalletRelatedToBudgetDetailsBusinessModel, WalletRelatedToBudgetDetailsApiModel>();
-
-            // Goal
-            CreateMap<GoalUpsertApiModel, GoalUpsertBusinessModel>();
-            CreateMap<GoalDetailsBusinessModel, GoalDetailsApiModel>();
-            CreateMap<CategoryRelatedToGoalDetailsBusinessModel, CategoryRelatedToGoalDetailsApiModel>();
         }
     }
 }

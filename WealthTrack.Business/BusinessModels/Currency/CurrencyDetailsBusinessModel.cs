@@ -1,4 +1,6 @@
-﻿namespace WealthTrack.Business.BusinessModels.Currency
+﻿using WealthTrack.Shared.Enums;
+
+namespace WealthTrack.Business.BusinessModels.Currency
 {
     public class CurrencyDetailsBusinessModel
     {
@@ -11,5 +13,7 @@
         public string Symbol { get; set; }
 
         public decimal ExchangeRate { get; set; }
+        
+        public CurrencyType Type { get; set; }
     }
 }

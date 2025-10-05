@@ -22,7 +22,7 @@ public class CurrencyControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         var currencies = DataFactory.CreateManyCurrencies(numberOfCurrencies);
         DbContext.Currencies.AddRange(currencies);
         await DbContext.SaveChangesAsync();
-        var currencyIds = currencies.Select(b => b.Id).ToList();
+        var currencyIds = currencies.Select(c => c.Id).ToList();
         
         // Act
         var response = await Client.GetAsync("/api/currency");

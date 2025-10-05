@@ -55,13 +55,11 @@ namespace WealthTrack.Business.Services.Implementations
                     Description = "Balance correction",
                     CreatedDate = DateTimeOffset.Now,
                     CategoryId = new Guid(_balanceCorrectionCategoryId),
-                    Type = model.Balance.Value > 0 ? OperationType.Income : OperationType.Expense,
+                    Type = model.Balance.Value > 0 ? TransactionType.Income : TransactionType.Expense,
                     WalletId = createdEntityId
                 });
             }
             
-            var walletCreatedEventModel = mapper.Map<WalletCreatedEvent>(domainModel);
-            await eventPublisher.PublishAsync(walletCreatedEventModel);
             await unitOfWork.SaveAsync();
             return createdEntityId;
         }
@@ -117,21 +115,10 @@ namespace WealthTrack.Business.Services.Implementations
                     Description = "Balance correction",
                     CreatedDate = DateTimeOffset.Now,
                     CategoryId = new Guid(_balanceCorrectionCategoryId),
-                    Type = model.Balance.Value > originalModel.Balance ? OperationType.Income : OperationType.Expense,
+                    Type = model.Balance.Value > originalModel.Balance ? TransactionType.Income : TransactionType.Expense,
                     WalletId = id
                 });
             }
-
-            await eventPublisher.PublishAsync(new WalletUpdatedEvent
-            {
-                WalletId = id,
-                BudgetId_Old = originalModel.BudgetId,
-                BudgetId_New = model.BudgetId,
-                Balance_Old = originalModel.Balance,
-                Balance_New = model.Balance,
-                IsPartOfGeneralBalance_Old = originalModel.IsPartOfGeneralBalance,
-                IsPartOfGeneralBalance_New = model.IsPartOfGeneralBalance,
-            });
 
             mapper.Map(model, originalModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
@@ -171,8 +158,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             await unitOfWork.WalletRepository.HardDeleteAsync(domainModelToDelete);
-            var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
-            await eventPublisher.PublishAsync(walletDeletedEventModel);
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();
@@ -214,12 +199,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             unitOfWork.WalletRepository.BulkHardDelete(domainModelsToDelete);
-            foreach (var domainModelToDelete in domainModelsToDelete)
-            {
-                var walletDeletedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToDelete);
-                await eventPublisher.PublishAsync(walletDeletedEventModel);
-            }
-
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();
@@ -258,8 +237,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
 
             domainModelToArchive.Status = EntityStatus.Archived;
-            var walletArchivedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToArchive);
-            await eventPublisher.PublishAsync(walletArchivedEventModel);
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();
@@ -301,12 +278,6 @@ namespace WealthTrack.Business.Services.Implementations
             }
             
             domainModelsToArchive.ForEach(w => w.Status = EntityStatus.Archived);
-            foreach (var domainModelToArchive in domainModelsToArchive)
-            {
-                var walletArchivedEventModel = mapper.Map<WalletDeletedEvent>(domainModelToArchive);
-                await eventPublisher.PublishAsync(walletArchivedEventModel);
-            }
-            
             if (shouldBeSaved)
             {
                 await unitOfWork.SaveAsync();

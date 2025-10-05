@@ -10,11 +10,11 @@ namespace WealthTrack.Business.Events.Models
         
         public bool IsCategoryDeleted { get; set; }
 
-        public OperationType TransactionType_Old { get; set; }
+        public TransactionType TransactionType_Old { get; set; }
 
-        public OperationType? TransactionType_New { get; set; }
+        public TransactionType? TransactionType_New { get; set; }
 
-        public Guid WalletId_Old { get; set; }
+        public Guid? WalletId_Old { get; set; }
 
         public Guid? WalletId_New { get; set; }
 
