@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="WealthTrack.Client.Views.LoginPage"
+    Title="Login">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30"
+            Spacing="20"
+            VerticalOptions="Center">
+
+            <Label
+                Text="Welcome to WealthTrack"
+                FontSize="28"
+                FontAttributes="Bold"
+                HorizontalOptions="Center" />
+
+            <Entry
+                x:Name="EmailEntry"
+                Placeholder="Email"
+                Keyboard="Email"
+                ClearButtonVisibility="WhileEditing" />
+
+            <Entry
+                x:Name="PasswordEntry"
+                Placeholder="Password"
+                IsPassword="True"
+                ClearButtonVisibility="WhileEditing" />
+
+            <Button
+                Text="Log in"
+                Clicked="OnLoginClicked"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                CornerRadius="10"
+                HeightRequest="45" />
+
+            <VerticalStackLayout Spacing="20" Padding="10">
+                <Button Text="Continue with Google"
+                        BackgroundColor="#DB4437"
+                        TextColor="White"
+                        Clicked="OnGoogleLoginClicked"/>
+
+                <Button Text="Continue with Apple"
+                        BackgroundColor="Black"
+                        TextColor="White"
+                        Clicked="OnAppleLoginClicked"/>
+            </VerticalStackLayout>
+
+            <Label
+                Text="Don't have an account? Sign up"
+                HorizontalOptions="Center"
+                TextColor="Gray"
+                FontAttributes="Italic" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

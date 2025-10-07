@@ -34,6 +34,8 @@ namespace WealthTrack.API
 
             if (!app.Environment.IsEnvironment("Testing"))
             {
+                app.UseSwagger();
+                app.UseSwaggerUI();
                 await EnsureDatabaseCreatedAndSeededAsync(app.Services);
             }
 
@@ -55,6 +57,9 @@ namespace WealthTrack.API
 
         private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddEndpointsApiExplorer();
+            services.AddSwaggerGen();
+            
             services.AddControllers();
             services.AddOpenApi();
 
