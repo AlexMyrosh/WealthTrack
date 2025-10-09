@@ -39,7 +39,7 @@ namespace WealthTrack.API
                 await EnsureDatabaseCreatedAndSeededAsync(app.Services);
             }
 
-            app.Run();
+            await app.RunAsync();
         }
 
         private static void ConfigureMiddleware(WebApplication app)

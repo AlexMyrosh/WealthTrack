@@ -1,14 +1,10 @@
 ﻿using AutoMapper;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.Events.Interfaces;
 using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
-using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
 using WealthTrack.Shared.Enums;
-using WealthTrack.Shared.Extensions;
 using Transaction = WealthTrack.Data.DomainModels.Transaction;
 
 namespace WealthTrack.Business.Services.Implementations

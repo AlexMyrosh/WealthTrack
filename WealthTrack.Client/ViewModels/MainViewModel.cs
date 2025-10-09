@@ -1,22 +1,57 @@
+using System.ComponentModel;
 using System.Windows.Input;
+using WealthTrack.Client.Models;
+using WealthTrack.Client.Services.Interfaces;
+using CommunityToolkit.Mvvm.Input;
 
 namespace WealthTrack.Client.ViewModels;
 
-public class MainViewModel : BaseViewModel
+public class MainViewModel : INotifyPropertyChanged
 {
-    public ICommand LogoutCommand { get; }
+    private readonly IAuthService _authService;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    public MainViewModel()
+    private bool _isGuest;
+    public bool IsGuest
     {
-        LogoutCommand = new Command(OnLogout);
+        get => _isGuest;
+        set
+        {
+            if (_isGuest != value)
+            {
+                _isGuest = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsGuest)));
+            }
+        }
     }
 
-    private async void OnLogout()
-    {
-        // Удаляем токен или данные пользователя
-        await SecureStorage.SetAsync("auth_token", string.Empty);
+    public ICommand LogoutCommand { get; }
+    public ICommand LoginCommand { get; }
 
-        // Переходим на страницу логина, очищая стек
+    public MainViewModel(IAuthService authService)
+    {
+        _authService = authService;
+
+        LogoutCommand = new AsyncRelayCommand(OnLogout);
+        LoginCommand = new AsyncRelayCommand(OnLogin);
+        
+        _ = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        var session = await _authService.GetUserSessionAsync();
+        IsGuest = session == null || session.CurrentLoginMode == LoginMode.Guest;
+    }
+
+    private async Task OnLogout()
+    {
+        await _authService.LogoutAsync();
+        IsGuest = true;
+    }
+
+    private async Task OnLogin()
+    {
         await Shell.Current.GoToAsync("//LoginPage");
     }
 }

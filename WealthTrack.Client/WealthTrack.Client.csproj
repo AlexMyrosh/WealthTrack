@@ -42,22 +42,20 @@
         <IosMinimumOSVersion>15.0</IosMinimumOSVersion>
         <IosSupportedOSPlatformVersion>16.4</IosSupportedOSPlatformVersion>
     </PropertyGroup>
-        <!-- iOS sign: FOR SIMULATION ONLY -->
+    
+    
+    <!-- iOS sign: FOR SIMULATION ONLY -->
     <PropertyGroup Condition="'$(TargetFramework)'=='net9.0-ios'">
-        <CodesignEntitlements Condition="'$(IsMacEnabled)' == 'true' And '$(TargetFramework)'=='net9.0-ios' And '$(RuntimeIdentifier)'=='iossimulator-x64'"> </CodesignEntitlements>
-        <CodesignKey Condition="'$(IsMacEnabled)' == 'true' And '$(RuntimeIdentifier)'=='iossimulator-x64'"></CodesignKey>
+        <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
         <CodesignProvision Condition="'$(IsMacEnabled)' == 'true' And '$(RuntimeIdentifier)'=='iossimulator-x64'">com.somemaker.wealthtrack</CodesignProvision>
         <CodesignRequireProvisioningProfile>false</CodesignRequireProvisioningProfile>
         <RequireCodeSigning>false</RequireCodeSigning>
     </PropertyGroup>
-
-    <!-- iOS sign: FOR REAT PHONE -->
-    <!-- <PropertyGroup Condition="'$(TargetFramework)'=='net9.0-ios' and '$(Platform)'=='iPhone'">
+    
+    <!-- iOS Simulator entitlements -->
+    <PropertyGroup Condition="'$(TargetFramework)'=='net9.0-ios' And '$(RuntimeIdentifier)'=='iossimulator-arm64'">
         <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
-        <CodesignKey>Apple Development: Your Name (TeamID)</CodesignKey>
-        <CodesignProvision>iOS Team Provisioning Profile: com.somemaker.wealthtrack</CodesignProvision>
-        <RequireCodeSigning>true</RequireCodeSigning>
-    </PropertyGroup> -->
+    </PropertyGroup>
 
     <ItemGroup>
         <!-- App Icon -->
@@ -78,8 +76,10 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.77.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5"/>
     </ItemGroup>
@@ -89,4 +89,13 @@
       <EmbeddedResource Include="appsettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\AppIcon\appicon.png" />
+      <MauiIcon Include="Resources\AppIcon\appicon.png" />
+    </ItemGroup>
+    
 </Project>

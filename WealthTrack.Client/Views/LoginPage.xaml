@@ -37,6 +37,26 @@
                 TextColor="White"
                 CornerRadius="10"
                 HeightRequest="45" />
+            
+            <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Don't have an account? " />
+                        <Span Text="Sign up"
+                              TextColor="#007AFF"
+                              TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSignUpClicked" />
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            
+            <Label
+                Text="or"
+                HorizontalOptions="Center"
+                TextColor="Gray" />
 
             <VerticalStackLayout Spacing="20" Padding="10">
                 <Button Text="Continue with Google"
@@ -47,14 +67,34 @@
                 <Button Text="Continue with Apple"
                         BackgroundColor="Black"
                         TextColor="White"
-                        Clicked="OnAppleLoginClicked"/>
+                        Clicked="OnAppleLoginClicked">
+                    <Button.IsVisible>
+                        <OnPlatform x:TypeArguments="x:Boolean">
+                            <On Platform="iOS" Value="True" />
+                            <On Platform="MacCatalyst" Value="True" />
+                            <On Platform="Android" Value="False" />
+                            <On Platform="WinUI" Value="False" />
+                        </OnPlatform>
+                    </Button.IsVisible>
+                </Button>
+                
+                <Button Text="Continue with Microsoft"
+                        BackgroundColor="Blue"
+                        TextColor="White"
+                        Clicked="OnMicrosoftLoginClicked"/>
             </VerticalStackLayout>
-
-            <Label
-                Text="Don't have an account? Sign up"
-                HorizontalOptions="Center"
-                TextColor="Gray"
-                FontAttributes="Italic" />
+            <Label HorizontalOptions="Center" TextColor="#007AFF" FontAttributes="Italic">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Continue without account yet"
+                              TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnContinueWithoutAccountClicked" />
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

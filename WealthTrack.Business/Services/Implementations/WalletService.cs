@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using WealthTrack.Business.BusinessModels.Wallet;
-using WealthTrack.Business.Events.Interfaces;
-using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Data.DomainModels;
 using WealthTrack.Data.UnitOfWork;
@@ -10,7 +8,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.Services.Implementations
 {
-    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, IEventPublisher eventPublisher, ITransactionService transactionService, IConfiguration configuration) : IWalletService
+    public class WalletService(IUnitOfWork unitOfWork, IMapper mapper, ITransactionService transactionService, IConfiguration configuration) : IWalletService
     {
         private readonly string _balanceCorrectionCategoryId = configuration["SystemCategories:BalanceCorrectionId"] ?? throw new InvalidOperationException("Unable to get balance correction category id from configuration");
 

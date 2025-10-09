@@ -7,7 +7,6 @@ using WealthTrack.Business.BusinessModels.Transaction;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Business.Events.Models;
 using WealthTrack.Data.DomainModels;
-using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Business.AutoMapper;
 

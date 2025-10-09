@@ -5,6 +5,8 @@
     x:Class="WealthTrack.Client.AppShell"
     FlyoutBehavior="Disabled">
     
+    <ShellContent Route="LoadingPage" ContentTemplate="{DataTemplate views:LoadingPage}" />
     <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
     <ShellContent Route="LoginPage" ContentTemplate="{DataTemplate views:LoginPage}" />
+    <ShellContent Route="SignUpPage" ContentTemplate="{DataTemplate views:SignUpPage}" />
 </Shell>

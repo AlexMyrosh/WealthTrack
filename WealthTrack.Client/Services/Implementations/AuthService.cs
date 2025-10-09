@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography;
+using Microsoft.Identity.Client;
 using WealthTrack.Client.Models;
 using WealthTrack.Client.Services.Interfaces;
 
@@ -8,22 +9,64 @@ namespace WealthTrack.Client.Services.Implementations;
 
 public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
 {
-    private const string AuthTokenKey = "auth_token";
+    private const string StorageKey = "user-session";
 
     public async Task<bool> LoginAsync(string email, string password)
     {
-        var response = await http.PostAsJsonAsync("api/auth/login", new { Email = email, Password = password });
-        if (!response.IsSuccessStatusCode)
+        try
+        {
+            var response = await http.PostAsJsonAsync("api/auth/login", new
+            {
+                Email = email,
+                Password = password
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var session = JsonSerializer.Deserialize<UserSession>(json);
+            if (session == null)
+            {
+                return false;
+            }
+
+            session.CurrentLoginMode = LoginMode.Registered;
+            await SaveUserSessionAsync(session);
+            return true;
+        }
+        catch
+        {
             return false;
+        }
+    }
+
+    public async Task<bool> SignUpAsync(string firstName, string lastName, string email, string password)
+    {
+        var response = await http.PostAsJsonAsync("api/auth/register", new
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = email, 
+            Password = password
+        });
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
 
         var json = await response.Content.ReadAsStringAsync();
-        using var doc = JsonDocument.Parse(json);
-
-        var token = doc.RootElement.GetProperty("token").GetString();
-        if (string.IsNullOrEmpty(token))
+        var session = JsonSerializer.Deserialize<UserSession>(json);
+        if (session == null)
+        {
             return false;
+        }
 
-        await SecureStorage.SetAsync(AuthTokenKey, token);
+        session.CurrentLoginMode = LoginMode.Registered;
+        await SaveUserSessionAsync(session);
         return true;
     }
 
@@ -39,44 +82,51 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
             _ => throw new NotSupportedException($"Platform {platform} is not supported")
         };
 
+        // PKCE setup
+        var codeVerifier = GenerateCodeVerifier();
+        var codeChallenge = GenerateCodeChallenge(codeVerifier);
+
         var authUrl = new Uri(
             $"https://accounts.google.com/o/oauth2/v2/auth?" +
-            $"client_id={google.ClientId}" +
-            $"&redirect_uri={google.RedirectUri}" +
+            $"client_id={Uri.EscapeDataString(google.ClientId)}" +
+            $"&redirect_uri={Uri.EscapeDataString(google.RedirectUri)}" +
             $"&response_type=code" +
-            $"&scope=openid%20email%20profile"
+            $"&scope=openid%20email%20profile" +
+            $"&code_challenge={codeChallenge}" +
+            $"&code_challenge_method=S256"
         );
 
         try
         {
-            var result = await WebAuthenticator.Default.AuthenticateAsync(
-                new WebAuthenticatorOptions
-                {
-                    Url = authUrl,
-                    CallbackUrl = new Uri(google.RedirectUri)
-                });
+            var result = await WebAuthenticator.Default.AuthenticateAsync(new WebAuthenticatorOptions
+            {
+                Url = authUrl,
+                CallbackUrl = new Uri(google.RedirectUri)
+            });
 
             if (!result.Properties.TryGetValue("code", out var code))
                 return false;
-
-            // Обмен кода на JWT через Sync Server
+            
             var response = await http.PostAsJsonAsync("api/auth/oauth/google", new
             {
                 Code = code,
-                Platform = platform
+                ClientId = google.ClientId,
+                RedirectUri = google.RedirectUri,
+                CodeVerifier = codeVerifier
             });
 
             if (!response.IsSuccessStatusCode)
                 return false;
 
             var json = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-
-            var token = doc.RootElement.GetProperty("token").GetString();
-            if (string.IsNullOrEmpty(token))
+            var session = JsonSerializer.Deserialize<UserSession>(json);
+            if (session == null)
+            {
                 return false;
+            }
 
-            await SecureStorage.SetAsync(AuthTokenKey, token);
+            session.CurrentLoginMode = LoginMode.Registered;
+            await SaveUserSessionAsync(session);
             return true;
         }
         catch (TaskCanceledException)
@@ -89,23 +139,114 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
     {
         // Just a mock at the moment
         await Task.Delay(500);
-        await SecureStorage.SetAsync(AuthTokenKey, "FAKE_APPLE_JWT");
+        var session = new UserSession
+        {
+            CurrentLoginMode = LoginMode.Registered,
+            Token = "FAKE_APPLE_JWT"
+        };
+
+        await SaveUserSessionAsync(session);
         return true;
     }
 
+    public async Task<bool> LoginWithMicrosoftAsync()
+    {
+        var pca = PublicClientApplicationBuilder
+            .Create(settings.Microsoft.ClientId)
+            .WithRedirectUri(settings.Microsoft.RedirectUri)
+            .Build();
+        
+        AuthenticationResult result;
+        try
+        {
+            var accounts = await pca.GetAccountsAsync();
+            result =  await pca.AcquireTokenSilent(settings.Microsoft.Scopes, accounts.FirstOrDefault()).ExecuteAsync();
+        }
+        catch (MsalUiRequiredException)
+        {
+            result = await pca.AcquireTokenInteractive(settings.Microsoft.Scopes).ExecuteAsync();
+        }
+        
+        var token = result.AccessToken;
+        var response = await http.PostAsJsonAsync("api/auth/oauth/microsoft", new
+        {
+            Token = token
+        });
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+        
+        var json = await response.Content.ReadAsStringAsync();
+        var session = JsonSerializer.Deserialize<UserSession>(json);
+        if (session == null)
+        {
+            return false;
+        }
+
+        session.CurrentLoginMode = LoginMode.Registered;
+        await SaveUserSessionAsync(session);
+        return true;
+    }
+    
     public Task LogoutAsync()
     {
-        SecureStorage.Remove(AuthTokenKey);
+        SecureStorage.Remove(StorageKey);
         return Task.CompletedTask;
     }
 
-    public async Task<string?> GetTokenAsync()
+    public async Task ContinueWithoutAccountAsync()
     {
-        return await SecureStorage.GetAsync(AuthTokenKey);
+        var session = new UserSession
+        {
+            CurrentLoginMode = LoginMode.Guest,
+        };
+
+        await SaveUserSessionAsync(session);
+    }
+    
+    public async Task<UserSession?> GetUserSessionAsync()
+    {
+        var json = await SecureStorage.GetAsync(StorageKey);
+        if (string.IsNullOrEmpty(json))
+        {
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<UserSession>(json);
     }
 
     private static string GetPlatform()
     {
         return DeviceInfo.Platform.ToString();
+    }
+    
+    private static string GenerateCodeVerifier()
+    {
+        var bytes = new byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Base64UrlEncode(bytes);
+    }
+
+    private static string GenerateCodeChallenge(string codeVerifier)
+    {
+        using var sha = SHA256.Create();
+        var bytes = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(codeVerifier));
+        return Base64UrlEncode(bytes);
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+    }
+    
+    private async Task SaveUserSessionAsync(UserSession session)
+    {
+        var json = JsonSerializer.Serialize(session);
+        await SecureStorage.SetAsync(StorageKey, json);
     }
 }

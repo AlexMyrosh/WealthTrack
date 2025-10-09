@@ -1,11 +1,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:WealthTrack.Client.ViewModels"
              x:Class="WealthTrack.Client.Views.MainPage">
-
-    <ContentPage.BindingContext>
-        <vm:MainViewModel />
-    </ContentPage.BindingContext>
 
     <VerticalStackLayout Padding="20" Spacing="20">
 
@@ -17,11 +12,36 @@
                FontSize="16"
                HorizontalOptions="Center" />
         
+        <!-- Logout Button -->
         <Button Text="Logout"
                 BackgroundColor="{StaticResource Primary}"
                 TextColor="{StaticResource PrimaryTextColor}"
                 CornerRadius="8"
                 Command="{Binding LogoutCommand}" 
-                VerticalOptions="EndAndExpand"/>
+                VerticalOptions="EndAndExpand">
+            <Button.Triggers>
+                <DataTrigger TargetType="Button"
+                             Binding="{Binding IsGuest}"
+                             Value="True">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </Button.Triggers>
+        </Button>
+
+        <!-- Login Button -->
+        <Button Text="Login"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="{StaticResource PrimaryTextColor}"
+                CornerRadius="8"
+                Command="{Binding LoginCommand}" 
+                VerticalOptions="EndAndExpand">
+            <Button.Triggers>
+                <DataTrigger TargetType="Button"
+                             Binding="{Binding IsGuest}"
+                             Value="False">
+                    <Setter Property="IsVisible" Value="False"/>
+                </DataTrigger>
+            </Button.Triggers>
+        </Button>
     </VerticalStackLayout>
 </ContentPage>

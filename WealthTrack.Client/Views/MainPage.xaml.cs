@@ -1,12 +1,13 @@
+using WealthTrack.Client.Services.Interfaces;
 using WealthTrack.Client.ViewModels;
 
 namespace WealthTrack.Client.Views;
 
 public partial class MainPage : ContentPage
 {
-    public MainPage(MainViewModel vm)
+    public MainPage(IAuthService authService)
     {
         InitializeComponent();
-        BindingContext = vm;
+        BindingContext = new MainViewModel(authService);
     }
 }

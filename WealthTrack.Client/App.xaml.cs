@@ -15,18 +15,26 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        Page rootPage;
+        var window = new Window(new AppShell());
+        return window;
+    }
 
-        var token = SecureStorage.GetAsync("auth_token").Result;
-        if (!string.IsNullOrEmpty(token))
-        {
-            rootPage = new AppShell();
-        }
+    protected override async void OnStart()
+    {
+        base.OnStart();
+        await InitializeAppAsync();
+    }
+
+    private async Task InitializeAppAsync()
+    {
+        // Start with loading page
+        await Shell.Current.GoToAsync("//LoadingPage");
+        
+        var session = await _authService.GetUserSessionAsync();
+
+        if (session != null)
+            await Shell.Current.GoToAsync("//MainPage");
         else
-        {
-            rootPage = new LoginPage(_authService);
-        }
-
-        return new Window(rootPage);
+            await Shell.Current.GoToAsync("//LoginPage");
     }
 }
