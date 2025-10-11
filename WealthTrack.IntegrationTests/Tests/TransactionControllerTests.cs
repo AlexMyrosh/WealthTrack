@@ -27,7 +27,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario(numberOfTransactions, numberOfTransfers);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -54,7 +53,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario(numberOfTransactions, numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -85,7 +83,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -109,7 +106,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -141,7 +137,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransferTransaction: t => t.Status = EntityStatus.Archived);
         DbContext.Currencies.AddRange(activeScenario.currency, archivedScenario.currency);
         DbContext.Categories.AddRange(activeScenario.category, archivedScenario.category);
-        DbContext.Budgets.AddRange(activeScenario.budget, archivedScenario.budget);
         DbContext.Wallets.AddRange(activeScenario.wallets);
         DbContext.Wallets.AddRange(archivedScenario.wallets);
         DbContext.Transactions.AddRange(activeScenario.transactions);
@@ -169,7 +164,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario(10, 10);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -193,7 +187,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -220,7 +213,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -249,7 +241,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -275,7 +266,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -302,7 +292,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -329,7 +318,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -366,7 +354,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -389,7 +376,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -412,7 +398,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -435,7 +420,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -457,7 +441,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario(configureTransaction: t => t.Status = EntityStatus.Archived);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -479,7 +462,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -500,7 +482,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario(configureTransferTransaction: t => t.Status = EntityStatus.Archived);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -521,7 +502,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -546,7 +526,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -571,7 +550,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -596,7 +574,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -621,7 +598,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -645,7 +621,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -669,7 +644,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -693,7 +667,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -712,7 +685,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -730,7 +702,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -748,7 +719,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -774,7 +744,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureCategory: c => c.Type = categoryType
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -817,7 +786,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory(c => c.Type = categoryType);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -862,7 +830,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -890,7 +857,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -920,7 +886,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -952,7 +917,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureCategory: c => c.Type = categoryType
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -980,7 +944,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -1008,7 +971,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -1036,7 +998,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -1064,7 +1025,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -1092,7 +1052,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithCategory();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         await DbContext.SaveChangesAsync();
@@ -1124,7 +1083,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1, scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1162,7 +1120,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1, scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1192,32 +1149,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     }
     
     [Fact]
-    public async Task Create_TransferTransaction_SourceAndTargetWalletFromDifferentBudgets_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreatePairOfWalletsForDifferentBudgets();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.AddRange(scenario.budget1, scenario.budget2);
-        DbContext.Wallets.AddRange(scenario.wallet1, scenario.wallet2);
-        await DbContext.SaveChangesAsync();
-
-        var upsert = new TransferTransactionUpsertApiModel
-        {
-            Amount = Random.Next(100, 1000),
-            Description = $"Test Transfer + {Guid.NewGuid()}",
-            TransactionDate = DateTimeOffset.UtcNow,
-            SourceWalletId = scenario.wallet1.Id,
-            TargetWalletId = scenario.wallet2.Id
-        };
-        
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/transaction/transfer/create", upsert);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
     public async Task Create_TransferTransaction_WithNullBody_ShouldReturnBadRequest()
     {
         // Act
@@ -1235,7 +1166,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1261,7 +1191,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1287,7 +1216,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1308,12 +1236,11 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     }
     
     [Fact]
-    public async Task Create_TransferTransaction_WithIncorrectSourceWalletId_ShouldReturnBadRequest()
+    public async Task Create_TransferTransaction_WithIncorrectSourceWalletId_ShouldReturnNotFoundResult()
     {
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1330,7 +1257,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var response = await Client.PostAsJsonAsync("/api/transaction/transfer/create", upsert);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
     
     [Fact]
@@ -1339,7 +1266,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1365,7 +1291,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1386,12 +1311,11 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     }
     
     [Fact]
-    public async Task Create_TransferTransaction_WithIncorrectTargetWalletId_ShouldReturnBadRequest()
+    public async Task Create_TransferTransaction_WithIncorrectTargetWalletId_ShouldReturnNotFoundResult()
     {
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1408,7 +1332,7 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var response = await Client.PostAsJsonAsync("/api/transaction/transfer/create", upsert);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
     
     [Fact]
@@ -1417,7 +1341,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreatePairOfWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet1,  scenario.wallet2);
         await DbContext.SaveChangesAsync();
 
@@ -1443,7 +1366,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
 
@@ -1478,7 +1400,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = type.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1519,7 +1440,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = type.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1560,7 +1480,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = type.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1602,7 +1521,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         );
         var newCategory = DataFactory.CreateCategory(c => c.Type = type);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.AddRange(scenario.category, newCategory);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1644,11 +1562,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         );
         var newWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId =  scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet, newWallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1689,7 +1605,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = type.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1723,11 +1638,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         );
         var newWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId =  scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet, newWallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1760,7 +1673,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1784,7 +1696,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1808,7 +1719,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1827,7 +1737,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1855,7 +1764,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = oldType.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1878,7 +1786,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1901,7 +1808,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1930,7 +1836,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         );
         var newCategory = DataFactory.CreateCategory(c => c.Type = newCategoryType);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.AddRange(scenario.category, newCategory);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1953,7 +1858,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1976,7 +1880,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -1984,36 +1887,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var upsert = new TransactionUpsertApiModel
         {
             WalletId = Guid.Empty
-        };
-
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/transaction/update/{scenario.transaction.Id}", upsert);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Update_RegularTransaction_WithNewWalletIdOfAnotherBudget_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransactionScenario();
-        var newBudget = DataFactory.CreateBudget(b => b.CurrencyId = scenario.currency.Id);
-        var newWallet = DataFactory.CreateWallet(w =>
-        {
-            w.CurrencyId = scenario.currency.Id;
-            w.BudgetId = newBudget.Id;
-        });
-        
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.AddRange(scenario.budget, newBudget);
-        DbContext.Wallets.AddRange(scenario.wallet, newWallet);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new TransactionUpsertApiModel
-        {
-            WalletId = newWallet.Id
         };
 
         // Act
@@ -2033,7 +1906,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2066,7 +1938,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2099,7 +1970,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2134,11 +2004,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransferScenario();
         var newWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId = scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Wallets.Add(newWallet);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2174,11 +2042,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransferScenario();
         var newWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId = scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Wallets.Add(newWallet);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2213,7 +2079,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2246,11 +2111,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransferScenario();
         var newSourceWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId =  scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Wallets.Add(newSourceWallet);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2284,11 +2147,9 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransferScenario();
         var newTargetWallet = DataFactory.CreateWallet(w =>
         {
-            w.BudgetId =  scenario.budget.Id;
             w.CurrencyId = scenario.currency.Id;
         });
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Wallets.Add(newTargetWallet);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2321,7 +2182,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2343,7 +2203,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2365,7 +2224,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2383,7 +2241,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2401,68 +2258,11 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
     }
     
     [Fact]
-    public async Task Update_TransferTransaction_WithNewSourceWalletOfDifferentBudget_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransferScenario();
-        var newBudget = DataFactory.CreateBudget(b => b.CurrencyId = scenario.currency.Id);
-        var newWallet = DataFactory.CreateWallet(w => {
-            w.CurrencyId = scenario.currency.Id;
-            w.BudgetId = newBudget.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.AddRange(scenario.budget, newBudget);
-        DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.Wallets.Add(newWallet);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new TransferTransactionUpsertApiModel
-        {
-            SourceWalletId = newWallet.Id
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/transaction/transfer/update/{scenario.transaction.Id}", upsert);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Update_TransferTransaction_WithNewTargetWalletOfDifferentBudget_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleTransferScenario();
-        var newBudget = DataFactory.CreateBudget(b => b.CurrencyId = scenario.currency.Id);
-        var newWallet = DataFactory.CreateWallet(w => {
-            w.CurrencyId = scenario.currency.Id;
-            w.BudgetId = newBudget.Id;
-        });
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.AddRange(scenario.budget, newBudget);
-        DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.Wallets.Add(newWallet);
-        DbContext.Transactions.Add(scenario.transaction);
-        await DbContext.SaveChangesAsync();
-        var upsert = new TransferTransactionUpsertApiModel
-        {
-            TargetWalletId = newWallet.Id
-        };
-        
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/transaction/transfer/update/{scenario.transaction.Id}", upsert);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
     public async Task Update_TransferTransaction_WithIncorrectSourceWalletId_ShouldReturnBadRequest()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2485,7 +2285,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2508,7 +2307,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2531,7 +2329,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2554,7 +2351,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2576,7 +2372,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2603,7 +2398,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2636,7 +2430,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         scenario.transaction.CategoryId = null;
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2668,7 +2461,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2687,7 +2479,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2705,7 +2496,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2731,7 +2521,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Status = transactionStatus
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2752,7 +2541,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2773,7 +2561,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2799,7 +2586,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransaction: t => t.Type = type.ToTransactionType()
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);
@@ -2826,7 +2612,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
             configureTransferTransaction: t => t.Status = transactionStatus    
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2846,7 +2631,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2866,7 +2650,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2886,7 +2669,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -2915,7 +2697,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -2935,7 +2716,6 @@ public class TransactionControllerTests(SeededWebAppFactory factory) : Integrati
         var scenario = DataFactory.CreateMixOfTransactionsScenario();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
         DbContext.Transactions.AddRange(scenario.transactions);

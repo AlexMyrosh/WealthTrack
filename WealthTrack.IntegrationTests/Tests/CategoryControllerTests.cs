@@ -898,7 +898,6 @@ public class CategoryControllerTests(EmptyWebAppFactory factory) : IntegrationTe
         // Arrange
         var scenario = DataFactory.CreateSingleTransactionScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Categories.Add(scenario.category);
         DbContext.Transactions.Add(scenario.transaction);

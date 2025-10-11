@@ -9,7 +9,6 @@ namespace WealthTrack.Data.Context
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<Budget> Budgets { get; set; }
         public DbSet<Goal> Goals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -108,24 +107,12 @@ namespace WealthTrack.Data.Context
                     .IsRequired()
                     .HasConversion<string>();
 
-                entity.Property(e => e.Type)
-                    .IsRequired()
-                    .HasConversion<string>();
-
                 entity.Property(e => e.CurrencyId)
                     .IsRequired();
                 
-                entity.Property(e => e.BudgetId)
-                    .IsRequired();
-
                 entity.HasOne(e => e.Currency)
                     .WithMany(e => e.Wallets)
                     .HasForeignKey(e => e.CurrencyId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasOne(e => e.Budget)
-                    .WithMany(e => e.Wallets)
-                    .HasForeignKey(e => e.BudgetId)
                     .OnDelete(DeleteBehavior.NoAction);
                 
                 entity.ToTable(t =>
@@ -183,43 +170,6 @@ namespace WealthTrack.Data.Context
                     .WithMany(w => w.IncomeTransferTransactions)
                     .HasForeignKey(e => e.TargetWalletId)
                     .OnDelete(DeleteBehavior.NoAction);
-            });
-            
-            modelBuilder.Entity<Budget>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-
-                entity.Property(e => e.Name)
-                    .IsRequired()
-                    .HasMaxLength(100);
-
-                entity.Property(e => e.CreatedDate)
-                    .IsRequired();
-
-                entity.Property(e => e.ModifiedDate)
-                    .IsRequired();
-
-                entity.Property(e => e.Status)
-                    .IsRequired()
-                    .HasConversion<string>();
-
-                entity.Property(e => e.CurrencyId)
-                    .IsRequired();
-                
-                entity.HasOne(e => e.Currency)
-                    .WithMany(e => e.Budgets)
-                    .HasForeignKey(e => e.CurrencyId)
-                    .OnDelete(DeleteBehavior.NoAction);
-
-                entity.HasMany(e => e.Wallets)
-                    .WithOne(e => e.Budget)
-                    .HasForeignKey(e => e.BudgetId)
-                    .OnDelete(DeleteBehavior.NoAction);
-                
-                entity.ToTable(t =>
-                {
-                    t.HasCheckConstraint("CK_Budget_Name_NotEmpty", $"LEN([{nameof(Budget.Name)}]) > 0");
-                });
             });
 
             modelBuilder.Entity<Goal>(entity =>

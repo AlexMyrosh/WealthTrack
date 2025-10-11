@@ -1,8 +1,6 @@
-using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using WealthTrack.API.AutoMapper;
-using WealthTrack.API.FluentValidationRules;
 using WealthTrack.API.Middlewares;
 using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers;
@@ -80,13 +78,10 @@ namespace WealthTrack.API
             services.AddScoped<ICurrencyService, CurrencyService>();
             services.AddScoped<ITransactionService, TransactionService>();
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IBudgetService, BudgetService>();
             services.AddScoped<IGoalService, GoalService>();
 
             services.AddScoped<CurrenciesSeeder>();
             services.AddScoped<SystemCategoriesSeeder>();
-            
-            services.AddValidatorsFromAssemblyContaining<BudgetUpsertApiModelValidator>();
             
             services.AddFluentValidationAutoValidation();
             services.AddFluentValidationClientsideAdapters();

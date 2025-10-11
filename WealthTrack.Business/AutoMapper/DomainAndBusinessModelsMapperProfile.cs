@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Goal;
@@ -14,14 +13,6 @@ public class DomainAndBusinessModelsMapperProfile : Profile
 {
     public DomainAndBusinessModelsMapperProfile()
     {
-        // Budget
-        CreateMap<BudgetUpsertBusinessModel, Budget>()
-            .ForMember(dest => dest.CurrencyId, opt => opt.Condition(src => src.CurrencyId.HasValue))
-            .ForMember(dest => dest.Name, opt => opt.Condition(src => src.Name != null));
-        CreateMap<Budget, BudgetDetailsBusinessModel>();
-        CreateMap<Currency, CurrencyRelatedToBudgetDetailsBusinessModel>();
-        CreateMap<Wallet, WalletRelatedToBudgetDetailsBusinessModel>();
-        
         // Category
         CreateMap<CategoryUpsertBusinessModel, Category>()
             .ForMember(dest => dest.IconName, opt => opt.Condition(src => src.IconName != null))
@@ -75,14 +66,11 @@ public class DomainAndBusinessModelsMapperProfile : Profile
         // Wallet
         CreateMap<WalletUpsertBusinessModel, Wallet>()
             .ForMember(dest => dest.Name, opt => opt.Condition(src => src.Name != null))
-            .ForMember(dest => dest.Type, opt => opt.Condition(src => src.Type.HasValue))
             .ForMember(dest => dest.Balance, opt => opt.Condition(src => src.Balance.HasValue))
             .ForMember(dest => dest.IsPartOfGeneralBalance, opt => opt.Condition(src => src.IsPartOfGeneralBalance.HasValue))
-            .ForMember(dest => dest.CurrencyId, opt => opt.Condition(src => src.CurrencyId.HasValue))
-            .ForMember(dest => dest.BudgetId, opt => opt.Condition(src => src.BudgetId.HasValue));
+            .ForMember(dest => dest.CurrencyId, opt => opt.Condition(src => src.CurrencyId.HasValue));
         CreateMap<Wallet, WalletDetailsBusinessModel>();
         CreateMap<Currency, CurrencyRelatedToWalletDetailsBusinessModel>();
-        CreateMap<Budget, BudgetRelatedToWalletDetailsBusinessModel>();
         CreateMap<Transaction, TransactionRelatedToWalletDetailsBusinessModel>();
     }
 }

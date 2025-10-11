@@ -24,7 +24,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateManyWallets(numberOfWallets);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         var walletIds = scenario.wallets.Select(w => w.Id).ToList();
@@ -49,7 +48,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateMixOfActiveAndArchivedWallets(numberOfActiveWallets, numberOfArchivedWallets);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.activeWallets);
         DbContext.Wallets.AddRange(scenario.archivedWallets);
         await DbContext.SaveChangesAsync();
@@ -73,7 +71,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -86,7 +83,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
@@ -99,7 +95,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -112,33 +107,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
-        walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
-        walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
-    }
-    
-    [Fact]
-    public async Task GetAll_WithIncludedBudget_ShouldReturnWalletsWithLoadingBudgetOnly()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateWalletsWithTransactions();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        DbContext.Transactions.AddRange(scenario.transferTransactions);
-        await DbContext.SaveChangesAsync();
-
-        // Act
-        var response = await Client.GetAsync($"/api/wallet?include={nameof(Wallet.Budget)}");
-        var walletsFromResponse = await response.Content.ReadFromJsonAsync<List<WalletDetailsApiModel>>();
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
@@ -151,7 +119,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -164,7 +131,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().BeNullOrEmpty());
@@ -177,7 +143,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -190,7 +155,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
@@ -203,7 +167,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -216,7 +179,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().BeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().BeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().BeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
@@ -229,7 +191,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -237,7 +198,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
 
         // Act
         var response = await Client.GetAsync($"/api/wallet?include=" +
-                                             $"{nameof(Wallet.Budget)}," +
                                              $"{nameof(Wallet.Currency)}," +
                                              $"{nameof(Wallet.Transactions)}," +
                                              $"{nameof(Wallet.IncomeTransferTransactions)}," +
@@ -247,7 +207,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletsFromResponse.Should().AllSatisfy(w => w.Currency.Should().NotBeNull());
-        walletsFromResponse.Should().AllSatisfy(w => w.Budget.Should().NotBeNull());
         walletsFromResponse.Should().AllSatisfy(w => w.Transactions.Should().NotBeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.IncomeTransferTransactions.Should().NotBeNullOrEmpty());
         walletsFromResponse.Should().AllSatisfy(w => w.OutgoingTransferTransactions.Should().NotBeNullOrEmpty());
@@ -260,7 +219,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -283,7 +241,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
@@ -299,12 +256,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task GetById_ShouldReturnArchiveBudget()
+    public async Task GetById_ShouldReturnArchivedWallet()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies(w => w.Status = EntityStatus.Archived);
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet);
         await DbContext.SaveChangesAsync();
     
@@ -325,7 +281,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -340,7 +295,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().BeNull();
-        walletFromResponse.Budget.Should().BeNull();
         walletFromResponse.Transactions.Should().BeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
@@ -353,7 +307,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -368,35 +321,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().NotBeNull();
-        walletFromResponse.Budget.Should().BeNull();
-        walletFromResponse.Transactions.Should().BeNullOrEmpty();
-        walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
-        walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
-    }
-    
-    [Fact]
-    public async Task GetById_WithIncludedBudget_ShouldReturnWalletWithBudgetOnly()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateWalletsWithTransactions();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.AddRange(scenario.wallets);
-        DbContext.Transactions.AddRange(scenario.transactions);
-        DbContext.Transactions.AddRange(scenario.transferTransactions);
-        await DbContext.SaveChangesAsync();
-        var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
-        
-        // Act
-        var response = await Client.GetAsync($"/api/wallet/{walletId}?include={nameof(Wallet.Budget)}");
-        var walletFromResponse = await response.Content.ReadFromJsonAsync<WalletDetailsApiModel>();
-        
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        walletFromResponse.Should().NotBeNull();
-        walletFromResponse.Currency.Should().BeNull();
-        walletFromResponse.Budget.Should().NotBeNull();
         walletFromResponse.Transactions.Should().BeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
@@ -409,7 +333,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -424,7 +347,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().BeNull();
-        walletFromResponse.Budget.Should().BeNull();
         walletFromResponse.Transactions.Should().NotBeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
@@ -437,7 +359,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -452,7 +373,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().BeNull();
-        walletFromResponse.Budget.Should().BeNull();
         walletFromResponse.Transactions.Should().BeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().BeNullOrEmpty();
@@ -465,7 +385,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -480,7 +399,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().BeNull();
-        walletFromResponse.Budget.Should().BeNull();
         walletFromResponse.Transactions.Should().BeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().BeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -493,7 +411,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -502,7 +419,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     
         // Act
         var response = await Client.GetAsync($"/api/wallet/{walletId}?include=" +
-                                             $"{nameof(Wallet.Budget)}," +
                                              $"{nameof(Wallet.Currency)}," +
                                              $"{nameof(Wallet.Transactions)}," +
                                              $"{nameof(Wallet.IncomeTransferTransactions)}," +
@@ -513,7 +429,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         walletFromResponse.Should().NotBeNull();
         walletFromResponse.Currency.Should().NotBeNull();
-        walletFromResponse.Budget.Should().NotBeNull();
         walletFromResponse.Transactions.Should().NotBeNullOrEmpty();
         walletFromResponse.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         walletFromResponse.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -525,7 +440,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         var walletId = Random.GetItems(scenario.wallets.Select(w => w.Id).ToArray(), 1).First();
@@ -543,7 +457,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         
@@ -560,7 +473,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateManyWallets();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         await DbContext.SaveChangesAsync();
         
@@ -578,9 +490,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     [Fact] public async Task Create_WithCorrectData_ShouldCreateNewWalletWithCorrectDefaultData()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
 
         var upsert = new WalletUpsertApiModel
@@ -588,9 +499,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id,
         };
 
         // Act
@@ -602,7 +511,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         createdId.Should().NotBe(Guid.Empty);
         var created = await DbContext.Wallets.AsNoTracking()
             .Include(w => w.Currency)
-            .Include(w => w.Budget)
             .Include(w => w.Transactions)
             .Include(w => w.IncomeTransferTransactions)
             .Include(w => w.OutgoingTransferTransactions)
@@ -611,12 +519,10 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         created.Name.Should().Be(upsert.Name);
         created.Balance.Should().Be(upsert.Balance);
         created.IsPartOfGeneralBalance.Should().Be(upsert.IsPartOfGeneralBalance.Value);
-        created.Type.Should().Be(upsert.Type);
         created.Status.Should().Be(EntityStatus.Active);
         created.CreatedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         created.ModifiedDate.Should().BeExactly(created.CreatedDate);
         created.Currency.Id.Should().Be(upsert.CurrencyId.Value);
-        created.Budget.Id.Should().Be(upsert.BudgetId.Value);
         created.IncomeTransferTransactions.Should().BeNullOrEmpty();
         created.OutgoingTransferTransactions.Should().BeNullOrEmpty();
     }
@@ -627,9 +533,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_CreatesWalletWithInitialBalance_ShouldCreateCorrectionTransaction(int initialBalanceSign, TransactionType transactionType)
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -637,9 +542,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000) * initialBalanceSign,
             IsPartOfGeneralBalance = false,
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id,
         };
         var expectedTransactionAmount =  decimal.Abs(upsert.Balance.Value);
         var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
@@ -670,9 +573,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithEmptyName_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -680,9 +582,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = string.Empty,
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id
         };
     
         // Act
@@ -696,9 +596,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithNullName_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -706,9 +605,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = null,
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id,
         };
     
         // Act
@@ -722,9 +619,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithNullBalance_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -732,9 +628,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = null,
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id,
         };
     
         // Act
@@ -748,9 +642,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithNullIsPartOfGeneralBalance_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -758,37 +651,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = null,
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
-        };
-    
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Theory]
-    [InlineData(null)]
-    [InlineData((WalletType)99)]
-    public async Task Create_WithIncorrectType_ShouldReturnBadRequest(WalletType? type)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        await DbContext.SaveChangesAsync();
-        
-        var upsert = new WalletUpsertApiModel
-        {
-            Name = $"Test Wallet + {Guid.NewGuid()}",
-            Balance = Random.Next(100, 1000),
-            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = type,
-            CurrencyId = scenario.currency.Id,
-            BudgetId = scenario.budget.Id
+            CurrencyId = currency.Id
         };
     
         // Act
@@ -802,9 +665,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithNullCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -812,9 +674,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = null,
-            BudgetId = scenario.budget.Id
+            CurrencyId = null
         };
     
         // Act
@@ -828,9 +688,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithIncorrectCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -838,9 +697,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = Guid.NewGuid(),
-            BudgetId = scenario.budget.Id
+            CurrencyId = Guid.NewGuid()
         };
     
         // Act
@@ -854,9 +711,8 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     public async Task Create_WithEmptyCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
+        var currency = DataFactory.CreateCurrency();
+        DbContext.Currencies.Add(currency);
         await DbContext.SaveChangesAsync();
         
         var upsert = new WalletUpsertApiModel
@@ -864,87 +720,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             Name = $"Test Wallet + {Guid.NewGuid()}",
             Balance = Random.Next(100, 1000),
             IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             CurrencyId = Guid.Empty,
-            BudgetId = scenario.budget.Id
-        };
-    
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Create_WithNullBudgetId_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        await DbContext.SaveChangesAsync();
-        
-        var upsert = new WalletUpsertApiModel
-        {
-            Name = $"Test Wallet + {Guid.NewGuid()}",
-            Balance = Random.Next(100, 1000),
-            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = null
-        };
-    
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Create_WithIncorrectBudgetId_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        await DbContext.SaveChangesAsync();
-        
-        var upsert = new WalletUpsertApiModel
-        {
-            Name = $"Test Wallet + {Guid.NewGuid()}",
-            Balance = Random.Next(100, 1000),
-            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = Guid.NewGuid()
-        };
-    
-        // Act
-        var response = await Client.PostAsJsonAsync("/api/wallet/create", upsert);
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Create_WithEmptyBudgetId_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateBudgetWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        await DbContext.SaveChangesAsync();
-        
-        var upsert = new WalletUpsertApiModel
-        {
-            Name = $"Test Wallet + {Guid.NewGuid()}",
-            Balance = Random.Next(100, 1000),
-            IsPartOfGeneralBalance = Random.GetItems([true, false], 1).First(),
-            Type = Random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
-            CurrencyId = scenario.currency.Id,
-            BudgetId = Guid.Empty
         };
     
         // Act
@@ -965,7 +741,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -994,9 +769,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
-        updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
-        updatedWallet.BudgetId.Should().Be(scenario.wallets[0].BudgetId);
         updatedWallet.Transactions.Should().NotBeNullOrEmpty();
         updatedWallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         updatedWallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -1009,7 +782,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -1038,9 +810,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
-        updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
-        updatedWallet.BudgetId.Should().Be(scenario.wallets[0].BudgetId);
         updatedWallet.Transactions.Should().NotBeNullOrEmpty();
         updatedWallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         updatedWallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -1053,7 +823,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -1082,9 +851,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
-        updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(scenario.wallets[0].CurrencyId);
-        updatedWallet.BudgetId.Should().Be(scenario.wallets[0].BudgetId);
         updatedWallet.Transactions.Should().NotBeNullOrEmpty();
         updatedWallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         updatedWallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -1098,7 +865,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var newCurrency = DataFactory.CreateCurrency();
         DbContext.Currencies.AddRange(scenario.currency, newCurrency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
         DbContext.Transactions.AddRange(scenario.transferTransactions);
@@ -1127,9 +893,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         updatedWallet.ModifiedDate.Should().BeCloseTo(DateTimeOffset.Now, TimeSpan.FromMinutes(1));
         updatedWallet.CreatedDate.Should().BeExactly(scenario.wallets[0].CreatedDate);
         updatedWallet.Status.Should().Be(scenario.wallets[0].Status);
-        updatedWallet.Type.Should().Be(scenario.wallets[0].Type);
         updatedWallet.CurrencyId.Should().Be(upsert.CurrencyId.Value);
-        updatedWallet.BudgetId.Should().Be(scenario.wallets[0].BudgetId);
         updatedWallet.Transactions.Should().NotBeNullOrEmpty();
         updatedWallet.IncomeTransferTransactions.Should().NotBeNullOrEmpty();
         updatedWallet.OutgoingTransferTransactions.Should().NotBeNullOrEmpty();
@@ -1141,7 +905,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
@@ -1170,7 +933,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         var balanceCorrectionCategoryId = factory.Configuration["SystemCategories:BalanceCorrectionId"];
@@ -1199,7 +961,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         var upsert = new WalletUpsertApiModel
@@ -1222,7 +983,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1244,7 +1004,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1266,7 +1025,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1283,7 +1041,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1299,37 +1056,12 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
     
-    [Theory]
-    [InlineData(WalletType.Cash, WalletType.DebitCard)]
-    [InlineData(WalletType.DebitCard, WalletType.Cash)]
-    public async Task Update_WithNewType_ShouldReturnBadRequest(WalletType oldType, WalletType newType)
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies(configureWallet: w => w.Type = oldType);
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        await DbContext.SaveChangesAsync();
-        
-        var modelToUpdate = new WalletUpsertApiModel
-        {
-            Type = newType
-        };
-
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", modelToUpdate);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
     [Fact]
     public async Task Update_WithIncorrectCurrencyId_ShouldReturnBadRequest()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1351,36 +1083,12 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
         var modelToUpdate = new WalletUpsertApiModel
         {
             CurrencyId = Guid.Empty
-        };
-
-        // Act
-        var response = await Client.PutAsJsonAsync($"/api/wallet/update/{scenario.wallet.Id}", modelToUpdate);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-    }
-    
-    [Fact]
-    public async Task Update_WithNewBudget_ShouldReturnBadRequest()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        var newBudget = DataFactory.CreateBudget(b => b.CurrencyId = scenario.currency.Id);
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.AddRange(scenario.budget, newBudget);
-        DbContext.Wallets.Add(scenario.wallet);
-        await DbContext.SaveChangesAsync();
-        
-        var modelToUpdate = new WalletUpsertApiModel
-        {
-            BudgetId = newBudget.Id
         };
 
         // Act
@@ -1404,7 +1112,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             configureWallet: w => w.Status = walletStatus
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
     
@@ -1428,7 +1135,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
             configureTransferTransaction: t => t.Status = transactionStatus
         );
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Categories.Add(scenario.category);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -1438,6 +1144,7 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         var expectedNumberOfTransactions = scenario.transactions.Count - scenario.transactions.Count(
             t => t.WalletId == walletIdToDelete || t.SourceWalletId == walletIdToDelete || t.TargetWalletId == walletIdToDelete);
         
+        // Act
         var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{walletIdToDelete}");
     
         // Assert
@@ -1447,31 +1154,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task HardDelete_WithCorrectData_ShouldNotDeleteRelatedBudget()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        await DbContext.SaveChangesAsync();
-    
-        // Act
-        var deleteResponse = await Client.DeleteAsync($"/api/wallet/hard_delete/{scenario.wallet.Id}");
-    
-        // Assert
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var existingBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
-        existingBudget.Should().NotBeNull();
-    }
-    
-    [Fact]
     public async Task HardDelete_WithCorrectData_ShouldNotDeleteRelatedCurrency()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
     
@@ -1490,7 +1177,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -1514,7 +1200,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -1538,7 +1223,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1555,7 +1239,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1576,7 +1259,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
     
@@ -1596,7 +1278,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateWalletsWithTransactions();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Categories.Add(scenario.category);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.transactions);
@@ -1617,32 +1298,11 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
     }
     
     [Fact]
-    public async Task Archive_WithCorrectData_ShouldNotArchiveRelatedBudget()
-    {
-        // Arrange
-        var scenario = DataFactory.CreateSingleWalletWithDependencies();
-        DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
-        DbContext.Wallets.Add(scenario.wallet);
-        await DbContext.SaveChangesAsync();
-    
-        // Act
-        var response = await Client.DeleteAsync($"/api/wallet/archive/{scenario.wallet.Id}");
-    
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Accepted);
-        var activeBudget = await DbContext.Budgets.AsNoTracking().FirstOrDefaultAsync(b => b.Id == scenario.budget.Id);
-        activeBudget.Should().NotBeNull();
-        activeBudget.Status.Should().Be(EntityStatus.Active);
-    }
-    
-    [Fact]
     public async Task Archive_WhenTransferTransactionExists_ShouldUpdateTargetWalletBalance()
     {
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -1666,7 +1326,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleTransferScenario();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.Add(scenario.transaction);
         await DbContext.SaveChangesAsync();
@@ -1690,7 +1349,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         
@@ -1707,7 +1365,6 @@ public class WalletControllerTests(SeededWebAppFactory factory) : IntegrationTes
         // Arrange
         var scenario = DataFactory.CreateSingleWalletWithDependencies();
         DbContext.Currencies.Add(scenario.currency);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         await DbContext.SaveChangesAsync();
         

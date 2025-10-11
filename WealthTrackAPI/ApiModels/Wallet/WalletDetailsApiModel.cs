@@ -14,11 +14,7 @@ namespace WealthTrack.API.ApiModels.Wallet
 
         public EntityStatus Status { get; set; }
 
-        public WalletType Type { get; set; }
-
         public CurrencyRelatedToWalletDetailsApiModel Currency { get; set; }
-
-        public BudgetRelatedToWalletDetailsApiModel Budget { get; set; }
 
         public List<TransactionRelatedToWalletDetailsApiModel> Transactions { get; set; }
         
@@ -40,17 +36,6 @@ namespace WealthTrack.API.ApiModels.Wallet
         public decimal ExchangeRate { get; set; }
         
         public CurrencyType Type { get; set; }
-    }
-
-    public class BudgetRelatedToWalletDetailsApiModel
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
-        public decimal OverallBalance { get; set; }
-        
-        public EntityStatus Status { get; set; }
     }
 
     public class TransactionRelatedToWalletDetailsApiModel

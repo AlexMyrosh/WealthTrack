@@ -10,10 +10,6 @@ namespace WealthTrack.API.ApiModels.Wallet
 
         public bool? IsPartOfGeneralBalance { get; set; }
 
-        public WalletType? Type { get; set; }
-
         public Guid? CurrencyId { get; set; }
-
-        public Guid? BudgetId { get; set; }
     }
 }

@@ -10,7 +10,7 @@ public class TestDataFactory
     private readonly Random _random = new();
     
     public Currency CreateCurrency(Action<Currency>? configure = null)
-    {
+    { 
         var currency = new Currency
         {
             Id = Guid.NewGuid(),
@@ -25,21 +25,6 @@ public class TestDataFactory
         return currency;
     }
 
-    public Budget CreateBudget(Action<Budget>? configure = null)
-    {
-        var budget = new Budget
-        {
-            Id = Guid.NewGuid(),
-            Name = $"Budget {_random.Next(1, 1000)}",
-            Status = EntityStatus.Active,
-            CreatedDate = DateTimeOffset.UtcNow,
-            ModifiedDate = DateTimeOffset.UtcNow
-        };
-
-        configure?.Invoke(budget);
-        return budget;
-    }
-
     public Wallet CreateWallet(Action<Wallet>? configure = null)
     {
         var wallet = new Wallet
@@ -48,7 +33,6 @@ public class TestDataFactory
             Name = $"Wallet {_random.Next(1, 1000)}",
             Balance = _random.Next(1, 1000),
             IsPartOfGeneralBalance = _random.GetItems([true, false], 1).First(),
-            Type = _random.GetItems([WalletType.Cash, WalletType.DebitCard], 1).First(),
             Status = EntityStatus.Active,
             CreatedDate = DateTimeOffset.UtcNow,
             ModifiedDate = DateTimeOffset.UtcNow
@@ -180,77 +164,28 @@ public class TestDataFactory
         return currencies;
     }
     
-    public (Currency currency, List<Budget> budgets, List<Wallet> wallets) CreateManyBudgetsWithDependencies(int numberOfBudgets = 2)
+    public (Currency currency, List<Wallet> activeWallets, List<Wallet> archivedWallets) CreateMixOfActiveAndArchivedWallets(int numberOfActiveWallets = 2, int numberOfArchivedWallets = 2)
     {
         var currency = CreateCurrency();
-        var budgets = Enumerable.Range(0, numberOfBudgets).Select(i =>
-            CreateBudget(b =>
-            {
-                b.Name = $"Budget {i + 1}";
-                b.CurrencyId = currency.Id;
-                b.Wallets =
-                [
-                    CreateWallet(w =>
-                    {
-                        w.Name = $"Wallet {i + 1}";
-                        w.CurrencyId = currency.Id;
-                    })
-                ];
-            })
-        ).ToList();
-    
-        var wallets = budgets.SelectMany(b => b.Wallets).ToList();
-        return (currency, budgets, wallets);
-    }
-    
-    public (Currency currency, List<Budget> activeBudgets, List<Budget> archivedBudgets) CreateMixOfActiveAndArchivedBudgets(int numberOfActiveBudgets = 2, int numberOfArchivedBudgets = 2)
-    {
-        var currency = CreateCurrency();
-        var activeBudgets = Enumerable.Range(0, numberOfActiveBudgets).Select(i =>
-            CreateBudget(b =>
-            {
-                b.Name = $"Active Budget {i + 1}";
-                b.CurrencyId = currency.Id;
-                b.Status = EntityStatus.Active;
-            })
-        ).ToList();
-        var archivedBudgets = Enumerable.Range(0, numberOfArchivedBudgets).Select(i =>
-            CreateBudget(b =>
-            {
-                b.Name = $"Archived Budget {i + 1}";
-                b.CurrencyId = currency.Id;
-                b.Status = EntityStatus.Archived;
-            })
-        ).ToList();
-        
-        
-        return (currency, activeBudgets, archivedBudgets);
-    }
-    
-    public (Currency currency, Budget budget, List<Wallet> activeWallets, List<Wallet> archivedWallets) CreateMixOfActiveAndArchivedWallets(int numberOfActiveWallets = 2, int numberOfArchivedWallets = 2)
-    {
-        var (currency, budget) = CreateBudgetWithDependencies();
         var activeWallets = Enumerable.Range(0, numberOfActiveWallets).Select(i =>
             CreateWallet(w =>
             {
                 w.Name = $"Active Wallet {i + 1}";
                 w.CurrencyId = currency.Id;
                 w.Status = EntityStatus.Active;
-                w.BudgetId = budget.Id;
             })
         ).ToList();
         var archivedWallets = Enumerable.Range(0, numberOfArchivedWallets).Select(i =>
             CreateWallet(w =>
             {
-                w.Name = $"Archived Budget {i + 1}";
+                w.Name = $"Archived Wallet {i + 1}";
                 w.CurrencyId = currency.Id;
                 w.Status = EntityStatus.Archived;
-                w.BudgetId = budget.Id;
             })
         ).ToList();
         
         
-        return (currency, budget, activeWallets, archivedWallets);
+        return (currency, activeWallets, archivedWallets);
     }
     
     public (List<Category> parents, List<Category> children) CreateManyNotSystemCategoryHierarchies(int numberOfParent = 2, int numberOfChildren = 2)
@@ -320,32 +255,28 @@ public class TestDataFactory
         return (goals, categories);
     }
     
-    public (Currency currency, Budget budget, List<Wallet> wallets) CreateManyWallets(int numberOfWallets = 2, Action<Wallet>? configureWallets = null)
+    public (Currency currency, List<Wallet> wallets) CreateManyWallets(int numberOfWallets = 2, Action<Wallet>? configureWallets = null)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
         var wallets = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
         {
             w.Name = $"Wallet {i + 1}";
             w.CurrencyId = currency.Id;
-            w.BudgetId = budget.Id;
         })).ToList();
         
         wallets.ForEach(w => configureWallets?.Invoke(w));
         
-        return (currency, budget, wallets);
+        return (currency, wallets);
     }
     
-    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<Transaction> transferTransactions) CreateMixOfTransactionsScenario(int numberOfTransactions = 2, int numberOfTransfers = 2, Action<Wallet>? configureWallets = null, Action<Transaction>? configureTransaction = null, Action<Transaction>? configureTransferTransaction = null)
+    public (Currency currency, Category category, List<Wallet> wallets, List<Transaction> transactions, List<Transaction> transferTransactions) CreateMixOfTransactionsScenario(int numberOfTransactions = 2, int numberOfTransfers = 2, Action<Wallet>? configureWallets = null, Action<Transaction>? configureTransaction = null, Action<Transaction>? configureTransferTransaction = null)
     {
         (numberOfTransactions % 2).Should().Be(0);
         (numberOfTransfers % 2).Should().Be(0);
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
         var category = CreateCategory();
         var wallet1 = CreateWallet(w =>
         {
-            w.BudgetId = budget.Id;
             w.CurrencyId = currency.Id;
             w.Transactions = CreateManyTransactions(numberOfTransactions / 2, t =>
             {
@@ -354,7 +285,6 @@ public class TestDataFactory
         });
         var wallet2 = CreateWallet(w =>
         {
-            w.BudgetId = budget.Id;
             w.CurrencyId = currency.Id;
             w.Transactions = CreateManyTransactions(numberOfTransactions / 2, t =>
             {
@@ -380,10 +310,10 @@ public class TestDataFactory
         transactions.ForEach(t => configureTransaction?.Invoke(t));
         transferTransactions.ForEach(t => configureTransferTransaction?.Invoke(t));
         
-        return (currency, category, budget, [wallet1, wallet2], transactions, transferTransactions);
+        return (currency, category, [wallet1, wallet2], transactions, transferTransactions);
     }
     
-    public (Currency currency, Category category, Budget budget, List<Wallet> wallets, List<Transaction> transactions, List<Transaction> transferTransactions) CreateWalletsWithTransactions(
+    public (Currency currency, Category category, List<Wallet> wallets, List<Transaction> transactions, List<Transaction> transferTransactions) CreateWalletsWithTransactions(
         Action<Wallet>? configureWallets = null,
         Action<Transaction>? configureTransaction = null,
         Action<Transaction>? configureTransferTransaction = null)
@@ -395,14 +325,12 @@ public class TestDataFactory
         return result;
     }
     
-    public (Currency currency, Budget budget, List<Wallet> wallets, Transaction transaction) CreateSingleTransferScenario(Action<Wallet>? configureWallet = null, Action<Transaction>? configureTransferTransaction = null)
+    public (Currency currency, List<Wallet> wallets, Transaction transaction) CreateSingleTransferScenario(Action<Wallet>? configureWallet = null, Action<Transaction>? configureTransferTransaction = null)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var targetWallet = CreateWallet(w =>
         {
-            w.BudgetId = budget.Id;
             w.CurrencyId = currency.Id;
         });
         var transaction = CreateTransfer(t =>
@@ -415,139 +343,26 @@ public class TestDataFactory
         configureWallet?.Invoke(targetWallet);
         configureTransferTransaction?.Invoke(transaction);
         
-        return (currency, budget, [wallet, targetWallet], transaction);
+        return (currency, [wallet, targetWallet], transaction);
     }
 
-    public (Currency currency, Budget budget, Wallet wallet) CreateSingleWalletWithDependencies(Action<Wallet>? configureWallet = null)
+    public (Currency currency, Wallet wallet) CreateSingleWalletWithDependencies(Action<Wallet>? configureWallet = null)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         
         configureWallet?.Invoke(wallet);
         
-        return (currency, budget, wallet);
-    }
-
-    public (Currency currency, Budget budget) CreateBudgetWithDependencies(Action<Budget>? configureBudget = null)
-    {
-        var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.Currency = currency);
-        
-        configureBudget?.Invoke(budget);
-        
-        return (currency, budget);
+        return (currency, wallet);
     }
     
-    public (List<Currency> currencies, List<Budget> budgets, List<Wallet> wallets) CreateManyBudgetsWithManyWalletsWithDifferentCurrencies(int numberOfBudgets = 2, int numberOfWallets = 2, Action<Wallet>? configureWallet = null)
-    {
-        var budgetsWithCurrencies = Enumerable.Range(0, numberOfBudgets).Select(_ => CreateBudgetWithDependencies(b =>
-        {
-            b.Wallets = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
-            {
-                w.Currency = CreateCurrency();
-            })).ToList();
-        })).ToList();
-
-        var budgets = budgetsWithCurrencies.Select(x => x.budget).ToList();
-        var wallets = budgets.SelectMany(b => b.Wallets).ToList();
-        var currencies = budgets.Select(b => b.Currency).ToList();
-        currencies.AddRange(wallets.Select(b => b.Currency));
-        
-        wallets.ForEach(w => configureWallet?.Invoke(w));
-        return (currencies, budgets, wallets);
-    }
-    
-    public (List<Currency> currencies, List<Budget> budgets, List<Wallet> firstSetOfWallets, List<Wallet> secondSetOfWallets) CreateManyBudgetsWithTwoSetsOfWalletsWithDifferentCurrencies(int numberOfBudgets = 2, int numberOfWallets = 2, Action<Wallet>? configureWallet1 = null, Action<Wallet>? configureWallet2 = null)
-    {
-        var budgetsWithCurrencies = Enumerable.Range(0, numberOfBudgets).Select(_ => CreateBudgetWithDependencies(b =>
-        {
-            b.Wallets = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
-            {
-                w.Currency = CreateCurrency();
-            })).ToList();
-        })).ToList();
-
-        var firstPairOfWallets = new List<Wallet>();
-        var secondPairOfWallets = new List<Wallet>();
-        foreach (var pair in budgetsWithCurrencies)
-        {
-            var wallets1 = Enumerable.Range(0, numberOfWallets).Select(_ => CreateWallet(w =>
-            {
-                w.Currency = CreateCurrency();
-            })).ToList();
-        
-            var wallets2 = Enumerable.Range(0, numberOfWallets).Select(_ => CreateWallet(w =>
-            {
-                w.Currency = CreateCurrency();
-            })).ToList();
-            
-            pair.budget.Wallets.AddRange(wallets1);
-            pair.budget.Wallets.AddRange(wallets2);
-            firstPairOfWallets.AddRange(wallets1);
-            secondPairOfWallets.AddRange(wallets2);
-        }
-        
-        var budgets = budgetsWithCurrencies.Select(x => x.budget).ToList();
-        var currencies = budgets.Select(w => w.Currency).ToList();
-        currencies.AddRange(firstPairOfWallets.Select(w => w.Currency));
-        currencies.AddRange(secondPairOfWallets.Select(w => w.Currency));
-        
-        firstPairOfWallets.ForEach(w => configureWallet1?.Invoke(w));
-        secondPairOfWallets.ForEach(w => configureWallet2?.Invoke(w));
-        return (currencies, budgets, firstPairOfWallets, secondPairOfWallets);
-    }
-    
-    public (List<Currency> currencies, Budget budget, List<Wallet> wallets) CreateBudgetAndWalletsWithDifferentCurrencies(int numberOfWallets = 2, Action<Wallet>? configureWallet = null)
-    {
-        var budgetCurrency = CreateCurrency();
-        var budget = CreateBudget(b => b.Currency = budgetCurrency);
-        var wallets = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
-        {
-            w.BudgetId = budget.Id;
-            w.Currency = CreateCurrency();
-        })).ToList();
-
-        var currencies = wallets.Select(w => w.Currency).ToList();
-        currencies.Add(budgetCurrency);
-        
-        wallets.ForEach(w => configureWallet?.Invoke(w));
-        return (currencies, budget, wallets);
-    }
-    
-    public (List<Currency> currencies, Budget budget, List<Wallet> firstSetOfWallets, List<Wallet> secondSetOfWallets) CreateBudgetWithTwoSetsOfWalletsWithDifferentCurrencies(int numberOfWallets = 2, Action<Wallet>? configureWallet1 = null, Action<Wallet>? configureWallet2 = null)
-    {
-        var budgetCurrency = CreateCurrency();
-        var budget = CreateBudget(b => b.Currency = budgetCurrency);
-        var wallets1 = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
-        {
-            w.BudgetId = budget.Id;
-            w.Currency = CreateCurrency();
-        })).ToList();
-        
-        var wallets2 = Enumerable.Range(0, numberOfWallets).Select(i => CreateWallet(w =>
-        {
-            w.BudgetId = budget.Id;
-            w.Currency = CreateCurrency();
-        })).ToList();
-
-        var currencies = wallets1.Select(w => w.Currency).ToList();
-        currencies.AddRange(wallets2.Select(w => w.Currency));
-        currencies.Add(budgetCurrency);
-        
-        wallets1.ForEach(w => configureWallet1?.Invoke(w));
-        wallets2.ForEach(w => configureWallet2?.Invoke(w));
-        return (currencies, budget, wallets1, wallets2);
-    }
-    
-    public (Currency currency, Budget budget, Wallet wallet, Category category, Transaction transaction) CreateSingleTransactionScenario(
+    public (Currency currency, Wallet wallet, Category category, Transaction transaction) CreateSingleTransactionScenario(
         Action<Wallet>? configureWallet = null,
         Action<Category>? configureCategory = null,
         Action<Transaction>? configureTransaction = null)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var category = CreateCategory();
         var transaction = CreateTransaction(t =>
         {
@@ -559,41 +374,31 @@ public class TestDataFactory
         configureCategory?.Invoke(category);
         configureTransaction?.Invoke(transaction);
         
-        return (currency, budget, wallet, category, transaction);
+        return (currency, wallet, category, transaction);
     }
     
-    public (Currency currency, Budget budget, Wallet wallet, Category category) CreateSingleWalletWithCategory(Action<Category>? configureCategory = null, Action<Wallet>? configureWallet = null)
+    public (Currency currency, Wallet wallet, Category category) CreateSingleWalletWithCategory(Action<Category>? configureCategory = null, Action<Wallet>? configureWallet = null)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var category = CreateCategory();
         
         configureCategory?.Invoke(category);
         configureWallet?.Invoke(wallet);
         
-        return (currency, budget, wallet, category);
+        return (currency, wallet, category);
     }
     
-    public (Currency currency, Budget budget, Wallet wallet1, Wallet wallet2) CreatePairOfWallets()
+    public (Currency currency, Wallet wallet1, Wallet wallet2) CreatePairOfWallets()
     {
-        var (currency, budget, wallets) = CreateManyWallets(2);
-        return (currency, budget, wallets[0], wallets[1]);
+        var (currency, wallets) = CreateManyWallets(2);
+        return (currency, wallets[0], wallets[1]);
     }
     
-    public (Currency currency, Budget budget1, Budget budget2, Wallet wallet1, Wallet wallet2) CreatePairOfWalletsForDifferentBudgets()
-    {
-        var (currency, budget1, wallets) = CreateManyWallets(2);
-        var budget2 = CreateBudget(b => b.CurrencyId = currency.Id);
-        wallets[1].BudgetId = budget2.Id;
-        return (currency, budget1, budget2, wallets[0], wallets[1]);
-    }
-    
-    public (Currency currency, Budget budget, Wallet wallet, Category category, List<Transaction> applicableTransactions, List<Transaction> notApplicableTransactions, Goal goal) CreateSingleGoalWithManyTransactions(int numberOfTransactions = 2)
+    public (Currency currency, Wallet wallet, Category category, List<Transaction> applicableTransactions, List<Transaction> notApplicableTransactions, Goal goal) CreateSingleGoalWithManyTransactions(int numberOfTransactions = 2)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var category = CreateCategory();
         var goal = CreateGoal(g =>
         {
@@ -616,14 +421,13 @@ public class TestDataFactory
             t.Type = goal.Type.ToTransactionType();
         });
         
-        return (currency, budget, wallet, category, applicableTransactions, notApplicableTransactions, goal);
+        return (currency, wallet, category, applicableTransactions, notApplicableTransactions, goal);
     }
     
-    public (Currency currency, Budget budget, Wallet wallet, Category category, List<Transaction> pastTransactions, List<Transaction> futureTransactions, Goal goal) CreateSingleGoalWithPastAndFutureApplicableTransactions(int numberOfTransactions = 2)
+    public (Currency currency, Wallet wallet, Category category, List<Transaction> pastTransactions, List<Transaction> futureTransactions, Goal goal) CreateSingleGoalWithPastAndFutureApplicableTransactions(int numberOfTransactions = 2)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var category = CreateCategory();
         var goal = CreateGoal(g =>
         {
@@ -646,12 +450,11 @@ public class TestDataFactory
             t.Type = goal.Type.ToTransactionType();
         });
         
-        return (currency, budget, wallet, category, applicableTransactions, notApplicableTransactions, goal);
+        return (currency, wallet, category, applicableTransactions, notApplicableTransactions, goal);
     }
     
     public (
         Currency currency, 
-        Budget budget, 
         List<Wallet> wallets, 
         Category category, 
         List<Transaction> applicableTransactions, 
@@ -661,9 +464,8 @@ public class TestDataFactory
         ) CreateManyGoalsWithManyTransactions(int numberOfGoals = 2, int numberOfTransactions = 2, int numberOfNotApplicableTransactions = 2, int numberOfTransferTransactions = 2)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet1 = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
-        var wallet2 = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet1 = CreateWallet(w => { w.CurrencyId = currency.Id; });
+        var wallet2 = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var category = CreateCategory();
         var goals = CreateManyGoals(numberOfGoals, g =>
         {
@@ -697,12 +499,11 @@ public class TestDataFactory
             })
         ).SelectMany(t => t).ToList();
         
-        return (currency, budget, [wallet1, wallet2], category, applicableTransactions, notApplicableTransactions, transfers, goals);
+        return (currency, [wallet1, wallet2], category, applicableTransactions, notApplicableTransactions, transfers, goals);
     }
     
         public (
         Currency currency, 
-        Budget budget, 
         Wallet wallet, 
         List<Category> categories, 
         List<Transaction> pastDateTransactions, 
@@ -711,8 +512,7 @@ public class TestDataFactory
         ) CreateManyGoalsWithPastAndFutureApplicableTransactions(int numberOfGoals = 2, int numberOfPastTransactions = 2, int numberOfFutureTransactions = 2)
     {
         var currency = CreateCurrency();
-        var budget = CreateBudget(b => b.CurrencyId = currency.Id);
-        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; w.BudgetId = budget.Id; });
+        var wallet = CreateWallet(w => { w.CurrencyId = currency.Id; });
         var categories = Enumerable.Range(0, numberOfGoals).Select(_ => CreateCategory()).ToList();
         var goals = Enumerable.Range(0, numberOfGoals).Select(i => CreateGoal(g =>
         {
@@ -740,7 +540,7 @@ public class TestDataFactory
             })
         ).SelectMany(t => t).ToList();
         
-        return (currency, budget, wallet, categories, applicableTransactions, notApplicableTransactions, goals);
+        return (currency, wallet, categories, applicableTransactions, notApplicableTransactions, goals);
     }
     
     public (Category parent, Category child) CreateCategoryHierarchyWithSingleChildScenario()

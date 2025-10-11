@@ -18,7 +18,6 @@ namespace WealthTrack.Data.UnitOfWork
             TransactionRepository = new TransactionRepository(_context);
             CurrencyRepository = new CurrencyRepository(_context);
             WalletRepository = new WalletRepository(_context);
-            BudgetRepository = new BudgetRepository(_context);
             GoalRepository = new GoalRepository(_context);
         }
 
@@ -29,8 +28,6 @@ namespace WealthTrack.Data.UnitOfWork
         public ICurrencyRepository CurrencyRepository { get; }
 
         public IWalletRepository WalletRepository { get; }
-
-        public IBudgetRepository BudgetRepository { get; }
 
         public IGoalRepository GoalRepository { get; }
 

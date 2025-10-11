@@ -14,11 +14,7 @@ namespace WealthTrack.Business.BusinessModels.Wallet
 
         public EntityStatus Status { get; set; }
 
-        public WalletType Type { get; set; }
-
         public CurrencyRelatedToWalletDetailsBusinessModel Currency { get; set; }
-
-        public BudgetRelatedToWalletDetailsBusinessModel Budget { get; set; }
 
         public List<TransactionRelatedToWalletDetailsBusinessModel> Transactions { get; set; }
         
@@ -41,18 +37,7 @@ namespace WealthTrack.Business.BusinessModels.Wallet
         
         public CurrencyType Type { get; set; }
     }
-
-    public class BudgetRelatedToWalletDetailsBusinessModel
-    {
-        public Guid Id { get; set; }
-
-        public string Name { get; set; }
-
-        public decimal OverallBalance { get; set; }
-        
-        public EntityStatus Status { get; set; }
-    }
-
+    
     public class TransactionRelatedToWalletDetailsBusinessModel
     {
         public Guid Id { get; set; }

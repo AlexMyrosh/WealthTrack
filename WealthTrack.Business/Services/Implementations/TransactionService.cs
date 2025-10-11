@@ -75,19 +75,19 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new ArgumentException("TransactionDate value is missing");
             }
 
-            if (!model.SourceWalletId.HasValue)
+            if (!model.SourceWalletId.HasValue || model.SourceWalletId == Guid.Empty)
             {
-                throw new ArgumentException("SourceWalletId value is missing");
+                throw new ArgumentException("SourceWalletId value is missing or empty");
             }
             
-            if (!model.TargetWalletId.HasValue)
+            if (!model.TargetWalletId.HasValue || model.TargetWalletId == Guid.Empty)
             {
-                throw new ArgumentException("TargetWalletId value is missing");
+                throw new ArgumentException("TargetWalletId value is missing or empty");
             }
-            
-            if (!await IsWalletsHaveTheSameBudget(model.SourceWalletId.Value, model.TargetWalletId.Value))
+
+            if (model.SourceWalletId == model.TargetWalletId)
             {
-                throw new ArgumentException("Source and Target wallets are from different budgets");
+                throw new ArgumentException("Target and Source Wallets are the same");
             }
 
             var domainModel = mapper.Map<Transaction>(model);
@@ -168,11 +168,6 @@ namespace WealthTrack.Business.Services.Implementations
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
             
-            if (model.WalletId.HasValue && originalModel.WalletId.HasValue && !await IsWalletsHaveTheSameBudget(model.WalletId.Value, originalModel.WalletId.Value))
-            {
-                throw new ArgumentException("Source and Target wallets are from different budgets");
-            }
-            
             await eventPublisher.PublishAsync(new TransactionUpdatedEvent
             {
                 CategoryId_Old = originalModel.CategoryId,
@@ -235,8 +230,8 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 throw new KeyNotFoundException($"Unable to get transaction from database by id - {id.ToString()}");
             }
-            
-            await eventPublisher.PublishAsync(new TransferTransactionUpdatedEvent
+
+            var transferUpdatedEventModel = new TransferTransactionUpdatedEvent
             {
                 Amount_New = model.Amount,
                 Amount_Old = originalModel.Amount,
@@ -244,14 +239,14 @@ namespace WealthTrack.Business.Services.Implementations
                 SourceWalletId_Old = originalModel.SourceWalletId.Value,
                 TargetWalletId_New = model.TargetWalletId,
                 TargetWalletId_Old = originalModel.TargetWalletId.Value,
-            });
-            
+            };
             mapper.Map(model, originalModel);
-            if (!await IsWalletsHaveTheSameBudget(originalModel.SourceWalletId.Value, originalModel.TargetWalletId.Value))
+            if (originalModel.SourceWalletId == originalModel.TargetWalletId)
             {
-                throw new ArgumentException("Source and Target wallets are from different budgets");
+                throw new ArgumentException("Source and Target wallets are the same");
             }
             
+            await eventPublisher.PublishAsync(transferUpdatedEventModel);
             originalModel.ModifiedDate = DateTimeOffset.Now;
             unitOfWork.TransactionRepository.Update(originalModel);
             await unitOfWork.SaveAsync();
@@ -424,28 +419,6 @@ namespace WealthTrack.Business.Services.Implementations
             {
                 await unitOfWork.SaveAsync();
             }
-        }
-
-        private async Task<bool> IsWalletsHaveTheSameBudget(Guid walletId1, Guid walletId2)
-        {
-            var wallet1 = await unitOfWork.WalletRepository.GetByIdAsync(walletId1);
-            var wallet2 = await unitOfWork.WalletRepository.GetByIdAsync(walletId2);
-            if (wallet1 is null)
-            {
-                throw new ArgumentException($"Unable to get wallet by id - {walletId1}");
-            }
-            
-            if (wallet2 is null)
-            {
-                throw new ArgumentException($"Unable to get wallet by id - {walletId1}");
-            }
-
-            if (wallet1.Id == wallet2.Id)
-            {
-                throw new ArgumentException("Wallets are the same");
-            }
-            
-            return wallet1.BudgetId == wallet2.BudgetId;
         }
     }
 }

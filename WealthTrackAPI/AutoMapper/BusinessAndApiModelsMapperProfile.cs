@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
-using WealthTrack.API.ApiModels.Budget;
 using WealthTrack.API.ApiModels.Category;
 using WealthTrack.API.ApiModels.Currency;
 using WealthTrack.API.ApiModels.Goal;
 using WealthTrack.API.ApiModels.Transaction;
 using WealthTrack.API.ApiModels.Wallet;
-using WealthTrack.Business.BusinessModels.Budget;
 using WealthTrack.Business.BusinessModels.Category;
 using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Goal;
@@ -18,12 +16,6 @@ namespace WealthTrack.API.AutoMapper
     {
         public BusinessAndApiModelsMapperProfile()
         {
-            // Budget
-            CreateMap<BudgetUpsertApiModel, BudgetUpsertBusinessModel>();
-            CreateMap<BudgetDetailsBusinessModel, BudgetDetailsApiModel>();
-            CreateMap<CurrencyRelatedToBudgetDetailsBusinessModel, CurrencyRelatedToBudgetDetailsApiModel>();
-            CreateMap<WalletRelatedToBudgetDetailsBusinessModel, WalletRelatedToBudgetDetailsApiModel>();
-            
             // Category
             CreateMap<CategoryUpsertApiModel, CategoryUpsertBusinessModel>();
             CreateMap<CategoryDetailsBusinessModel, CategoryDetailsApiModel>();
@@ -48,7 +40,6 @@ namespace WealthTrack.API.AutoMapper
             CreateMap<WalletUpsertApiModel, WalletUpsertBusinessModel>();
             CreateMap<WalletDetailsBusinessModel, WalletDetailsApiModel>();
             CreateMap<CurrencyRelatedToWalletDetailsBusinessModel, CurrencyRelatedToWalletDetailsApiModel>();
-            CreateMap<BudgetRelatedToWalletDetailsBusinessModel, BudgetRelatedToWalletDetailsApiModel>();
             CreateMap<TransactionRelatedToWalletDetailsBusinessModel, TransactionRelatedToWalletDetailsApiModel>();
         }
     }

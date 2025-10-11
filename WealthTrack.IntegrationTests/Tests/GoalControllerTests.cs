@@ -86,7 +86,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         var scenario = DataFactory.CreateManyGoalsWithManyTransactions(numberOfGoals, numberOfTransactions, numberOfTransactions, numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallets);
         DbContext.Transactions.AddRange(scenario.applicableTransactions);
         DbContext.Transactions.AddRange(scenario.notApplicableTransactions);
@@ -115,7 +114,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         var scenario = DataFactory.CreateManyGoalsWithPastAndFutureApplicableTransactions(numberOfGoals, numberOfTransactions, numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.AddRange(scenario.categories);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.AddRange(scenario.wallet);
         DbContext.Transactions.AddRange(scenario.pastDateTransactions);
         DbContext.Transactions.AddRange(scenario.futureTransactions);
@@ -221,7 +219,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         var scenario = DataFactory.CreateSingleGoalWithManyTransactions(numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.AddRange(scenario.applicableTransactions);
         DbContext.Transactions.AddRange(scenario.notApplicableTransactions);
@@ -249,7 +246,6 @@ public class GoalControllerTests(EmptyWebAppFactory factory) : IntegrationTestBa
         var scenario = DataFactory.CreateSingleGoalWithPastAndFutureApplicableTransactions(numberOfTransactions);
         DbContext.Currencies.Add(scenario.currency);
         DbContext.Categories.Add(scenario.category);
-        DbContext.Budgets.Add(scenario.budget);
         DbContext.Wallets.Add(scenario.wallet);
         DbContext.Transactions.AddRange(scenario.pastTransactions);
         DbContext.Transactions.AddRange(scenario.futureTransactions);
