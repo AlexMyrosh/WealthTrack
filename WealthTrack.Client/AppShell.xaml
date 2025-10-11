@@ -5,8 +5,29 @@
     x:Class="WealthTrack.Client.AppShell"
     FlyoutBehavior="Disabled">
     
+    <!-- Standalone pages (not part of main app structure) -->
     <ShellContent Route="LoadingPage" ContentTemplate="{DataTemplate views:LoadingPage}" />
-    <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
+    <ShellContent Route="OnboardingPage" ContentTemplate="{DataTemplate views:OnboardingPage}" />
     <ShellContent Route="LoginPage" ContentTemplate="{DataTemplate views:LoginPage}" />
     <ShellContent Route="SignUpPage" ContentTemplate="{DataTemplate views:SignUpPage}" />
+    <ShellContent Route="InitialCreationPage" ContentTemplate="{DataTemplate views:InitialCreationPage}" />
+    
+    <TabBar>
+        <ShellContent Title="Wallets" 
+                      Icon="wallet.png"
+                      ContentTemplate="{DataTemplate views:WalletsPage}"/>
+
+        <ShellContent Title="Transactions"
+                      Icon="transactions.png"
+                      Route="TransactionsPage"
+                      ContentTemplate="{DataTemplate views:TransactionsPage}" />
+
+        <ShellContent Title="Goals"
+                      Icon="profile.png"
+                      ContentTemplate="{DataTemplate views:GoalsPage}"/>
+        
+        <ShellContent Title="Configuration"
+                      Icon="settings.png"
+                      ContentTemplate="{DataTemplate views:ConfigurationPage}"/>
+    </TabBar>
 </Shell>

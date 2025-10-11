@@ -1,0 +1,98 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WealthTrack.Client.Views.InitialCreationPage"
+             Title="Getting Started">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="30">
+            
+            <!-- Header -->
+            <StackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="{Binding StepTitle}" 
+                       FontSize="28" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Primary}}" />
+                
+                <Label Text="{Binding StepDescription}" 
+                       FontSize="16" 
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" />
+            </StackLayout>
+            
+            <!-- Wallet Creation Step -->
+            <StackLayout Spacing="20">
+                <Border BackgroundColor="{AppThemeBinding Light={StaticResource Gray50}, Dark={StaticResource Gray800}}" 
+                        StrokeThickness="0"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    
+                    <StackLayout Spacing="15">
+                        <Label Text="Wallet Name" 
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}" />
+                        
+                        <Entry Text="{Binding WalletName}" 
+                               Placeholder="e.g., Cash, Credit Card, ..."
+                               BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray700}}"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}" />
+                        
+                        <Label Text="Initial Balance" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}" />
+                        
+                        <Entry Text="{Binding InitialBalance}" 
+                               Placeholder="0.00"
+                               Keyboard="Numeric"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray700}}"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}" />
+                        
+                        <Label Text="Currency" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}" />
+                        
+                        <Picker ItemsSource="{Binding Currencies}"
+                                SelectedItem="{Binding SelectedCurrency}"
+                                ItemDisplayBinding="{Binding Code}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource Gray700}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}">
+                        </Picker>
+                    </StackLayout>
+                </Border>
+                
+                <StackLayout Orientation="Horizontal" Spacing="10">
+                    <Button Text="Create Wallet" 
+                            Command="{Binding CreateWalletCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            FontSize="16"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            HorizontalOptions="FillAndExpand" />
+                    
+                    <Button Text="Create later" 
+                            Command="{Binding SkipWalletCommand}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                            TextColor="{AppThemeBinding Light={StaticResource Gray700}, Dark={StaticResource Gray300}}"
+                            CornerRadius="8"
+                            FontSize="16"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            HorizontalOptions="FillAndExpand" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                              IsVisible="{Binding IsBusy}"
+                              Color="{StaticResource Primary}"
+                              HorizontalOptions="Center" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

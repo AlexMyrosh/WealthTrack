@@ -97,5 +97,26 @@
       <None Remove="Resources\AppIcon\appicon.png" />
       <MauiIcon Include="Resources\AppIcon\appicon.png" />
     </ItemGroup>
+
+    <ItemGroup>
+      <MauiXaml Update="Views\InitialCreationPage.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\InitialCreationPage.xaml.cs">
+        <DependentUpon>InitialCreationPage.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Views\InitialCreationPage.xaml" />
+      <AdditionalFiles Include="Views\LoadingPage.xaml" />
+      <AdditionalFiles Include="Views\LoginPage.xaml" />
+      <AdditionalFiles Include="Views\OnboardingPage.xaml" />
+      <AdditionalFiles Include="Views\SignUpPage.xaml" />
+    </ItemGroup>
     
 </Project>

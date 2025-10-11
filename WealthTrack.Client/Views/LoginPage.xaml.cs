@@ -1,3 +1,4 @@
+using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Client.Services;
 using WealthTrack.Client.Services.Interfaces;
 
@@ -6,11 +7,13 @@ namespace WealthTrack.Client.Views;
 public partial class LoginPage : ContentPage
 {
     private readonly IAuthService _authService;
+    private readonly IWalletService _walletService;
     
-    public LoginPage(IAuthService authService)
+    public LoginPage(IAuthService authService, IWalletService walletService)
     {
         InitializeComponent();
         _authService = authService;
+        _walletService = walletService;
     }
 
     private async void OnLoginClicked(object sender, EventArgs e)
@@ -26,7 +29,7 @@ public partial class LoginPage : ContentPage
         
         if (await _authService.LoginAsync(email, password))
         {
-            await Shell.Current.GoToAsync("//MainPage");
+            await MoveToNextStepAsync();
         }
         else
         {
@@ -43,7 +46,7 @@ public partial class LoginPage : ContentPage
     {
         if (await _authService.LoginWithGoogleAsync())
         {
-            await Shell.Current.GoToAsync("//MainPage");
+            await MoveToNextStepAsync();
         }
         else
         {
@@ -55,7 +58,7 @@ public partial class LoginPage : ContentPage
     {
         if (await _authService.LoginWithAppleAsync())
         {
-            await Shell.Current.GoToAsync("//MainPage");
+            await MoveToNextStepAsync();
         }
         else
         {
@@ -67,7 +70,7 @@ public partial class LoginPage : ContentPage
     {
         if (await _authService.LoginWithMicrosoftAsync())
         {
-            await Shell.Current.GoToAsync("//MainPage");
+            await MoveToNextStepAsync();
         }
         else
         {
@@ -78,6 +81,26 @@ public partial class LoginPage : ContentPage
     private async void OnContinueWithoutAccountClicked(object sender, EventArgs e)
     {
         await _authService.ContinueWithoutAccountAsync();
-        await Shell.Current.GoToAsync("//MainPage");
+        await MoveToNextStepAsync();
+    }
+
+    private async Task MoveToNextStepAsync()
+    {
+        var wallets = await _walletService.GetAllAsync();
+        if (wallets.Count == 0)
+        {
+            await Shell.Current.GoToAsync("//InitialCreationPage");
+        }
+        else
+        {
+            var session = await _authService.GetUserSessionAsync();
+            if (session is not null)
+            {
+                session.IsIntroductionCompleted = true;
+                await _authService.SaveUserSessionAsync(session);
+            }
+        
+            await Shell.Current.GoToAsync("//TransactionsPage");
+        }
     }
 }

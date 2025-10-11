@@ -27,7 +27,7 @@ public partial class SignUpPage : ContentPage
         
         if (await _authService.SignUpAsync(firstName, lastName, email, password))
         {
-            await Shell.Current.GoToAsync("//MainPage");
+            await Shell.Current.GoToAsync("//TransactionsPage");
         }
         else
         {

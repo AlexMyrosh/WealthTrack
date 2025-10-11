@@ -17,10 +17,10 @@ using WealthTrack.Business.Seeders;
 using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Client.Models;
-using WealthTrack.Client.Services;
 using WealthTrack.Client.Services.Implementations;
 using WealthTrack.Client.Services.Interfaces;
 using WealthTrack.Client.Views;
+using WealthTrack.Client.ViewModels;
 using WealthTrack.Data.Context;
 using WealthTrack.Data.UnitOfWork;
 
@@ -78,7 +78,6 @@ public static class MauiProgram
         services.AddScoped<ICurrencyService, CurrencyService>();
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IWalletService, WalletService>();
-        services.AddScoped<IBudgetService, BudgetService>();
         services.AddScoped<IGoalService, GoalService>();
 
         services.AddScoped<CurrenciesSeeder>();
@@ -94,13 +93,19 @@ public static class MauiProgram
 
         services.AddScoped<IEventPublisher, EventPublisher>();
         
-        services.AddSingleton<ApiClient>();
-
         // Pages
-        services.AddTransient<MainPage>();
         services.AddTransient<LoginPage>();
         services.AddTransient<SignUpPage>();
         services.AddTransient<LoadingPage>();
+        services.AddTransient<OnboardingPage>();
+        services.AddTransient<InitialCreationPage>();
+        services.AddTransient<WalletsPage>();
+        services.AddTransient<TransactionsPage>();
+        services.AddTransient<GoalsPage>();
+        services.AddTransient<ConfigurationPage>();
+        
+        // ViewModels
+        services.AddTransient<OnboardingViewModel>();
     }
     
     private static void EnsureDatabaseCreated(IServiceProvider services)

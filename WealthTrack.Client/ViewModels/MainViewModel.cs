@@ -3,6 +3,7 @@ using System.Windows.Input;
 using WealthTrack.Client.Models;
 using WealthTrack.Client.Services.Interfaces;
 using CommunityToolkit.Mvvm.Input;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Client.ViewModels;
 

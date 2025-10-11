@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Microsoft.Identity.Client;
 using WealthTrack.Client.Models;
 using WealthTrack.Client.Services.Interfaces;
+using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Client.Services.Implementations;
 
@@ -216,6 +217,12 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
 
         return JsonSerializer.Deserialize<UserSession>(json);
     }
+    
+    public async Task SaveUserSessionAsync(UserSession session)
+    {
+        var json = JsonSerializer.Serialize(session);
+        await SecureStorage.SetAsync(StorageKey, json);
+    }
 
     private static string GetPlatform()
     {
@@ -242,11 +249,5 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
-    }
-    
-    private async Task SaveUserSessionAsync(UserSession session)
-    {
-        var json = JsonSerializer.Serialize(session);
-        await SecureStorage.SetAsync(StorageKey, json);
     }
 }

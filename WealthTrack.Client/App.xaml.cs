@@ -1,5 +1,4 @@
 ﻿using WealthTrack.Client.Services.Interfaces;
-using WealthTrack.Client.Views;
 
 namespace WealthTrack.Client;
 
@@ -27,14 +26,20 @@ public partial class App : Application
 
     private async Task InitializeAppAsync()
     {
-        // Start with loading page
         await Shell.Current.GoToAsync("//LoadingPage");
         
         var session = await _authService.GetUserSessionAsync();
-
-        if (session != null)
-            await Shell.Current.GoToAsync("//MainPage");
+        if (session is { IsIntroductionCompleted: true })
+        {
+            await Shell.Current.GoToAsync("//TransactionsPage");
+        }
+        else if (session is { IsIntroductionCompleted: false })
+        {
+            await Shell.Current.GoToAsync("//InitialCreationPage");
+        }
         else
-            await Shell.Current.GoToAsync("//LoginPage");
+        {
+            await Shell.Current.GoToAsync("//OnboardingPage");
+        }
     }
 }

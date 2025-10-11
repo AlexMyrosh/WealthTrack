@@ -1,4 +1,4 @@
-namespace WealthTrack.Client.Models;
+namespace WealthTrack.Shared.Enums;
 
 public enum LoginMode
 {
