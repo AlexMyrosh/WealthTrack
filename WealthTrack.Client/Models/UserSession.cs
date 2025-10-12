@@ -10,6 +10,12 @@ public class UserSession
     
     public string Email { get; set; } = string.Empty;
     
+    public Guid? AccountCurrencyId { get; set; }
+    
+    public CustomAppTheme? SelectedAppTheme { get; set; }
+    
+    public bool IsSyncEnabled { get; set; }
+    
     public string Token { get; set; } = string.Empty;
     
     public LoginMode CurrentLoginMode { get; set; }

@@ -105,6 +105,11 @@ namespace WealthTrack.Business.Services.Implementations
             await unitOfWork.SaveAsync();
         }
 
+        public async Task<bool> AnyAsync()
+        {
+            return await unitOfWork.WalletRepository.AnyAsync();
+        }
+
         public async Task HardDeleteAsync(Guid id, bool shouldBeSaved = true)
         {
             if (id == Guid.Empty)

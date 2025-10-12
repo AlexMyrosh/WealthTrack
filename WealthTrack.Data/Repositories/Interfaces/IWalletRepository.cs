@@ -16,6 +16,8 @@ namespace WealthTrack.Data.Repositories.Interfaces
 
         public Task HardDeleteAsync(Wallet model);
 
+        public Task<bool> AnyAsync();
+
         public void BulkHardDelete(IEnumerable<Wallet> models);
     }
 }

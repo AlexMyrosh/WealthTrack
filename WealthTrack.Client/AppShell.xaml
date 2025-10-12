@@ -2,32 +2,39 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:WealthTrack.Client.Views"
+    xmlns:onboarding="clr-namespace:WealthTrack.Client.Views.Onboarding"
+    xmlns:account="clr-namespace:WealthTrack.Client.Views.Account"
+    xmlns:wallet="clr-namespace:WealthTrack.Client.Views.Wallet"
+    xmlns:transaction="clr-namespace:WealthTrack.Client.Views.Transaction"
+    xmlns:goal="clr-namespace:WealthTrack.Client.Views.Goal"
+    xmlns:configuration="clr-namespace:WealthTrack.Client.Views.Configuration"
     x:Class="WealthTrack.Client.AppShell"
     FlyoutBehavior="Disabled">
     
     <!-- Standalone pages (not part of main app structure) -->
     <ShellContent Route="LoadingPage" ContentTemplate="{DataTemplate views:LoadingPage}" />
-    <ShellContent Route="OnboardingPage" ContentTemplate="{DataTemplate views:OnboardingPage}" />
-    <ShellContent Route="LoginPage" ContentTemplate="{DataTemplate views:LoginPage}" />
-    <ShellContent Route="SignUpPage" ContentTemplate="{DataTemplate views:SignUpPage}" />
-    <ShellContent Route="InitialCreationPage" ContentTemplate="{DataTemplate views:InitialCreationPage}" />
+    <ShellContent Route="OnboardingPage" ContentTemplate="{DataTemplate onboarding:OnboardingPage}" />
+    <ShellContent Route="LoginPage" ContentTemplate="{DataTemplate account:LoginPage}" />
+    <ShellContent Route="AccountCreationPage" ContentTemplate="{DataTemplate account:AccountCreationPage}" />
+    <ShellContent Route="InitialCreationPage" ContentTemplate="{DataTemplate onboarding:InitialCreationPage}" />
+    <ShellContent Route="InitialAccountConfigurationPage" ContentTemplate="{DataTemplate onboarding:InitialAccountConfigurationPage}" />
     
     <TabBar>
         <ShellContent Title="Wallets" 
                       Icon="wallet.png"
-                      ContentTemplate="{DataTemplate views:WalletsPage}"/>
+                      ContentTemplate="{DataTemplate wallet:WalletsPage}"/>
 
         <ShellContent Title="Transactions"
                       Icon="transactions.png"
                       Route="TransactionsPage"
-                      ContentTemplate="{DataTemplate views:TransactionsPage}" />
+                      ContentTemplate="{DataTemplate transaction:TransactionsPage}" />
 
         <ShellContent Title="Goals"
                       Icon="profile.png"
-                      ContentTemplate="{DataTemplate views:GoalsPage}"/>
+                      ContentTemplate="{DataTemplate goal:GoalsPage}"/>
         
         <ShellContent Title="Configuration"
                       Icon="settings.png"
-                      ContentTemplate="{DataTemplate views:ConfigurationPage}"/>
+                      ContentTemplate="{DataTemplate configuration:ConfigurationPage}"/>
     </TabBar>
 </Shell>

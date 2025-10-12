@@ -7,6 +7,12 @@ public interface IAuthService
     public Task<bool> LoginAsync(string email, string password);
     
     public Task<bool> SignUpAsync(string firstName, string lastName, string email, string password);
+
+    public Task<bool> RequestPasswordResetAsync(string email);
+
+    public Task<string?> VerifyResetCodeAsync(string email, string code);
+
+    public Task<bool> ResetPasswordAsync(string token, string newPassword);
     
     public Task<bool> LoginWithGoogleAsync();
     

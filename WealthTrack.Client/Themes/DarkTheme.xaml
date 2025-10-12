@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="WealthTrack.Client.Themes.DarkTheme">
+
+    <Color x:Key="ContentPageBackground">#1C1C1E</Color>
+    <Color x:Key="TitleColor">#FFFFFF</Color>
+    <Color x:Key="NavigationElementColor">#0A84FF</Color>
+    <Color x:Key="EntryBackground">#2C2C2E</Color>
+    <Color x:Key="EntryTextColor">#FFFFFF</Color>
+    <Color x:Key="ButtonBackground">#0A84FF</Color>
+    <Color x:Key="ButtonDisabledBackground">#80BFFF</Color>
+    <Color x:Key="ButtonTextColor">#FFFFFF</Color>
+    <Color x:Key="LabelTextColor">#FFFFFF</Color>
+    <Color x:Key="BorderBackground">#3A3A3C</Color>
+    <Color x:Key="PickerBackground">#2C2C2E</Color>
+    <Color x:Key="PickerTextColor">#FFFFFF</Color>
+    <Color x:Key="LoadingSpinnerColor">#0A84FF</Color>
+    
+    <!-- Social buttons -->
+    <Color x:Key="GoogleButtonBackground">#C1351D</Color>
+    <Color x:Key="AppleButtonBackground">#E5E5E5</Color>
+    <Color x:Key="MicrosoftButtonBackground">#4169E1</Color>
+    <Color x:Key="SocialButtonTextColor">#000000</Color>
+    
+</ResourceDictionary>

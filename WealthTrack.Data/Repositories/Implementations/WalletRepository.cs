@@ -60,12 +60,12 @@ namespace WealthTrack.Data.Repositories.Implementations
 
         public async Task HardDeleteAsync(Wallet model)
         {
-            // await context.TransferTransactions
-            //     .Where(t => t.SourceWalletId == model.Id || t.TargetWalletId == model.Id)
-            //     .ExecuteDeleteAsync();
+            context.Wallets.Remove(model);
+        }
 
-            context.Entry(model).State = EntityState.Deleted;
-            //context.Wallets.Remove(model);
+        public async Task<bool> AnyAsync()
+        {
+            return await context.Wallets.AnyAsync();
         }
         
         public void BulkHardDelete(IEnumerable<Wallet> models)

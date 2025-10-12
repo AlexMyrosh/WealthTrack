@@ -8,7 +8,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Client.Services.Implementations;
 
-public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
+public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthService
 {
     private const string StorageKey = "user-session";
 
@@ -16,7 +16,7 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
     {
         try
         {
-            var response = await http.PostAsJsonAsync("api/auth/login", new
+            var response = await httpClient.PostAsJsonAsync("api/auth/login", new
             {
                 Email = email,
                 Password = password
@@ -46,7 +46,7 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
 
     public async Task<bool> SignUpAsync(string firstName, string lastName, string email, string password)
     {
-        var response = await http.PostAsJsonAsync("api/auth/register", new
+        var response = await httpClient.PostAsJsonAsync("api/auth/register", new
         {
             FirstName = firstName,
             LastName = lastName,
@@ -69,6 +69,27 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
         session.CurrentLoginMode = LoginMode.Registered;
         await SaveUserSessionAsync(session);
         return true;
+    }
+
+    public async Task<bool> RequestPasswordResetAsync(string email)
+    {
+        var response = await httpClient.PostAsJsonAsync("api/auth/request-password-reset", new { email });
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<string?> VerifyResetCodeAsync(string email, string code)
+    {
+        var response = await httpClient.PostAsJsonAsync("api/auth/verify-reset-code", new { email, code });
+        if (!response.IsSuccessStatusCode) return null;
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return json.GetProperty("token").GetString();
+    }
+
+    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    {
+        var response = await httpClient.PostAsJsonAsync("api/auth/reset-password", new { token, newPassword });
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<bool> LoginWithGoogleAsync()
@@ -108,7 +129,7 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
             if (!result.Properties.TryGetValue("code", out var code))
                 return false;
             
-            var response = await http.PostAsJsonAsync("api/auth/oauth/google", new
+            var response = await httpClient.PostAsJsonAsync("api/auth/oauth/google", new
             {
                 Code = code,
                 ClientId = google.ClientId,
@@ -169,7 +190,7 @@ public class AuthService(HttpClient http, OAuthSettings settings) : IAuthService
         }
         
         var token = result.AccessToken;
-        var response = await http.PostAsJsonAsync("api/auth/oauth/microsoft", new
+        var response = await httpClient.PostAsJsonAsync("api/auth/oauth/microsoft", new
         {
             Token = token
         });

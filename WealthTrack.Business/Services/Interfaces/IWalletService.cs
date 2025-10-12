@@ -12,6 +12,8 @@ namespace WealthTrack.Business.Services.Interfaces
 
         public Task UpdateAsync(Guid id, WalletUpsertBusinessModel model);
 
+        public Task<bool> AnyAsync();
+
         public Task HardDeleteAsync(Guid id, bool shouldBeSaved = true);
         
         public Task BulkHardDeleteAsync(List<Guid> ids, bool shouldBeSaved = true);

@@ -20,7 +20,13 @@ using WealthTrack.Client.Models;
 using WealthTrack.Client.Services.Implementations;
 using WealthTrack.Client.Services.Interfaces;
 using WealthTrack.Client.Views;
-using WealthTrack.Client.ViewModels;
+using WealthTrack.Client.ViewModels.Onboarding;
+using WealthTrack.Client.Views.Account;
+using WealthTrack.Client.Views.Configuration;
+using WealthTrack.Client.Views.Goal;
+using WealthTrack.Client.Views.Onboarding;
+using WealthTrack.Client.Views.Transaction;
+using WealthTrack.Client.Views.Wallet;
 using WealthTrack.Data.Context;
 using WealthTrack.Data.UnitOfWork;
 
@@ -79,6 +85,10 @@ public static class MauiProgram
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IGoalService, GoalService>();
+        
+        services.AddScoped<IDialogService, DialogService>();
+        services.AddScoped<INavigationService, NavigationService>();
+        services.AddScoped<IThemeService, ThemeService>();
 
         services.AddScoped<CurrenciesSeeder>();
         services.AddScoped<SystemCategoriesSeeder>();
@@ -95,7 +105,7 @@ public static class MauiProgram
         
         // Pages
         services.AddTransient<LoginPage>();
-        services.AddTransient<SignUpPage>();
+        services.AddTransient<AccountCreationPage>();
         services.AddTransient<LoadingPage>();
         services.AddTransient<OnboardingPage>();
         services.AddTransient<InitialCreationPage>();

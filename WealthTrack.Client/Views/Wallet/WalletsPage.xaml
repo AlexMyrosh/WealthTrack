@@ -1,0 +1,16 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WealthTrack.Client.Views.Wallet.WalletsPage"
+             Title="Wallets"
+             Shell.NavBarIsVisible="False">
+
+    <VerticalStackLayout Padding="20" Spacing="20">
+        <Label Text="Wallets"
+               FontSize="24"
+               HorizontalOptions="Center" />
+
+        <Label Text="Manage your wallets and accounts here!"
+               FontSize="16"
+               HorizontalOptions="Center" />
+    </VerticalStackLayout>
+</ContentPage>

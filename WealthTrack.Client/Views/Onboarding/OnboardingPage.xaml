@@ -1,0 +1,127 @@
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WealthTrack.Client.Views.Onboarding.OnboardingPage"
+             BackgroundColor="{DynamicResource ContentPageBackground}">
+    
+    <Grid>
+        <CarouselView x:Name="OnboardingCarousel" 
+                      ItemsSource="{Binding OnboardingItems}"
+                      CurrentItem="{Binding CurrentItem}"
+                      IsSwipeEnabled="True"
+                      Loop="False">
+            <CarouselView.ItemTemplate>
+                <DataTemplate>
+                    <ScrollView>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            
+                            <!-- Title (pinned to top) -->
+                            <Label Grid.Row="0"
+                                   Text="{Binding Title}" 
+                                   FontSize="28" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{DynamicResource TitleColor}"
+                                   LineBreakMode="WordWrap"
+                                   Padding="20,40,20,20" />
+                            
+                            <!-- Description (pinned to middle) -->
+                            <Label Grid.Row="1"
+                                   Text="{Binding Description}" 
+                                   FontSize="16" 
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   HorizontalTextAlignment="Center"
+                                   TextColor="{DynamicResource LabelTextColor}"
+                                   LineBreakMode="WordWrap"
+                                   Padding="40,0,40,0" />
+                            
+                            <!-- Get Started Button (only on login page) -->
+                            <StackLayout Grid.Row="2" 
+                                         HorizontalOptions="Center"
+                                         Padding="40,20,40,0"
+                                         IsVisible="{Binding IsLoginPage}">
+                                <Button Text="Get Started"
+                                        BackgroundColor="{DynamicResource ButtonBackground}"
+                                        TextColor="{DynamicResource ButtonTextColor}"
+                                        FontSize="16"
+                                        HorizontalOptions="Center"
+                                        Padding="40,15"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NextCommand}" />
+                            </StackLayout>
+                            
+                            <!-- Navigation with Arrows and Page Indicators -->
+                            <Grid Grid.Row="2" Padding="40,20,40,10" IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShowNavigation}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Left Arrow -->
+                                <Label Grid.Column="0"
+                                       Text="◀" 
+                                       FontSize="24"
+                                       TextColor="{DynamicResource NavigationElementColor}"
+                                       VerticalOptions="Center"
+                                       IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShowLeftArrow}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.PreviousCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                
+                                <!-- Page Indicators -->
+                                <StackLayout Grid.Column="1" 
+                                             Orientation="Horizontal" 
+                                             HorizontalOptions="Center" 
+                                             Spacing="8" 
+                                             VerticalOptions="Center">
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                    <Label Text="●" FontSize="12" TextColor="{DynamicResource NavigationElementColor}" />
+                                </StackLayout>
+                                
+                                <!-- Right Arrow -->
+                                <Label Grid.Column="2"
+                                       Text="▶" 
+                                       FontSize="24"
+                                       TextColor="{DynamicResource NavigationElementColor}"
+                                       VerticalOptions="Center"
+                                       IsVisible="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ShowRightArrow}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.NextCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </Grid>
+                            
+                            <!-- Skip Button (reduced distance from navigation bullets) -->
+                            <StackLayout Grid.Row="3" 
+                                         HorizontalOptions="Center"
+                                         Padding="40,0,40,20">
+                                <Label Text="Skip" 
+                                       FontSize="16"
+                                       TextColor="{DynamicResource LabelTextColor}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center"
+                                       IsVisible="{Binding ShowSkipButton}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SkipCommand}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </StackLayout>
+                        </Grid>
+                    </ScrollView>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:account="clr-namespace:WealthTrack.Client.ViewModels.Account" x:Class="WealthTrack.Client.Views.Account.LoginPage" 
+             x:DataType="account:LoginViewModel"
+             BackgroundColor="{DynamicResource ContentPageBackground}">
+    <ScrollView>
+        <VerticalStackLayout Padding="30" Spacing="20">
+            <Label Text="Welcome to WealthTrack" FontSize="28" FontAttributes="Bold" HorizontalOptions="Center" TextColor="{DynamicResource TitleColor}"/>
+            <Entry Text="{Binding Email}" 
+               Placeholder="Email"
+               Keyboard="Email"
+               ClearButtonVisibility="WhileEditing"
+               BackgroundColor="{DynamicResource EntryBackground}"
+               TextColor="{DynamicResource EntryTextColor}" 
+            />
+            <Entry Text="{Binding Password}" 
+               Placeholder="Password"
+               IsPassword="True"
+               ClearButtonVisibility="WhileEditing"
+               BackgroundColor="{DynamicResource EntryBackground}"
+               TextColor="{DynamicResource EntryTextColor}"
+            />
+            
+            <Button Text="Log in" 
+                Command="{Binding RegularLoginCommand}"
+                BackgroundColor="{DynamicResource ButtonBackground}"
+                TextColor="{DynamicResource ButtonTextColor}"
+                CornerRadius="8"
+                FontSize="16"
+                FontAttributes="Bold"
+                HeightRequest="50"
+            />
+            
+            <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Reset password" TextColor="#007AFF" TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ResetPasswordCommand}"/>
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            
+            <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Don't have an account? " />
+                        <Span Text="Sign up" TextColor="#007AFF" TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding NavigateToAccountCreationPageCommand}"/>
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            
+            <Label Text="or" HorizontalOptions="Center" TextColor="Gray" />
+
+            <VerticalStackLayout Spacing="20">
+                <Button Text="Continue with Google" 
+                        Command="{Binding GoogleLoginCommand}"
+                        BackgroundColor="{DynamicResource GoogleButtonBackground}"
+                        TextColor="{DynamicResource SocialButtonTextColor}"
+                        CornerRadius="8"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="50"
+                />
+                
+                <Button Text="Continue with Apple" 
+                        Command="{Binding AppleLoginCommand}"
+                        BackgroundColor="{DynamicResource AppleButtonBackground}"
+                        TextColor="{DynamicResource SocialButtonTextColor}"
+                        CornerRadius="8"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="50">
+                    <Button.IsVisible>
+                        <OnPlatform x:TypeArguments="x:Boolean">
+                            <On Platform="iOS" Value="True" />
+                            <On Platform="MacCatalyst" Value="True" />
+                            <On Platform="Android" Value="False" />
+                            <On Platform="WinUI" Value="False" />
+                        </OnPlatform>
+                    </Button.IsVisible>
+                </Button>
+                
+                <Button Text="Continue with Microsoft" 
+                        Command="{Binding MicrosoftLoginCommand}"
+                        BackgroundColor="{DynamicResource MicrosoftButtonBackground}"
+                        TextColor="{DynamicResource SocialButtonTextColor}"
+                        CornerRadius="8"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="50"
+                />
+            </VerticalStackLayout>
+            
+            <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Continue without account yet" TextDecorations="Underline">
+                            <Span.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ContinueWithoutAccountCommand}" />
+                            </Span.GestureRecognizers>
+                        </Span>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

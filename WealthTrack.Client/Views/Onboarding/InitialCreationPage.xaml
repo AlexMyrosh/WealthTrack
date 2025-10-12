@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="WealthTrack.Client.Views.Onboarding.InitialCreationPage"
+             BackgroundColor="{DynamicResource ContentPageBackground}"
+             Title="Getting Started">
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="30">
+            
+            <!-- Header -->
+            <StackLayout Spacing="10" HorizontalOptions="Center">
+                <Label Text="{Binding StepTitle}" 
+                       FontSize="28" 
+                       FontAttributes="Bold" 
+                       HorizontalOptions="Center"
+                       TextColor="{DynamicResource TitleColor}" />
+                
+                <Label Text="{Binding StepDescription}" 
+                       FontSize="16" 
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"
+                       TextColor="{DynamicResource LabelTextColor}" />
+            </StackLayout>
+            
+            <!-- Wallet Creation Step -->
+            <StackLayout Spacing="20">
+                <Border BackgroundColor="{DynamicResource BorderBackground}" 
+                        StrokeThickness="0"
+                        Padding="20">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12" />
+                    </Border.StrokeShape>
+                    
+                    <StackLayout Spacing="15">
+                        <Label Text="Wallet Name" 
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{DynamicResource LabelTextColor}" />
+                        
+                        <Entry Text="{Binding WalletName}" 
+                               Placeholder="e.g., Cash, Credit Card, ..."
+                               BackgroundColor="{DynamicResource EntryBackground}"
+                               TextColor="{DynamicResource EntryTextColor}" />
+                        
+                        <Label Text="Initial Balance" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{DynamicResource LabelTextColor}" />
+                        
+                        <Entry Text="{Binding InitialBalance}" 
+                               Placeholder="0.00"
+                               Keyboard="Numeric"
+                               BackgroundColor="{DynamicResource EntryBackground}"
+                               TextColor="{DynamicResource EntryTextColor}" />
+                        
+                        <Label Text="Currency" 
+                               FontSize="16" 
+                               FontAttributes="Bold"
+                               TextColor="{DynamicResource LabelTextColor}" />
+                        
+                        <Picker ItemsSource="{Binding Currencies}"
+                                SelectedItem="{Binding SelectedCurrency}"
+                                ItemDisplayBinding="{Binding Code}"
+                                BackgroundColor="{DynamicResource PickerBackground}"
+                                TextColor="{DynamicResource PickerTextColor}">
+                        </Picker>
+                    </StackLayout>
+                </Border>
+                
+                <StackLayout Orientation="Horizontal" Spacing="10">
+                    <Button Text="Create Wallet" 
+                            Command="{Binding CreateWalletCommand}"
+                            BackgroundColor="{DynamicResource ButtonBackground}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            CornerRadius="8"
+                            FontSize="16"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            HorizontalOptions="FillAndExpand" />
+                    
+                    <Button Text="Create later" 
+                            Command="{Binding SkipWalletCommand}"
+                            BackgroundColor="{DynamicResource ButtonBackground}"
+                            TextColor="{DynamicResource ButtonTextColor}"
+                            CornerRadius="8"
+                            FontSize="16"
+                            FontAttributes="Bold"
+                            HeightRequest="50"
+                            HorizontalOptions="FillAndExpand" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                              IsVisible="{Binding IsBusy}"
+                              Color="{DynamicResource LoadingSpinnerColor}"
+                              HorizontalOptions="Center" />
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
