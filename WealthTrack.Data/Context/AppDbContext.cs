@@ -44,8 +44,8 @@ namespace WealthTrack.Data.Context
                 
                 entity.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Category_Name_NotEmpty", $"LEN([{nameof(Category.Name)}]) > 0");
-                    t.HasCheckConstraint("CK_Category_IconName_NotEmpty", $"LEN([{nameof(Category.IconName)}]) > 0");
+                    t.HasCheckConstraint("CK_Category_Name_NotEmpty", $"LENGTH([{nameof(Category.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Category_IconName_NotEmpty", $"LENGTH([{nameof(Category.IconName)}]) > 0");
                 });
             });
 
@@ -67,7 +67,7 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(10);
 
                 entity.Property(e => e.ExchangeRate)
-                    .HasColumnType("decimal(18,9)")
+                    .HasPrecision(18, 9)
                     .IsRequired();
                 
                 entity.Property(e => e.Type)
@@ -76,9 +76,9 @@ namespace WealthTrack.Data.Context
                 
                 entity.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Currency_Name_NotEmpty", $"LEN([{nameof(Currency.Name)}]) > 0");
-                    t.HasCheckConstraint("CK_Currency_Code_NotEmpty", $"LEN([{nameof(Currency.Code)}]) > 0");
-                    t.HasCheckConstraint("CK_Currency_Symbol_NotEmpty", $"LEN([{nameof(Currency.Symbol)}]) > 0");
+                    t.HasCheckConstraint("CK_Currency_Name_NotEmpty", $"LENGTH([{nameof(Currency.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Currency_Code_NotEmpty", $"LENGTH([{nameof(Currency.Code)}]) > 0");
+                    t.HasCheckConstraint("CK_Currency_Symbol_NotEmpty", $"LENGTH([{nameof(Currency.Symbol)}]) > 0");
                 });
             });
 
@@ -91,7 +91,7 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(100);
 
                 entity.Property(e => e.Balance)
-                    .HasColumnType("decimal(18,9)")
+                    .HasPrecision(18, 9)
                     .IsRequired();
 
                 entity.Property(e => e.IsPartOfGeneralBalance)
@@ -117,7 +117,7 @@ namespace WealthTrack.Data.Context
                 
                 entity.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Wallet_Name_NotEmpty", $"LEN([{nameof(Wallet.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Wallet_Name_NotEmpty", $"LENGTH([{nameof(Wallet.Name)}]) > 0");
                 });
             });
 
@@ -126,7 +126,7 @@ namespace WealthTrack.Data.Context
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Amount)
-                    .HasColumnType("decimal(18,9)")
+                    .HasPrecision(18, 9)
                     .IsRequired();
 
                 entity.Property(e => e.Description)
@@ -181,7 +181,7 @@ namespace WealthTrack.Data.Context
                     .HasMaxLength(100);
                 
                 entity.Property(e => e.PlannedMoneyAmount)
-                    .HasColumnType("decimal(18,9)")
+                    .HasPrecision(18, 9)
                     .IsRequired();
                 
                 entity.Property(e => e.Type)
@@ -226,7 +226,7 @@ namespace WealthTrack.Data.Context
 
                 entity.ToTable(t =>
                 {
-                    t.HasCheckConstraint("CK_Goal_Name_NotEmpty", $"LEN([{nameof(Goal.Name)}]) > 0");
+                    t.HasCheckConstraint("CK_Goal_Name_NotEmpty", $"LENGTH([{nameof(Goal.Name)}]) > 0");
                 });
             });
         }

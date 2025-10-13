@@ -159,6 +159,10 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
 
     public async Task<bool> LoginWithAppleAsync()
     {
+        var authUrl = new Uri("https://appleid.apple.com/auth/authorize?..."); // Ваш auth URL
+        var callbackUrl = new Uri("myapp://");
+        var result = await WebAuthenticator.Default.AuthenticateAsync(authUrl, callbackUrl);
+
         // Just a mock at the moment
         await Task.Delay(500);
         var session = new UserSession

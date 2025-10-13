@@ -62,7 +62,7 @@ namespace WealthTrack.API
             services.AddOpenApi();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
+            services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
 
             services.AddAutoMapper(cfg =>
             {

@@ -68,8 +68,12 @@ public static class MauiProgram
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString).LogTo(Console.WriteLine, LogLevel.Information));
+        services.AddDbContext<AppDbContext>(options =>
+        {
+            var dbFileName = configuration["DbName"]!;
+            var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), dbFileName);
+            options.UseSqlite($"Data Source={dbPath}").LogTo(Console.WriteLine, LogLevel.Information);
+        });
 
         services.AddAutoMapper(cfg =>
         {

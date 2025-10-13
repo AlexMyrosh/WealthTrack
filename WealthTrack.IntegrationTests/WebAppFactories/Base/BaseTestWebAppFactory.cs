@@ -35,7 +35,7 @@ public abstract class BaseTestWebAppFactory : WebApplicationFactory<Program>
             services.AddDbContext<AppDbContext>(options =>
             {
                 var connectionString = Configuration.GetConnectionString(ConnectionStringName);
-                options.UseSqlServer(connectionString);
+                options.UseSqlite(connectionString);
             });
         });
     }

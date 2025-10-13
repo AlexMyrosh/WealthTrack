@@ -3,16 +3,6 @@
     <PropertyGroup>
         <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-        <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-        <!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-
-        <!-- Note for MacCatalyst:
-        The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-        When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-        The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-        either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-        <!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
-
         <OutputType>Exe</OutputType>
         <RootNamespace>WealthTrack.Client</RootNamespace>
         <UseMaui>true</UseMaui>
@@ -23,55 +13,118 @@
         <!-- Display name -->
         <ApplicationTitle>WealthTrack</ApplicationTitle>
 
-        <!-- App Identifier -->
+        <!-- App ID -->
         <ApplicationId>com.somemaker.wealthtrack</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationVersion>1.0</ApplicationVersion>
 
         <!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
         <WindowsPackageType>None</WindowsPackageType>
 
+        <!-- Supported OS versions -->
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+
         <IosMinimumOSVersion>15.0</IosMinimumOSVersion>
         <IosSupportedOSPlatformVersion>16.4</IosSupportedOSPlatformVersion>
     </PropertyGroup>
-    
-    
-    <!-- iOS sign: FOR SIMULATION ONLY -->
-    <PropertyGroup Condition="'$(TargetFramework)'=='net9.0-ios'">
+
+    <!-- =====================================================
+     🧪 DEVELOPMENT CONFIGURATION (for debugging & testing)
+     ===================================================== -->
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <Deterministic>false</Deterministic>
+        <Optimize>false</Optimize>
+        <UseInterpreter>true</UseInterpreter>
+        <RunAOTCompilation>false</RunAOTCompilation>
+        <CodesignKey>Apple Development: Oleksandr Myroshnychenko (Q4BBZXS86Q)</CodesignKey>
+        <CodesignProvision>Profile for Development</CodesignProvision>
+    </PropertyGroup>
+
+    <!-- Android (Dev) -->
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-android' and '$(Configuration)'=='Debug'">
+        <AndroidUseSharedRuntime>true</AndroidUseSharedRuntime>
+        <AndroidLinkMode>None</AndroidLinkMode>
+    </PropertyGroup>
+
+    <!-- iOS (Dev) -->
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios' and '$(Configuration)'=='Debug'">
         <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
-        <CodesignProvision Condition="'$(IsMacEnabled)' == 'true' And '$(RuntimeIdentifier)'=='iossimulator-x64'">com.somemaker.wealthtrack</CodesignProvision>
-        <CodesignRequireProvisioningProfile>false</CodesignRequireProvisioningProfile>
+        <CodesignKey>Apple Development</CodesignKey>
+        <CodesignTeamId>$(APPLE_TEAM_ID)</CodesignTeamId>
+        <CodesignProvision>Automatic</CodesignProvision>
         <RequireCodeSigning>false</RequireCodeSigning>
     </PropertyGroup>
     
-    <!-- iOS Simulator entitlements -->
-    <PropertyGroup Condition="'$(TargetFramework)'=='net9.0-ios' And '$(RuntimeIdentifier)'=='iossimulator-arm64'">
-        <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+    <Target Name="CheckTeamId" BeforeTargets="Build">
+        <Message Importance="High" Text="APPLE_TEAM_ID=$(APPLE_TEAM_ID)" />
+    </Target>
+
+    <!-- macOS Catalyst (Dev) -->
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-maccatalyst' and '$(Configuration)'=='Debug'">
+        <CodesignKey>Apple Development</CodesignKey>
+        <CodesignTeamId>$(APPLE_TEAM_ID)</CodesignTeamId>
     </PropertyGroup>
 
+    <!-- Windows (Dev) -->
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-windows10.0.19041.0' and '$(Configuration)'=='Debug'">
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    </PropertyGroup>
+
+    <!-- =====================================================
+     🚀 RELEASE CONFIGURATION (for production / store)
+     =====================================================
+     ⚠️ Activate when it will be needede to builb IPA/APK/MSIX.
+     ===================================================== -->
+
+    <!--
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+      <Optimize>true</Optimize>
+      <RunAOTCompilation>true</RunAOTCompilation>
+      <UseInterpreter>false</UseInterpreter>
+      <Deterministic>true</Deterministic>
+      <DebugType>none</DebugType>
+    </PropertyGroup>
+  
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios' and '$(Configuration)'=='Release'">
+      <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
+      <CodesignKey>Apple Distribution</CodesignKey>
+      <CodesignTeamId>UN84N249MY</CodesignTeamId>
+      <CodesignProvision>Automatic</CodesignProvision>
+      <RequireCodeSigning>true</RequireCodeSigning>
+      <BuildIpa>true</BuildIpa>
+    </PropertyGroup>
+  
+    <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-android' and '$(Configuration)'=='Release'">
+      <AndroidLinkMode>Full</AndroidLinkMode>
+      <AndroidPackageFormat>aab</AndroidPackageFormat>
+      <AndroidSigningKeyStore>keystore.jks</AndroidSigningKeyStore>
+      <AndroidSigningKeyAlias>wealthtrack</AndroidSigningKeyAlias>
+      <AndroidSigningKeyPass>yourpassword</AndroidSigningKeyPass>
+      <AndroidSigningStorePass>yourpassword</AndroidSigningStorePass>
+    </PropertyGroup>
+    -->
+
+    <!-- ===================================================== -->
+
     <ItemGroup>
-        <!-- App Icon -->
-
-        <!-- Splash Screen -->
-
         <!-- Images -->
         <MauiImage Include="Resources\Images\*"/>
-        <!-- Remove template bot image from build -->
-        <None Remove="Resources/Images/dotnet_bot.png" />
 
         <!-- Custom Fonts -->
         <MauiFont Include="Resources\Fonts\*"/>
+    </ItemGroup>
 
-        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
-        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)"/>
+    <ItemGroup>
+        <Folder Include="Resources\Images\" />
+        <Folder Include="ViewModels\Category\" />
+        <Folder Include="Views\Category\" />
     </ItemGroup>
 
     <ItemGroup>
@@ -85,88 +138,126 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="appsettings.json" />
-      <EmbeddedResource Include="appsettings.json" />
+        <None Remove="appsettings.json" />
+        <EmbeddedResource Include="appsettings.json" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
+        <ProjectReference Include="..\WealthTrack.Business\WealthTrack.Business.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="Resources\AppIcon\appicon.png" />
-      <MauiIcon Include="Resources\AppIcon\appicon.png" />
+        <MauiIcon Include="Resources\AppIcon\appicon.png" />
     </ItemGroup>
 
     <ItemGroup>
-      <MauiXaml Update="Views\Wallet\WalletsPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Transaction\TransactionsPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Goal\GoalsPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Account\LoginPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Account\AccountCreationPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Onboarding\OnboardingPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Onboarding\InitialCreationPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
-      <MauiXaml Update="Views\Configuration\ConfigurationPage.xaml">
-        <SubType>Designer</SubType>
-      </MauiXaml>
+        <MauiXaml Update="Views\Account\AccountCreationPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+        <MauiXaml Update="Views\Account\ForgotPasswordPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+        <MauiXaml Update="Views\Account\LoginPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+        <MauiXaml Update="Views\Account\ResetPasswordPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Configuration\ConfigurationPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Goal\GoalsPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Onboarding\InitialConfigurationPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+        <MauiXaml Update="Views\Onboarding\InitialCreationPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+        <MauiXaml Update="Views\Onboarding\OnboardingPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Transaction\TransactionsPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Wallet\WalletsPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\LoadingPage.xaml">
+            <SubType>Designer</SubType>
+        </MauiXaml>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Views\Wallet\WalletsPage.xaml.cs">
-        <DependentUpon>WalletsPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Transaction\TransactionsPage.xaml.cs">
-        <DependentUpon>TransactionsPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Goal\GoalsPage.xaml.cs">
-        <DependentUpon>GoalsPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Account\LoginPage.xaml.cs">
-        <DependentUpon>LoginPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Account\AccountCreationPage.xaml.cs">
-        <DependentUpon>SignUpPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Onboarding\OnboardingPage.xaml.cs">
-        <DependentUpon>OnboardingPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Onboarding\InitialCreationPage.xaml.cs">
-        <DependentUpon>InitialCreationPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
-      <Compile Update="Views\Configuration\ConfigurationPage.xaml.cs">
-        <DependentUpon>ConfigurationPage.xaml</DependentUpon>
-        <SubType>Code</SubType>
-      </Compile>
+        <Compile Update="Views\Account\AccountCreationPage.xaml.cs">
+            <DependentUpon>AccountCreationPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Account\ForgotPasswordPage.xaml.cs">
+            <DependentUpon>ForgotPasswordPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Account\LoginPage.xaml.cs">
+            <DependentUpon>LoginPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Account\ResetPasswordPage.xaml.cs">
+            <DependentUpon>ResetPasswordPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Configuration\ConfigurationPage.xaml.cs">
+            <DependentUpon>ConfigurationPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Goal\GoalsPage.xaml.cs">
+            <DependentUpon>GoalsPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Onboarding\InitialAccountConfigurationPage.xaml.cs">
+            <DependentUpon>InitialAccountConfigurationPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Onboarding\InitialCreationPage.xaml.cs">
+            <DependentUpon>InitialCreationPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Onboarding\OnboardingPage.xaml.cs">
+            <DependentUpon>OnboardingPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Transaction\TransactionsPage.xaml.cs">
+            <DependentUpon>TransactionsPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Wallet\WalletsPage.xaml.cs">
+            <DependentUpon>WalletsPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\LoadingPage.xaml.cs">
+            <DependentUpon>LoadingPage.xaml</DependentUpon>
+            <SubType>Code</SubType>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>
-      <AdditionalFiles Include="Views\LoadingPage.xaml" />
+      <None Remove="Platforms\iOS\Resources\LaunchScreen.storyboard" />
+      <Resource Include="Platforms\iOS\Resources\LaunchScreen.storyboard">
+        <Link>Platforms/iOS/LaunchScreen.storyboard</Link>
+        <IsDefaultItem>true</IsDefaultItem>
+      </Resource>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="ViewModels\Category\" />
-      <Folder Include="Views\Category\" />
-    </ItemGroup>
-    
 </Project>
+
