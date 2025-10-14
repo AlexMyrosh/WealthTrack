@@ -26,7 +26,7 @@ public static class TransactionTypeExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(operationType), operationType, null)
         };
     }
-    
+
     public static TransactionType ToTransactionType(this OperationType operationType)
     {
         return operationType switch

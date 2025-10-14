@@ -28,7 +28,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            var session = JsonSerializer.Deserialize<UserSession>(json);
+            var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
             if (session == null)
             {
                 return false;
@@ -44,12 +44,11 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
         }
     }
 
-    public async Task<bool> SignUpAsync(string firstName, string lastName, string email, string password)
+    public async Task<bool> SignUpAsync(string fullName, string email, string password)
     {
         var response = await httpClient.PostAsJsonAsync("api/auth/register", new
         {
-            FirstName = firstName,
-            LastName = lastName,
+            Fullname = fullName,
             Email = email, 
             Password = password
         });
@@ -60,7 +59,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
         }
 
         var json = await response.Content.ReadAsStringAsync();
-        var session = JsonSerializer.Deserialize<UserSession>(json);
+        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
         if (session == null)
         {
             return false;
@@ -103,8 +102,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
             "MacCatalyst" => settings.Google.Desktop,
             _ => throw new NotSupportedException($"Platform {platform} is not supported")
         };
-
-        // PKCE setup
+        
         var codeVerifier = GenerateCodeVerifier();
         var codeChallenge = GenerateCodeChallenge(codeVerifier);
 
@@ -141,7 +139,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
                 return false;
 
             var json = await response.Content.ReadAsStringAsync();
-            var session = JsonSerializer.Deserialize<UserSession>(json);
+            var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
             if (session == null)
             {
                 return false;
@@ -159,18 +157,40 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
 
     public async Task<bool> LoginWithAppleAsync()
     {
-        var authUrl = new Uri("https://appleid.apple.com/auth/authorize?..."); // Ваш auth URL
-        var callbackUrl = new Uri("myapp://");
-        var result = await WebAuthenticator.Default.AuthenticateAsync(authUrl, callbackUrl);
-
-        // Just a mock at the moment
-        await Task.Delay(500);
-        var session = new UserSession
+        if (DeviceInfo.Platform != DevicePlatform.iOS || DeviceInfo.Version.Major < 13)
         {
-            CurrentLoginMode = LoginMode.Registered,
-            Token = "FAKE_APPLE_JWT"
-        };
+            return false;
+        }
+        
+        var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
+        {
+            IncludeEmailScope = true,
+            IncludeFullNameScope = true
+        });
+        
+        var fullname = result.Properties["name"] ?? string.Empty;
+        var email = result.Properties["email"] ?? string.Empty;
+        var idToken = result.IdToken;
 
+        var response = await httpClient.PostAsJsonAsync("api/auth/oauth/apple", new
+        {
+            FullName = fullname,
+            Email = email,
+            Token = idToken
+        });
+            
+        if (!response.IsSuccessStatusCode)
+        {
+            return false;
+        }
+
+        var json = await response.Content.ReadAsStringAsync();
+        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
+        if (session == null)
+        {
+            return false;
+        }
+            
         await SaveUserSessionAsync(session);
         return true;
     }
@@ -205,7 +225,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
         }
         
         var json = await response.Content.ReadAsStringAsync();
-        var session = JsonSerializer.Deserialize<UserSession>(json);
+        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
         if (session == null)
         {
             return false;

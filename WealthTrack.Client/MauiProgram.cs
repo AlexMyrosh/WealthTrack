@@ -17,6 +17,7 @@ using WealthTrack.Business.Seeders;
 using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Client.Models;
+using WealthTrack.Client.Services;
 using WealthTrack.Client.Services.Implementations;
 using WealthTrack.Client.Services.Interfaces;
 using WealthTrack.Client.Views;
@@ -42,7 +43,7 @@ public static class MauiProgram
         builder.Configuration.AddConfiguration(config);
 
         ConfigureServices(builder.Services, config);
-        
+
         var oauthSettings = builder.Configuration.GetSection("OAuth").Get<OAuthSettings>();
         if (oauthSettings is null)
         {
@@ -50,7 +51,7 @@ public static class MauiProgram
         }
 
         builder.Services.AddSingleton(oauthSettings);
-        
+
         builder.Services.AddHttpClient<IAuthService, AuthService>(client => { client.BaseAddress = new Uri(oauthSettings.BackendBaseUrl); })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
@@ -62,12 +63,20 @@ public static class MauiProgram
 
         var app = builder.Build();
         EnsureDatabaseCreated(app.Services);
-        
+
         return app;
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
+        // services.AddAuthentication().AddApple("Apple", options =>
+        // {
+        //     options.ClientId = "your.service.id";
+        //     options.KeyId = "your.key.id";
+        //     options.TeamId = "your.team.id";
+        //     options.PrivateKey = "-----BEGIN PRIVATE KEY-----\n...";
+        // });
+        
         services.AddDbContext<AppDbContext>(options =>
         {
             var dbFileName = configuration["DbName"]!;
@@ -75,10 +84,7 @@ public static class MauiProgram
             options.UseSqlite($"Data Source={dbPath}").LogTo(Console.WriteLine, LogLevel.Information);
         });
 
-        services.AddAutoMapper(cfg =>
-        {
-            cfg.AddProfile<DomainAndBusinessModelsMapperProfile>();
-        });
+        services.AddAutoMapper(cfg => { cfg.AddProfile<DomainAndBusinessModelsMapperProfile>(); });
 
         services.AddHttpClient<CurrenciesSeeder>();
 
@@ -89,7 +95,7 @@ public static class MauiProgram
         services.AddScoped<ITransactionService, TransactionService>();
         services.AddScoped<IWalletService, WalletService>();
         services.AddScoped<IGoalService, GoalService>();
-        
+
         services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<INavigationService, NavigationService>();
         services.AddScoped<IThemeService, ThemeService>();
@@ -106,7 +112,7 @@ public static class MauiProgram
         services.AddScoped<IEventHandler<TransferTransactionDeletedEvent>, WalletUpdateOnTransferTransactionDeletionEventHandler>();
 
         services.AddScoped<IEventPublisher, EventPublisher>();
-        
+
         // Pages
         services.AddTransient<LoginPage>();
         services.AddTransient<AccountCreationPage>();
@@ -117,15 +123,16 @@ public static class MauiProgram
         services.AddTransient<TransactionsPage>();
         services.AddTransient<GoalsPage>();
         services.AddTransient<ConfigurationPage>();
-        
+
         // ViewModels
         services.AddTransient<OnboardingViewModel>();
     }
-    
+
     private static void EnsureDatabaseCreated(IServiceProvider services)
     {
         using var scope = services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        SecureStorage.RemoveAll();
         //dbContext.Database.EnsureDeleted();
         dbContext.Database.EnsureCreated();
     }

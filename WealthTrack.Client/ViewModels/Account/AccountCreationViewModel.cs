@@ -15,8 +15,7 @@ public partial class AccountCreationViewModel : ObservableObject
     public ICommand CreateAccountCommand { get; }
     public ICommand NavigateToLoginPageCommand { get; }
     
-    [ObservableProperty] private string _firstName = string.Empty;
-    [ObservableProperty] private string _lastName = string.Empty;
+    [ObservableProperty] private string _fullName = string.Empty;
     [ObservableProperty] private string _email = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
     
@@ -32,17 +31,16 @@ public partial class AccountCreationViewModel : ObservableObject
     
     private async Task CreateAccountAsync()
     {
-        if (string.IsNullOrEmpty(FirstName) || string.IsNullOrEmpty(LastName) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+        if (string.IsNullOrEmpty(FullName) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
         {
             await _dialogService.ShowAlertAsync("Error", "Please fill in all required fields", "OK");
             return;
         }
         
-        FirstName = FirstName.Trim();
-        LastName = LastName.Trim();
+        FullName = FullName.Trim();
         Email = Email.Trim();
         
-        if (await _authService.SignUpAsync(FirstName, LastName, Email, Password))
+        if (await _authService.SignUpAsync(FullName, Email, Password))
         {
             await _navigationService.GoToAsync("//InitialAccountConfigurationPage");
         }

@@ -7,14 +7,8 @@
     <ScrollView>
         <VerticalStackLayout Padding="30" Spacing="20">
             <Label Text="Create your WealthTrack account" FontSize="26" FontAttributes="Bold" HorizontalOptions="Center" TextColor="{DynamicResource TitleColor}"/>
-            <Entry Text="{Binding FirstName}" 
+            <Entry Text="{Binding FullName}" 
                    Placeholder="Your first name"
-                   ClearButtonVisibility="WhileEditing"
-                   BackgroundColor="{DynamicResource EntryBackground}"
-                   TextColor="{DynamicResource EntryTextColor}" 
-            />
-            <Entry Text="{Binding LastName}" 
-                   Placeholder="Your last name"
                    ClearButtonVisibility="WhileEditing"
                    BackgroundColor="{DynamicResource EntryBackground}"
                    TextColor="{DynamicResource EntryTextColor}" 
