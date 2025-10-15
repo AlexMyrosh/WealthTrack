@@ -12,6 +12,7 @@ public partial class ResetPasswordViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly string _token;
 
+    [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _password = string.Empty;
     [ObservableProperty] private string _confirmPassword = string.Empty;
 
@@ -41,15 +42,24 @@ public partial class ResetPasswordViewModel : ObservableObject
             return;
         }
 
-        var result = await _authService.ResetPasswordAsync(_token, Password);
-        if (result)
+        try
         {
-            await _dialogService.ShowAlertAsync("Success", "Password successfully updated", "OK");
-            await _navigationService.GoToAsync("//LoginPage");
+            IsBusy = true;
+            var result = await _authService.ResetPasswordAsync(_token, Password);
+            if (result)
+            {
+                await _dialogService.ShowAlertAsync("Success", "Password successfully updated", "OK");
+                await _navigationService.GoToAsync("//LoginPage");
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Failed to reset password", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Failed to reset password", "OK");
+            IsBusy = false;
         }
+
     }
 }

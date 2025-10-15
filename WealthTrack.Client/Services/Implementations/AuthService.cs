@@ -8,7 +8,7 @@ using WealthTrack.Shared.Enums;
 
 namespace WealthTrack.Client.Services.Implementations;
 
-public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthService
+public class AuthService(HttpClient httpClient, OAuthSettings settings, IUserService userService) : IAuthService
 {
     private const string StorageKey = "user-session";
 
@@ -35,7 +35,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
             }
 
             session.CurrentLoginMode = LoginMode.Registered;
-            await SaveUserSessionAsync(session);
+            await userService.SaveUserSessionAsync(session);
             return true;
         }
         catch
@@ -46,78 +46,106 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
 
     public async Task<bool> SignUpAsync(string fullName, string email, string password)
     {
-        var response = await httpClient.PostAsJsonAsync("api/auth/register", new
+        try
         {
-            Fullname = fullName,
-            Email = email, 
-            Password = password
-        });
-        
-        if (!response.IsSuccessStatusCode)
+            var response = await httpClient.PostAsJsonAsync("api/auth/register", new
+            {
+                Fullname = fullName,
+                Email = email,
+                Password = password
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
+            if (session == null)
+            {
+                return false;
+            }
+
+            session.CurrentLoginMode = LoginMode.Registered;
+            await userService.SaveUserSessionAsync(session);
+            return true;
+        }
+        catch
         {
             return false;
         }
-
-        var json = await response.Content.ReadAsStringAsync();
-        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
-        if (session == null)
-        {
-            return false;
-        }
-
-        session.CurrentLoginMode = LoginMode.Registered;
-        await SaveUserSessionAsync(session);
-        return true;
     }
 
     public async Task<bool> RequestPasswordResetAsync(string email)
     {
-        var response = await httpClient.PostAsJsonAsync("api/auth/request-password-reset", new { email });
-        return response.IsSuccessStatusCode;
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync("api/auth/request-password-reset", new { email });
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task<string?> VerifyResetCodeAsync(string email, string code)
     {
-        var response = await httpClient.PostAsJsonAsync("api/auth/verify-reset-code", new { email, code });
-        if (!response.IsSuccessStatusCode) return null;
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync("api/auth/verify-reset-code", new { email, code });
+            if (!response.IsSuccessStatusCode) return null;
 
-        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
-        return json.GetProperty("token").GetString();
+            var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+            return json.GetProperty("token").GetString();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
-        var response = await httpClient.PostAsJsonAsync("api/auth/reset-password", new { token, newPassword });
-        return response.IsSuccessStatusCode;
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync("api/auth/reset-password", new { token, newPassword });
+            return response.IsSuccessStatusCode;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public async Task<bool> LoginWithGoogleAsync()
     {
-        var platform = GetPlatform();
-        var google = platform switch
-        {
-            "iOS" => settings.Google.iOS,
-            "Android" => settings.Google.Android,
-            "Windows" => settings.Google.Desktop,
-            "MacCatalyst" => settings.Google.Desktop,
-            _ => throw new NotSupportedException($"Platform {platform} is not supported")
-        };
-        
-        var codeVerifier = GenerateCodeVerifier();
-        var codeChallenge = GenerateCodeChallenge(codeVerifier);
-
-        var authUrl = new Uri(
-            $"https://accounts.google.com/o/oauth2/v2/auth?" +
-            $"client_id={Uri.EscapeDataString(google.ClientId)}" +
-            $"&redirect_uri={Uri.EscapeDataString(google.RedirectUri)}" +
-            $"&response_type=code" +
-            $"&scope=openid%20email%20profile" +
-            $"&code_challenge={codeChallenge}" +
-            $"&code_challenge_method=S256"
-        );
-
         try
         {
+            var platform = GetPlatform();
+            var google = platform switch
+            {
+                "iOS" => settings.Google.iOS,
+                "Android" => settings.Google.Android,
+                "Windows" => settings.Google.Desktop,
+                "MacCatalyst" => settings.Google.Desktop,
+                _ => throw new NotSupportedException($"Platform {platform} is not supported")
+            };
+
+            var codeVerifier = GenerateCodeVerifier();
+            var codeChallenge = GenerateCodeChallenge(codeVerifier);
+
+            var authUrl = new Uri(
+                $"https://accounts.google.com/o/oauth2/v2/auth?" +
+                $"client_id={Uri.EscapeDataString(google.ClientId)}" +
+                $"&redirect_uri={Uri.EscapeDataString(google.RedirectUri)}" +
+                $"&response_type=code" +
+                $"&scope=openid%20email%20profile" +
+                $"&code_challenge={codeChallenge}" +
+                $"&code_challenge_method=S256"
+            );
+
             var result = await WebAuthenticator.Default.AuthenticateAsync(new WebAuthenticatorOptions
             {
                 Url = authUrl,
@@ -126,7 +154,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
 
             if (!result.Properties.TryGetValue("code", out var code))
                 return false;
-            
+
             var response = await httpClient.PostAsJsonAsync("api/auth/oauth/google", new
             {
                 Code = code,
@@ -146,10 +174,10 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
             }
 
             session.CurrentLoginMode = LoginMode.Registered;
-            await SaveUserSessionAsync(session);
+            await userService.SaveUserSessionAsync(session);
             return true;
         }
-        catch (TaskCanceledException)
+        catch
         {
             return false;
         }
@@ -157,83 +185,97 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
 
     public async Task<bool> LoginWithAppleAsync()
     {
-        if (DeviceInfo.Platform != DevicePlatform.iOS || DeviceInfo.Version.Major < 13)
+        try
         {
-            return false;
-        }
-        
-        var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
-        {
-            IncludeEmailScope = true,
-            IncludeFullNameScope = true
-        });
-        
-        var fullname = result.Properties["name"] ?? string.Empty;
-        var email = result.Properties["email"] ?? string.Empty;
-        var idToken = result.IdToken;
+            if (DeviceInfo.Platform != DevicePlatform.iOS || DeviceInfo.Version.Major < 13)
+            {
+                return false;
+            }
 
-        var response = await httpClient.PostAsJsonAsync("api/auth/oauth/apple", new
-        {
-            FullName = fullname,
-            Email = email,
-            Token = idToken
-        });
-            
-        if (!response.IsSuccessStatusCode)
-        {
-            return false;
-        }
+            var result = await AppleSignInAuthenticator.AuthenticateAsync(new AppleSignInAuthenticator.Options
+            {
+                IncludeEmailScope = true,
+                IncludeFullNameScope = true
+            });
 
-        var json = await response.Content.ReadAsStringAsync();
-        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
-        if (session == null)
+            var fullname = result.Properties["name"] ?? string.Empty;
+            var email = result.Properties["email"] ?? string.Empty;
+            var idToken = result.IdToken;
+
+            var response = await httpClient.PostAsJsonAsync("api/auth/oauth/apple", new
+            {
+                FullName = fullname,
+                Email = email,
+                Token = idToken
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
+            if (session == null)
+            {
+                return false;
+            }
+
+            await userService.SaveUserSessionAsync(session);
+            return true;
+        }
+        catch
         {
             return false;
         }
-            
-        await SaveUserSessionAsync(session);
-        return true;
     }
 
     public async Task<bool> LoginWithMicrosoftAsync()
     {
-        var pca = PublicClientApplicationBuilder
-            .Create(settings.Microsoft.ClientId)
-            .WithRedirectUri(settings.Microsoft.RedirectUri)
-            .Build();
-        
-        AuthenticationResult result;
         try
         {
-            var accounts = await pca.GetAccountsAsync();
-            result =  await pca.AcquireTokenSilent(settings.Microsoft.Scopes, accounts.FirstOrDefault()).ExecuteAsync();
-        }
-        catch (MsalUiRequiredException)
-        {
-            result = await pca.AcquireTokenInteractive(settings.Microsoft.Scopes).ExecuteAsync();
-        }
-        
-        var token = result.AccessToken;
-        var response = await httpClient.PostAsJsonAsync("api/auth/oauth/microsoft", new
-        {
-            Token = token
-        });
+            var pca = PublicClientApplicationBuilder
+                .Create(settings.Microsoft.ClientId)
+                .WithRedirectUri(settings.Microsoft.RedirectUri)
+                .Build();
 
-        if (!response.IsSuccessStatusCode)
+            AuthenticationResult result;
+            try
+            {
+                var accounts = await pca.GetAccountsAsync();
+                result = await pca.AcquireTokenSilent(settings.Microsoft.Scopes, accounts.FirstOrDefault()).ExecuteAsync();
+            }
+            catch (MsalUiRequiredException)
+            {
+                result = await pca.AcquireTokenInteractive(settings.Microsoft.Scopes).ExecuteAsync();
+            }
+
+            var token = result.AccessToken;
+            var response = await httpClient.PostAsJsonAsync("api/auth/oauth/microsoft", new
+            {
+                Token = token
+            });
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
+            if (session == null)
+            {
+                return false;
+            }
+
+            session.CurrentLoginMode = LoginMode.Registered;
+            await userService.SaveUserSessionAsync(session);
+            return true;
+        }
+        catch
         {
             return false;
         }
-        
-        var json = await response.Content.ReadAsStringAsync();
-        var session = JsonSerializer.Deserialize<UserSession>(json, JsonSerializerOptions.Web);
-        if (session == null)
-        {
-            return false;
-        }
-
-        session.CurrentLoginMode = LoginMode.Registered;
-        await SaveUserSessionAsync(session);
-        return true;
     }
     
     public Task LogoutAsync()
@@ -249,24 +291,7 @@ public class AuthService(HttpClient httpClient, OAuthSettings settings) : IAuthS
             CurrentLoginMode = LoginMode.Guest,
         };
 
-        await SaveUserSessionAsync(session);
-    }
-    
-    public async Task<UserSession?> GetUserSessionAsync()
-    {
-        var json = await SecureStorage.GetAsync(StorageKey);
-        if (string.IsNullOrEmpty(json))
-        {
-            return null;
-        }
-
-        return JsonSerializer.Deserialize<UserSession>(json);
-    }
-    
-    public async Task SaveUserSessionAsync(UserSession session)
-    {
-        var json = JsonSerializer.Serialize(session);
-        await SecureStorage.SetAsync(StorageKey, json);
+        await userService.SaveUserSessionAsync(session);
     }
 
     private static string GetPlatform()

@@ -13,7 +13,7 @@ public class UserSession
     
     public CustomAppTheme? SelectedAppTheme { get; set; }
     
-    public bool IsSyncEnabled { get; set; }
+    public bool? IsSyncEnabled { get; set; }
     
     public string Token { get; set; } = string.Empty;
     

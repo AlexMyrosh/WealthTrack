@@ -13,6 +13,7 @@ public partial class ForgotPasswordViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly INavigation _navigation;
 
+    [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _email = string.Empty;
     [ObservableProperty] private string _code = string.Empty;
     [ObservableProperty] private bool _isEmailStepEnabled = true;
@@ -61,8 +62,8 @@ public partial class ForgotPasswordViewModel : ObservableObject
     {
         if (CanResendCode)
         {
-            await _authService.RequestPasswordResetAsync(Email);
             StartResendTimer();
+            await _authService.RequestPasswordResetAsync(Email);
         }
     }
 
@@ -74,14 +75,22 @@ public partial class ForgotPasswordViewModel : ObservableObject
             return;
         }
 
-        var resetToken = await _authService.VerifyResetCodeAsync(Email, Code);
-        if (resetToken == null)
+        try
         {
-            await _dialogService.ShowAlertAsync("Error", "Code is invalid or expired", "OK");
-            return;
-        }
+            IsBusy = true;
+            var resetToken = await _authService.VerifyResetCodeAsync(Email, Code);
+            if (resetToken == null)
+            {
+                await _dialogService.ShowAlertAsync("Error", "Code is invalid or expired", "OK");
+                return;
+            }
         
-        await _navigation.PushAsync(new ResetPasswordPage(_authService, _navigationService, _dialogService, resetToken));
+            await _navigation.PushAsync(new ResetPasswordPage(_authService, _navigationService, _dialogService, resetToken));
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
     
     private void StartResendTimer()

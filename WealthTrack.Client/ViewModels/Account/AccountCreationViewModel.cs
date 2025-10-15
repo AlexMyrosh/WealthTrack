@@ -7,23 +7,25 @@ namespace WealthTrack.Client.ViewModels.Account;
 
 public partial class AccountCreationViewModel : ObservableObject
 {
-    public INavigation Navigation { get; set; } = null!;
     private readonly IAuthService _authService;
     private readonly IDialogService _dialogService;
     private readonly INavigationService _navigationService;
+    private readonly INavigation _navigation;
     
     public ICommand CreateAccountCommand { get; }
     public ICommand NavigateToLoginPageCommand { get; }
     
+    [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _fullName = string.Empty;
     [ObservableProperty] private string _email = string.Empty;
     [ObservableProperty] private string _password = string.Empty;
     
-    public AccountCreationViewModel(IAuthService authService, IDialogService dialogService, INavigationService navigationService)
+    public AccountCreationViewModel(IAuthService authService, IDialogService dialogService, INavigationService navigationService, INavigation navigation)
     {
         _authService = authService;
         _dialogService = dialogService;
         _navigationService = navigationService;
+        _navigation = navigation;
         
         CreateAccountCommand = new AsyncRelayCommand(CreateAccountAsync);
         NavigateToLoginPageCommand = new AsyncRelayCommand(GoToLoginPageAsync);
@@ -39,19 +41,26 @@ public partial class AccountCreationViewModel : ObservableObject
         
         FullName = FullName.Trim();
         Email = Email.Trim();
-        
-        if (await _authService.SignUpAsync(FullName, Email, Password))
+        try
         {
-            await _navigationService.GoToAsync("//InitialAccountConfigurationPage");
+            IsBusy = true;
+            if (await _authService.SignUpAsync(FullName, Email, Password))
+            {
+                await _navigationService.GoToAsync("//CurrencySelectionPage");
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Account creation failed", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Account creation failed", "OK");
+            IsBusy = false;
         }
     }
 
     private async Task GoToLoginPageAsync()
     {
-        await Navigation.PopAsync();
+        await _navigation.PopAsync();
     }
 }

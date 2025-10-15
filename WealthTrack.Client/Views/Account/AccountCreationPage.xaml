@@ -1,55 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:account="clr-namespace:WealthTrack.Client.ViewModels.Account" x:Class="WealthTrack.Client.Views.Account.AccountCreationPage"
+             xmlns:account="clr-namespace:WealthTrack.Client.ViewModels.Account"
+             xmlns:converters="clr-namespace:WealthTrack.Client.Converters"
+             x:Class="WealthTrack.Client.Views.Account.AccountCreationPage"
              x:DataType="account:AccountCreationViewModel"
              BackgroundColor="{DynamicResource ContentPageBackground}">
-    <ScrollView>
-        <VerticalStackLayout Padding="30" Spacing="20">
-            <Label Text="Create your WealthTrack account" FontSize="26" FontAttributes="Bold" HorizontalOptions="Center" TextColor="{DynamicResource TitleColor}"/>
-            <Entry Text="{Binding FullName}" 
-                   Placeholder="Your first name"
-                   ClearButtonVisibility="WhileEditing"
-                   BackgroundColor="{DynamicResource EntryBackground}"
-                   TextColor="{DynamicResource EntryTextColor}" 
-            />
-            <Entry Text="{Binding Email}" 
-                   Placeholder="Email"
-                   Keyboard="Email"
-                   ClearButtonVisibility="WhileEditing"
-                   BackgroundColor="{DynamicResource EntryBackground}"
-                   TextColor="{DynamicResource EntryTextColor}" 
-            />
-            <Entry Text="{Binding Password}" 
-                   Placeholder="Password"
-                   IsPassword="True"
-                   ClearButtonVisibility="WhileEditing"
-                   BackgroundColor="{DynamicResource EntryBackground}"
-                   TextColor="{DynamicResource EntryTextColor}"
-            />
-            
-            <Button Text="Create account" 
-                    Command="{Binding CreateAccountCommand}"
-                    BackgroundColor="{DynamicResource ButtonBackground}"
-                    TextColor="{DynamicResource ButtonTextColor}"
-                    CornerRadius="8"
-                    FontSize="16"
-                    FontAttributes="Bold"
-                    HeightRequest="50"
-            />
-            
-            <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
-                <Label.FormattedText>
-                    <FormattedString>
-                        <Span Text="Already have an account? " />
-                        <Span Text="Log in" TextColor="#007AFF" TextDecorations="Underline">
-                            <Span.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NavigateToLoginPageCommand}" />
-                            </Span.GestureRecognizers>
-                        </Span>
-                    </FormattedString>
-                </Label.FormattedText>
-            </Label>
-        </VerticalStackLayout>
-    </ScrollView>
+    
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+    
+    <Grid IgnoreSafeArea="True">
+        <ScrollView>
+            <VerticalStackLayout Padding="30" Spacing="20">
+                <Label Text="Create your WealthTrack account" FontSize="26" FontAttributes="Bold" HorizontalOptions="Center" TextColor="{DynamicResource TitleColor}"/>
+                <Entry Text="{Binding FullName}" 
+                       Placeholder="Your first name"
+                       ClearButtonVisibility="WhileEditing"
+                       BackgroundColor="{DynamicResource EntryBackground}"
+                       TextColor="{DynamicResource EntryTextColor}" 
+                />
+                <Entry Text="{Binding Email}" 
+                       Placeholder="Email"
+                       Keyboard="Email"
+                       ClearButtonVisibility="WhileEditing"
+                       BackgroundColor="{DynamicResource EntryBackground}"
+                       TextColor="{DynamicResource EntryTextColor}" 
+                />
+                <Entry Text="{Binding Password}" 
+                       Placeholder="Password"
+                       IsPassword="True"
+                       ClearButtonVisibility="WhileEditing"
+                       BackgroundColor="{DynamicResource EntryBackground}"
+                       TextColor="{DynamicResource EntryTextColor}"
+                />
+                
+                <Button Text="Create account" 
+                        Command="{Binding CreateAccountCommand}"
+                        BackgroundColor="{DynamicResource ButtonBackground}"
+                        TextColor="{DynamicResource ButtonTextColor}"
+                        CornerRadius="8"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        HeightRequest="50"
+                />
+                
+                <Label HorizontalOptions="Center" TextColor="Gray" FontAttributes="Italic">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Already have an account? " />
+                            <Span Text="Log in" TextColor="#007AFF" TextDecorations="Underline">
+                                <Span.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding NavigateToLoginPageCommand}" />
+                                </Span.GestureRecognizers>
+                            </Span>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <Grid BackgroundColor="#80000000" IsVisible="{Binding IsBusy}" InputTransparent="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}">
+            <ActivityIndicator 
+                IsRunning="{Binding IsBusy}" 
+                Color="White"
+                WidthRequest="50"
+                HeightRequest="50"
+                VerticalOptions="Center"
+                HorizontalOptions="Center" />
+        </Grid>
+    </Grid>
 </ContentPage>

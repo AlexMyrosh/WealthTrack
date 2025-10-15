@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:onboarding="clr-namespace:WealthTrack.Client.ViewModels.Onboarding"
+    xmlns:viewmodel="clr-namespace:WealthTrack.Client.Models"
+    x:Class="WealthTrack.Client.Views.Onboarding.AppFeaturesCarouselPage"
+    x:DataType="onboarding:AppFeaturesCarouselViewModel"
+    BackgroundColor="{DynamicResource ContentPageBackground}">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="20">
+        <Label Grid.Row="0" Text="{Binding CurrentFeature.Title}" FontSize="28" FontAttributes="Bold"
+            HorizontalOptions="Center" VerticalOptions="Start" TextColor="{DynamicResource TitleColor}" />
+        
+        <CarouselView Grid.Row="1" ItemsSource="{Binding Features}" Position="{Binding CurrentIndex, Mode=TwoWay}"
+              IndicatorView="{x:Reference IndicatorView}" Loop="False" HorizontalScrollBarVisibility="Never" VerticalScrollBarVisibility="Never">
+            <CarouselView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodel:AppFeatureModel">
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+                        <Label Text="{Binding Description}" FontSize="18" TextColor="{DynamicResource LabelTextColor}" HorizontalTextAlignment="Center"/>
+                    </StackLayout>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+        
+        <IndicatorView x:Name="IndicatorView" Grid.Row="2" IndicatorColor="{DynamicResource IndicatorViewColor}" 
+                       SelectedIndicatorColor="{DynamicResource SelectedIndicatorViewColor}" HorizontalOptions="Center" 
+                       Margin="0,0,0,20" />
+        
+        <Button Grid.Row="3" Text="Get started" Command="{Binding GetStartedCommand}" BackgroundColor="{DynamicResource ButtonBackground}"
+                TextColor="{DynamicResource ButtonTextColor}" CornerRadius="8" FontSize="16" FontAttributes="Bold"
+                HeightRequest="50" VerticalOptions="End" />
+    </Grid>
+</ContentPage>

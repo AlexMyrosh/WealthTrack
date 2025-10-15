@@ -3,6 +3,7 @@ using CommunityToolkit.Maui;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.SegmentedControl;
 using WealthTrack.Business.AutoMapper;
 using WealthTrack.Business.EventHandlers.TransactionCreatedEventHandlers;
 using WealthTrack.Business.EventHandlers.TransactionDeletedEventHandlers;
@@ -16,6 +17,7 @@ using WealthTrack.Business.Events.Models;
 using WealthTrack.Business.Seeders;
 using WealthTrack.Business.Services.Implementations;
 using WealthTrack.Business.Services.Interfaces;
+using WealthTrack.Client.AutoMapper;
 using WealthTrack.Client.Models;
 using WealthTrack.Client.Services;
 using WealthTrack.Client.Services.Implementations;
@@ -26,6 +28,7 @@ using WealthTrack.Client.Views.Account;
 using WealthTrack.Client.Views.Configuration;
 using WealthTrack.Client.Views.Goal;
 using WealthTrack.Client.Views.Onboarding;
+using WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration;
 using WealthTrack.Client.Views.Transaction;
 using WealthTrack.Client.Views.Wallet;
 using WealthTrack.Data.Context;
@@ -59,7 +62,7 @@ public static class MauiProgram
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
             });
 
-        builder.UseMauiApp<App>().UseMauiCommunityToolkit().ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
+        builder.UseMauiApp<App>().UseMauiCommunityToolkit().UseSegmentedControl().ConfigureFonts(fonts => { fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular"); });
 
         var app = builder.Build();
         EnsureDatabaseCreated(app.Services);
@@ -69,22 +72,18 @@ public static class MauiProgram
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
-        // services.AddAuthentication().AddApple("Apple", options =>
-        // {
-        //     options.ClientId = "your.service.id";
-        //     options.KeyId = "your.key.id";
-        //     options.TeamId = "your.team.id";
-        //     options.PrivateKey = "-----BEGIN PRIVATE KEY-----\n...";
-        // });
-        
         services.AddDbContext<AppDbContext>(options =>
         {
             var dbFileName = configuration["DbName"]!;
             var dbPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), dbFileName);
             options.UseSqlite($"Data Source={dbPath}").LogTo(Console.WriteLine, LogLevel.Information);
         });
-
-        services.AddAutoMapper(cfg => { cfg.AddProfile<DomainAndBusinessModelsMapperProfile>(); });
+        
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AddProfile<DomainAndBusinessModelsMapperProfile>();
+            cfg.AddProfile<BusinessAndClientModelsMapperProfile>();
+        });
 
         services.AddHttpClient<CurrenciesSeeder>();
 
@@ -99,6 +98,7 @@ public static class MauiProgram
         services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<INavigationService, NavigationService>();
         services.AddScoped<IThemeService, ThemeService>();
+        services.AddScoped<IUserService, UserService>();
 
         services.AddScoped<CurrenciesSeeder>();
         services.AddScoped<SystemCategoriesSeeder>();
@@ -112,20 +112,37 @@ public static class MauiProgram
         services.AddScoped<IEventHandler<TransferTransactionDeletedEvent>, WalletUpdateOnTransferTransactionDeletionEventHandler>();
 
         services.AddScoped<IEventPublisher, EventPublisher>();
-
-        // Pages
-        services.AddTransient<LoginPage>();
+        
+        // Account pages
         services.AddTransient<AccountCreationPage>();
-        services.AddTransient<LoadingPage>();
-        services.AddTransient<OnboardingPage>();
-        services.AddTransient<InitialCreationPage>();
-        services.AddTransient<WalletsPage>();
-        services.AddTransient<TransactionsPage>();
-        services.AddTransient<GoalsPage>();
+        services.AddTransient<ForgotPasswordPage>();
+        services.AddTransient<LoginPage>();
+        services.AddTransient<ResetPasswordPage>();
+        
+        // Configuration pages
         services.AddTransient<ConfigurationPage>();
-
+        
+        // Goal pages
+        services.AddTransient<GoalsPage>();
+        
+        // Onboarding pages
+        services.AddTransient<CurrencySelectionPage>();
+        services.AddTransient<InitialWalletCreationPage>();
+        services.AddTransient<SyncSelectionPage>();
+        services.AddTransient<ThemeSelectionPage>();
+        services.AddTransient<AppFeaturesCarouselPage>();
+        
+        // Transaction pages
+        services.AddTransient<TransactionsPage>();
+        
+        // Wallet pages
+        services.AddTransient<WalletsPage>();
+        
+        // Other pages
+        services.AddTransient<LoadingPage>();
+        
         // ViewModels
-        services.AddTransient<OnboardingViewModel>();
+        services.AddTransient<AppFeaturesCarouselViewModel>();
     }
 
     private static void EnsureDatabaseCreated(IServiceProvider services)

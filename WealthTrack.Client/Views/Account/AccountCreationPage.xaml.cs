@@ -8,8 +8,6 @@ public partial class AccountCreationPage
     public AccountCreationPage(IAuthService authService, IDialogService dialogService, INavigationService navigationService)
     {
         InitializeComponent();
-        var viewModel = new AccountCreationViewModel(authService, dialogService, navigationService);
-        BindingContext = viewModel;
-        viewModel.Navigation = Navigation;
+        BindingContext = new AccountCreationViewModel(authService, dialogService, navigationService, Navigation);
     }
 }

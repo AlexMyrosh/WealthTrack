@@ -6,10 +6,10 @@ namespace WealthTrack.Client.Views.Account;
 
 public partial class LoginPage
 {
-    public LoginPage(IAuthService authService, IWalletService walletService, INavigationService navigationService, IDialogService dialogService)
+    public LoginPage(IAuthService authService, IUserService userService, INavigationService navigationService, IDialogService dialogService)
     {
         InitializeComponent();
-        var viewModel = new LoginViewModel(authService, walletService, navigationService, dialogService);
+        var viewModel = new LoginViewModel(authService, userService, navigationService, dialogService);
         BindingContext = viewModel;
         viewModel.Navigation = Navigation;
     }

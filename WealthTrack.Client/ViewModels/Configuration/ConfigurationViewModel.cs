@@ -1,6 +1,6 @@
 namespace WealthTrack.Client.ViewModels.Configuration;
 
-public class ConfigurationViewModel : BaseViewModel
+public class ConfigurationViewModel
 {
     public ConfigurationViewModel()
     {

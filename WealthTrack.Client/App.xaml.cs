@@ -1,15 +1,18 @@
-﻿using WealthTrack.Client.Services.Interfaces;
+﻿using WealthTrack.Business.Seeders;
+using WealthTrack.Client.Services.Interfaces;
 
 namespace WealthTrack.Client;
 
 public partial class App : Application
 {
-    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
+    private readonly CurrenciesSeeder _currenciesSeeder;
 
-    public App(IAuthService authService)
+    public App(IUserService userService, CurrenciesSeeder currenciesSeeder)
     {
         InitializeComponent();
-        _authService = authService;
+        _userService = userService;
+        _currenciesSeeder = currenciesSeeder;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -27,8 +30,9 @@ public partial class App : Application
     private async Task InitializeAppAsync()
     {
         await Shell.Current.GoToAsync("//LoadingPage");
+        //await _currenciesSeeder.SeedAsync();
         
-        var session = await _authService.GetUserSessionAsync();
+        var session = await _userService.GetUserSessionAsync();
         if (session is { IsIntroductionCompleted: true })
         {
             await Shell.Current.GoToAsync("//TransactionsPage");

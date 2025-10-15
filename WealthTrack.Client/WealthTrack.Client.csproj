@@ -62,10 +62,6 @@
         <RequireCodeSigning>false</RequireCodeSigning>
     </PropertyGroup>
     
-    <Target Name="CheckTeamId" BeforeTargets="Build">
-        <Message Importance="High" Text="APPLE_TEAM_ID=$(APPLE_TEAM_ID)" />
-    </Target>
-
     <!-- macOS Catalyst (Dev) -->
     <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-maccatalyst' and '$(Configuration)'=='Debug'">
         <CodesignKey>Apple Development</CodesignKey>
@@ -95,7 +91,7 @@
     <PropertyGroup Condition="'$(TargetFramework)'=='net7.0-ios' and '$(Configuration)'=='Release'">
       <CodesignEntitlements>Platforms/iOS/Entitlements.plist</CodesignEntitlements>
       <CodesignKey>Apple Distribution</CodesignKey>
-      <CodesignTeamId>UN84N249MY</CodesignTeamId>
+      <CodesignTeamId>$(APPLE_TEAM_ID)</CodesignTeamId>
       <CodesignProvision>Automatic</CodesignProvision>
       <RequireCodeSigning>true</RequireCodeSigning>
       <BuildIpa>true</BuildIpa>
@@ -133,8 +129,9 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.77.1" />
-        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5"/>
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
+        <PackageReference Include="Plugin.Maui.SegmentedControl" Version="1.1.0" />
         <PackageReference Include="System.Net.Http.Json" Version="9.0.9" />
     </ItemGroup>
 
@@ -176,10 +173,7 @@
         <MauiXaml Update="Views\Onboarding\InitialConfigurationPage.xaml">
             <SubType>Designer</SubType>
         </MauiXaml>
-        <MauiXaml Update="Views\Onboarding\InitialCreationPage.xaml">
-            <SubType>Designer</SubType>
-        </MauiXaml>
-        <MauiXaml Update="Views\Onboarding\OnboardingPage.xaml">
+        <MauiXaml Update="Views\Onboarding\AppFeaturesCarouselPage.xaml">
             <SubType>Designer</SubType>
         </MauiXaml>
 
@@ -193,6 +187,14 @@
 
         <MauiXaml Update="Views\LoadingPage.xaml">
             <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Onboarding\InitialAccountConfigurationPages\InitialAccountConfigurationPage.xaml">
+          <SubType>Designer</SubType>
+        </MauiXaml>
+
+        <MauiXaml Update="Views\Onboarding\InitialAccountConfigurationPages\InitialWalletCreationPage.xaml">
+          <SubType>Designer</SubType>
         </MauiXaml>
     </ItemGroup>
 
@@ -223,16 +225,7 @@
             <DependentUpon>GoalsPage.xaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
-
-        <Compile Update="Views\Onboarding\InitialAccountConfigurationPage.xaml.cs">
-            <DependentUpon>InitialAccountConfigurationPage.xaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Views\Onboarding\InitialCreationPage.xaml.cs">
-            <DependentUpon>InitialCreationPage.xaml</DependentUpon>
-            <SubType>Code</SubType>
-        </Compile>
-        <Compile Update="Views\Onboarding\OnboardingPage.xaml.cs">
+        <Compile Update="Views\Onboarding\AppFeaturesCarouselPage.xaml.cs">
             <DependentUpon>OnboardingPage.xaml</DependentUpon>
             <SubType>Code</SubType>
         </Compile>
@@ -250,6 +243,16 @@
         <Compile Update="Views\LoadingPage.xaml.cs">
             <DependentUpon>LoadingPage.xaml</DependentUpon>
             <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Onboarding\InitialAccountConfigurationPages\InitialAccountConfigurationPage.xaml.cs">
+          <DependentUpon>InitialAccountConfigurationPage.xaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Views\Onboarding\InitialAccountConfigurationPages\InitialWalletCreationPage.xaml.cs">
+          <DependentUpon>InitialWalletCreationPage.xaml</DependentUpon>
+          <SubType>Code</SubType>
         </Compile>
     </ItemGroup>
 

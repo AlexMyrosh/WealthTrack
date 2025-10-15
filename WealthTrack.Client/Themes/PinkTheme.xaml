@@ -6,7 +6,8 @@
 
     <Color x:Key="ContentPageBackground">#FFF6F9</Color>
     <Color x:Key="TitleColor">#AD1457</Color>
-    <Color x:Key="NavigationElementColor">#E91E63</Color>
+    <Color x:Key="IndicatorViewColor">#FFC0CB</Color>
+    <Color x:Key="SelectedIndicatorViewColor">#FF69B4</Color>
     <Color x:Key="EntryBackground">#FFE3EC</Color>
     <Color x:Key="EntryTextColor">#3C003C</Color>
     <Color x:Key="ButtonBackground">#E91E63</Color>
@@ -17,6 +18,7 @@
     <Color x:Key="PickerBackground">#FFE3EC</Color>
     <Color x:Key="PickerTextColor">#3C003C</Color>
     <Color x:Key="LoadingSpinnerColor">#E91E63</Color>
+    <Color x:Key="AccentColor">#FF4081</Color>
     
     <!-- Social buttons -->
     <Color x:Key="GoogleButtonBackground">#E03E2D</Color>

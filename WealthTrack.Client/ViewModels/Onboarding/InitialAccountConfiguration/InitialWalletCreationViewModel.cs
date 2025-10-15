@@ -1,69 +1,35 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Client.Services.Interfaces;
 
-namespace WealthTrack.Client.ViewModels.Onboarding;
+namespace WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration;
 
-public class InitialCreationViewModel : BaseViewModel
+public partial class InitialWalletCreationViewModel : ObservableObject
 {
     private readonly IWalletService _walletService;
     private readonly ICurrencyService _currencyService;
-    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
 
-    private ObservableCollection<CurrencyDetailsBusinessModel> _currencies = new();
-    public ObservableCollection<CurrencyDetailsBusinessModel> Currencies
-    {
-        get => _currencies;
-        set => SetProperty(ref _currencies, value);
-    }
-
-    private CurrencyDetailsBusinessModel? _selectedCurrency;
-    public CurrencyDetailsBusinessModel? SelectedCurrency
-    {
-        get => _selectedCurrency;
-        set => SetProperty(ref _selectedCurrency, value);
-    }
-
-    private string _walletName = string.Empty;
-    public string WalletName
-    {
-        get => _walletName;
-        set => SetProperty(ref _walletName, value);
-    }
-
-    private decimal _initialBalance;
-    public decimal InitialBalance
-    {
-        get => _initialBalance;
-        set => SetProperty(ref _initialBalance, value);
-    }
-
-    private string _stepTitle = string.Empty;
-    public string StepTitle
-    {
-        get => _stepTitle;
-        set => SetProperty(ref _stepTitle, value);
-    }
-
-    private string _stepDescription = string.Empty;
-    public string StepDescription
-    {
-        get => _stepDescription;
-        set => SetProperty(ref _stepDescription, value);
-    }
-    
+    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty] private ObservableCollection<CurrencyDetailsBusinessModel> _currencies = [];
+    [ObservableProperty] private CurrencyDetailsBusinessModel? _selectedCurrency;
+    [ObservableProperty] private string _walletName = string.Empty;
+    [ObservableProperty] private decimal _initialBalance;
+    [ObservableProperty] private string _stepTitle = string.Empty;
+    [ObservableProperty] private string _stepDescription = string.Empty;
     public ICommand CreateWalletCommand { get; }
     public ICommand SkipWalletCommand { get; }
 
-    public InitialCreationViewModel(IWalletService walletService, ICurrencyService currencyService, IAuthService authService)
+    public InitialWalletCreationViewModel(IWalletService walletService, ICurrencyService currencyService, IUserService userService)
     {
         _walletService = walletService;
         _currencyService = currencyService;
-        _authService = authService;
+        _userService = userService;
 
         CreateWalletCommand = new AsyncRelayCommand(CreateWalletAsync);
         SkipWalletCommand = new AsyncRelayCommand(SkipWalletAsync);
@@ -146,11 +112,11 @@ public class InitialCreationViewModel : BaseViewModel
 
     private async Task NavigateToMainPageAsync()
     {
-        var session = await _authService.GetUserSessionAsync();
+        var session = await _userService.GetUserSessionAsync();
         if (session is not null)
         {
             session.IsIntroductionCompleted = true;
-            await _authService.SaveUserSessionAsync(session);
+            await _userService.SaveUserSessionAsync(session);
         }
         
         await Shell.Current.GoToAsync("//TransactionsPage");

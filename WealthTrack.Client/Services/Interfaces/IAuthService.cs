@@ -23,8 +23,4 @@ public interface IAuthService
     public Task LogoutAsync();
 
     public Task ContinueWithoutAccountAsync();
-
-    public Task<UserSession?> GetUserSessionAsync();
-
-    public Task SaveUserSessionAsync(UserSession session);
 }

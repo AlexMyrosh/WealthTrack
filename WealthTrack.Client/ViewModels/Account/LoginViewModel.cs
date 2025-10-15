@@ -12,7 +12,7 @@ namespace WealthTrack.Client.ViewModels.Account;
 public partial class LoginViewModel : ObservableObject
 {
     private readonly IAuthService _authService;
-    private readonly IWalletService _walletService;
+    private readonly IUserService _userService;
     private readonly INavigationService _navigationService;
     private readonly IDialogService _dialogService;
 
@@ -24,18 +24,18 @@ public partial class LoginViewModel : ObservableObject
     public ICommand MicrosoftLoginCommand { get; }
     public ICommand NavigateToAccountCreationPageCommand { get; }
     public ICommand ContinueWithoutAccountCommand { get; }
-    
+
+    [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _email = string.Empty;
-    
     [ObservableProperty] private string _password = string.Empty;
-    
-    public LoginViewModel(IAuthService authService, IWalletService walletService, INavigationService navigationService, IDialogService dialogService)
+
+    public LoginViewModel(IAuthService authService, IUserService userService, INavigationService navigationService, IDialogService dialogService)
     {
-        _authService  = authService;
-        _walletService = walletService;
+        _authService = authService;
+        _userService = userService;
         _navigationService = navigationService;
         _dialogService = dialogService;
-        
+
         RegularLoginCommand = new AsyncRelayCommand(RegularLoginAsync);
         ResetPasswordCommand = new AsyncRelayCommand(ResetPasswordAsync);
         GoogleLoginCommand = new AsyncRelayCommand(GoogleLoginAsync);
@@ -44,12 +44,12 @@ public partial class LoginViewModel : ObservableObject
         NavigateToAccountCreationPageCommand = new AsyncRelayCommand(GoToAccountCreationPage);
         ContinueWithoutAccountCommand = new AsyncRelayCommand(ContinueWithoutAccountAsync);
     }
-    
+
     private async Task GoToAccountCreationPage()
     {
         await Navigation.PushAsync(new AccountCreationPage(_authService, _dialogService, _navigationService));
     }
-    
+
     private async Task RegularLoginAsync()
     {
         if (string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
@@ -57,17 +57,25 @@ public partial class LoginViewModel : ObservableObject
             await _dialogService.ShowAlertAsync("Error", "Please enter both email and password", "OK");
             return;
         }
-        
-        if (await _authService.LoginAsync(Email, Password))
+
+        try
         {
-            await MoveToNextStepAsync();
+            IsBusy = true;
+            if (await _authService.LoginAsync(Email, Password))
+            {
+                await MoveToNextStepAsync();
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Login failed", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Login failed", "OK");
+            IsBusy = false;
         }
     }
-    
+
     private async Task ResetPasswordAsync()
     {
         await Navigation.PushAsync(new ForgotPasswordPage(_authService, _navigationService, _dialogService));
@@ -75,64 +83,84 @@ public partial class LoginViewModel : ObservableObject
 
     private async Task GoogleLoginAsync()
     {
-        if (await _authService.LoginWithGoogleAsync())
+        try
         {
-            await MoveToNextStepAsync();
+            IsBusy = true;
+            if (await _authService.LoginWithGoogleAsync())
+            {
+                await MoveToNextStepAsync();
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Google login failed", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Google login failed", "OK");
+            IsBusy = false;
         }
     }
 
     private async Task AppleLoginAsync()
     {
-        if (await _authService.LoginWithAppleAsync())
+        try
         {
-            await MoveToNextStepAsync();
+            IsBusy = true;
+            if (await _authService.LoginWithAppleAsync())
+            {
+                await MoveToNextStepAsync();
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Apple login failed", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Apple login failed", "OK");
+            IsBusy = false;
         }
     }
-    
+
     private async Task MicrosoftLoginAsync()
     {
-        if (await _authService.LoginWithMicrosoftAsync())
+        try
         {
-            await MoveToNextStepAsync();
+            IsBusy = true;
+            if (await _authService.LoginWithMicrosoftAsync())
+            {
+                await MoveToNextStepAsync();
+            }
+            else
+            {
+                await _dialogService.ShowAlertAsync("Error", "Microsoft login failed", "OK");
+            }
         }
-        else
+        finally
         {
-            await _dialogService.ShowAlertAsync("Error", "Microsoft login failed", "OK");
+            IsBusy = false;
         }
     }
-    
+
     private async Task ContinueWithoutAccountAsync()
     {
         await _authService.ContinueWithoutAccountAsync();
         await MoveToNextStepAsync();
     }
-    
+
     private async Task MoveToNextStepAsync()
     {
-        var session = await _authService.GetUserSessionAsync() ?? new UserSession
+        var session = await _userService.GetUserSessionAsync() ?? new UserSession
         {
             CurrentLoginMode = LoginMode.Guest
         };
 
-        if (!session.IsIntroductionCompleted || !session.AccountCurrencyId.HasValue || !session.SelectedAppTheme.HasValue)
+        if (session.IsIntroductionCompleted)
         {
-            await _navigationService.GoToAsync("//InitialAccountConfigurationPage");
-        }
-        else if (!await _walletService.AnyAsync())
-        {
-            await _navigationService.GoToAsync("//InitialCreationPage");
+            await _navigationService.GoToAsync("//TransactionsPage");
         }
         else
         {
-            await _navigationService.GoToAsync("//TransactionsPage");
+            await _navigationService.GoToAsync("//CurrencySelectionPage");
         }
     }
 }

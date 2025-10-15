@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:initialConfiguration="clr-namespace:WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration"
+             xmlns:controls="clr-namespace:Plugin.Maui.SegmentedControl;assembly=Plugin.Maui.SegmentedControl"
+             x:Class="WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration.SyncSelectionPage"
+             x:DataType="initialConfiguration:SyncSelectionViewModel"
+             BackgroundColor="{DynamicResource ContentPageBackground}">
+
+    <Grid RowDefinitions="*,Auto" Padding="0">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="30" Spacing="20">
+                <Label Text="Enable sync"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{DynamicResource TitleColor}" />
+
+                <Label Text="You can enable sync your data with our server to be able to work on different devices with the same account"
+                       FontSize="18"
+                       TextColor="{DynamicResource LabelTextColor}"
+                       HorizontalTextAlignment="Center" />
+
+                <controls:SegmentedControl
+                    SelectedSegment="{Binding SyncIndex}"
+                    TintColor="{DynamicResource AccentColor}">
+                    <controls:SegmentedControl.Children>
+                        <controls:SegmentedControlOption Text="Sync On" />
+                        <controls:SegmentedControlOption Text="Sync Off" />
+                    </controls:SegmentedControl.Children>
+                </controls:SegmentedControl>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1"
+                Text="Next"
+                Command="{Binding NextCommand}"
+                BackgroundColor="{DynamicResource ButtonBackground}"
+                TextColor="{DynamicResource ButtonTextColor}"
+                CornerRadius="8"
+                FontSize="16"
+                FontAttributes="Bold"
+                HeightRequest="50"
+                Margin="20" />
+    </Grid>
+</ContentPage>

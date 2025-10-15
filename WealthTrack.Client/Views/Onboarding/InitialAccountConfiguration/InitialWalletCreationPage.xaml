@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="WealthTrack.Client.Views.Onboarding.InitialCreationPage"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodel="clr-namespace:WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration"
+             x:Class="WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration.InitialWalletCreationPage"
+             x:DataType="viewmodel:InitialWalletCreationViewModel"
              BackgroundColor="{DynamicResource ContentPageBackground}"
              Title="Getting Started">
     <ScrollView>

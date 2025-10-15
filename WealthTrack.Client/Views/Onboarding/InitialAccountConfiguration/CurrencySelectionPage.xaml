@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:initialConfiguration="clr-namespace:WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration"
+             x:Class="WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration.CurrencySelectionPage"
+             x:DataType="initialConfiguration:CurrencySelectionViewModel"
+             BackgroundColor="{DynamicResource ContentPageBackground}">
+
+    <Grid RowDefinitions="*,Auto" Padding="0">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="30" Spacing="20">
+                <Label Text="Select your primary currency"
+                       FontSize="28"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{DynamicResource TitleColor}" />
+                <Picker ItemsSource="{Binding Currencies}"
+                        SelectedItem="{Binding SelectedCurrency}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Center"
+                        BackgroundColor="{DynamicResource PickerBackground}"
+                        TextColor="{DynamicResource PickerTextColor}"
+                        FontSize="18"
+                        HeightRequest="50"
+                        Margin="0,10"
+                        Title="Select currency" />
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <Button Grid.Row="1"
+                Text="Next"
+                Command="{Binding NextCommand}"
+                BackgroundColor="{DynamicResource ButtonBackground}"
+                TextColor="{DynamicResource ButtonTextColor}"
+                CornerRadius="8"
+                FontSize="16"
+                FontAttributes="Bold"
+                HeightRequest="50"
+                Margin="20" />
+    </Grid>
+</ContentPage>
