@@ -1,3 +1,4 @@
+using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WealthTrack.Business.Services.Interfaces;
@@ -13,6 +14,9 @@ public partial class SyncSelectionViewModel : ObservableObject
     private readonly IUserService _userService;
     private readonly IWalletService _walletService;
     private readonly ICurrencyService _currencyService;
+    private readonly INavigationService _navigationService;
+    private readonly IDialogService _dialogService;
+    private readonly IMapper _mapper;
     
     private readonly INavigation _navigation;
     
@@ -21,11 +25,14 @@ public partial class SyncSelectionViewModel : ObservableObject
 
     public IAsyncRelayCommand NextCommand { get; }
 
-    public SyncSelectionViewModel(IUserService userService, IWalletService walletService, ICurrencyService currencyService, INavigation navigation)
+    public SyncSelectionViewModel(IUserService userService, IWalletService walletService, ICurrencyService currencyService, INavigation navigation, INavigationService navigationService, IMapper mapper, IDialogService dialogService)
     {
         _userService = userService;
         _walletService = walletService;
         _currencyService = currencyService;
+        _navigationService = navigationService;
+        _mapper = mapper;
+        _dialogService = dialogService;
         
         _navigation = navigation;
 
@@ -54,6 +61,6 @@ public partial class SyncSelectionViewModel : ObservableObject
         var userSession = await _userService.GetUserSessionAsync() ?? new UserSession();
         userSession.IsSyncEnabled = IsSyncEnabled;
         await _userService.SaveUserSessionAsync(userSession);
-        await _navigation.PushAsync(new InitialWalletCreationPage(_walletService, _currencyService, _userService));
+        await _navigation.PushAsync(new InitialWalletCreationPage(_walletService, _currencyService, _navigationService, _mapper, _dialogService));
     }
 }

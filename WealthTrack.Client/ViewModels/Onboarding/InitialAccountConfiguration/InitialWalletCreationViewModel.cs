@@ -1,124 +1,110 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using WealthTrack.Business.BusinessModels.Currency;
 using WealthTrack.Business.BusinessModels.Wallet;
 using WealthTrack.Business.Services.Interfaces;
+using WealthTrack.Client.Models.Dto;
 using WealthTrack.Client.Services.Interfaces;
+using WealthTrack.Client.Views.Transaction;
 
 namespace WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration;
 
-public partial class InitialWalletCreationViewModel : ObservableObject
-{
-    private readonly IWalletService _walletService;
-    private readonly ICurrencyService _currencyService;
-    private readonly IUserService _userService;
-
-    [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private ObservableCollection<CurrencyDetailsBusinessModel> _currencies = [];
-    [ObservableProperty] private CurrencyDetailsBusinessModel? _selectedCurrency;
-    [ObservableProperty] private string _walletName = string.Empty;
-    [ObservableProperty] private decimal _initialBalance;
-    [ObservableProperty] private string _stepTitle = string.Empty;
-    [ObservableProperty] private string _stepDescription = string.Empty;
-    public ICommand CreateWalletCommand { get; }
-    public ICommand SkipWalletCommand { get; }
-
-    public InitialWalletCreationViewModel(IWalletService walletService, ICurrencyService currencyService, IUserService userService)
+    public partial class InitialWalletCreationViewModel : ObservableObject
     {
-        _walletService = walletService;
-        _currencyService = currencyService;
-        _userService = userService;
+        private readonly IWalletService _walletService;
+        private readonly INavigationService _navigationService;
+        private readonly ICurrencyService _currencyService;
+        private readonly IMapper _mapper;
+        private readonly IDialogService _dialogService;
 
-        CreateWalletCommand = new AsyncRelayCommand(CreateWalletAsync);
-        SkipWalletCommand = new AsyncRelayCommand(SkipWalletAsync);
+        [ObservableProperty] private ObservableCollection<WalletDto> _wallets = [];
+        [ObservableProperty] private ObservableCollection<CurrencyDto> _currencies = [];
+        [ObservableProperty] private CurrencyDto? _selectedCurrency;
+        [ObservableProperty] private string _newWalletName = string.Empty;
+        [ObservableProperty] private decimal _newWalletBalance;
+        [ObservableProperty] private bool _isPartOfGeneralBalance;
 
-        _ = InitializeAsync();
-    }
+        public ICommand AddWalletCommand { get; }
+        public ICommand CompleteCommand { get; }
+        public ICommand DeleteWalletCommand { get; }
 
-    private async Task InitializeAsync()
-    {
-        IsBusy = true;
-        try
+        public string CompleteButtonText => Wallets.Any() ? "Complete configuration" : "Create later";
+
+        public InitialWalletCreationViewModel(IWalletService walletService, INavigationService navigationService, ICurrencyService currencyService, IMapper mapper, IDialogService dialogService)
         {
-            await LoadCurrenciesAsync();
-            await CheckExistingDataAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
+            _walletService = walletService;
+            _navigationService = navigationService;
+            _currencyService = currencyService;
+            _mapper = mapper;
+            _dialogService = dialogService;
 
-    private async Task LoadCurrenciesAsync()
-    {
-        var currencies = await _currencyService.GetAllAsync();
-        Currencies.Clear();
-        foreach (var currency in currencies)
-        {
-            Currencies.Add(currency);
-        }
-
-        // Set default currency (USD if available)
-        SelectedCurrency = Currencies.FirstOrDefault(c => c.Code == "USD") ?? Currencies.FirstOrDefault();
-    }
-
-    private async Task CheckExistingDataAsync()
-    {
-        var wallets = await _walletService.GetAllAsync();
-        if (wallets.Count == 0)
-        {
-            StepTitle = "Create Your First Wallet";
-            StepDescription = "Now let's create a wallet to start tracking your money.";
-        }
-        else
-        {
-            await NavigateToMainPageAsync();
-        }
-    }
-    
-    private async Task CreateWalletAsync()
-    {
-        if (SelectedCurrency == null || string.IsNullOrWhiteSpace(WalletName))
-        {
-            return;
-        }
-
-        IsBusy = true;
-        try
-        {
-            var request = new WalletUpsertBusinessModel
-            {
-                Name = WalletName,
-                CurrencyId = SelectedCurrency.Id,
-                Balance = InitialBalance,
-                IsPartOfGeneralBalance = true
-            };
-
-            await _walletService.CreateAsync(request);
-            await NavigateToMainPageAsync();
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-    }
-
-    private async Task SkipWalletAsync()
-    {
-        await NavigateToMainPageAsync();
-    }
-
-    private async Task NavigateToMainPageAsync()
-    {
-        var session = await _userService.GetUserSessionAsync();
-        if (session is not null)
-        {
-            session.IsIntroductionCompleted = true;
-            await _userService.SaveUserSessionAsync(session);
+            AddWalletCommand = new AsyncRelayCommand(AddWalletAsync);
+            CompleteCommand = new AsyncRelayCommand(CompleteAsync);
+            DeleteWalletCommand = new AsyncRelayCommand<Guid>(DeleteWalletAsync);
+            
+            _ = LoadDataAsync();
         }
         
-        await Shell.Current.GoToAsync("//TransactionsPage");
+        private async Task LoadDataAsync()
+        {
+            var currencies = await _currencyService.GetAllAsync();
+            var wallets = await _walletService.GetAllAsync();
+            Wallets = new ObservableCollection<WalletDto>(_mapper.Map<List<WalletDto>>(wallets));
+            Currencies = new ObservableCollection<CurrencyDto>(_mapper.Map<List<CurrencyDto>>(currencies));
+            if (Currencies.Any())
+            {
+                // In the future, it will be needed to search for default currency by user's country
+                SelectedCurrency = (Currencies.FirstOrDefault(c => c.Code == "USD") ?? Currencies.FirstOrDefault())!;
+            }
+        }
+        
+        private async Task AddWalletAsync()
+        {
+            if (string.IsNullOrWhiteSpace(NewWalletName))
+            {
+                await _dialogService.ShowAlertAsync("Error", "Name is required", "OK");
+                return;
+            }
+            if (SelectedCurrency is null)
+            {
+                await _dialogService.ShowAlertAsync("Error", "Currency is required", "OK");
+                return;
+            }
+            
+            var wallet = new WalletUpsertBusinessModel
+            {
+                Name = NewWalletName,
+                Balance = NewWalletBalance,
+                IsPartOfGeneralBalance = IsPartOfGeneralBalance,
+                CurrencyId = SelectedCurrency.Id
+            };
+
+            var walletId = await _walletService.CreateAsync(wallet);
+            Wallets.Add(new WalletDto
+            {
+                Id = walletId,
+                Name = NewWalletName,
+                Balance = NewWalletBalance,
+                IsPartOfGeneralBalance = IsPartOfGeneralBalance,
+                Currency = SelectedCurrency
+            });
+            NewWalletName = string.Empty;
+            NewWalletBalance = 0;
+
+            OnPropertyChanged(nameof(CompleteButtonText));
+        }
+        
+        private async Task DeleteWalletAsync(Guid id)
+        {
+            var wallet = Wallets.First(w => w.Id == id);
+            Wallets.Remove(wallet);
+            await _walletService.HardDeleteAsync(id);
+        }
+
+        private async Task CompleteAsync()
+        {
+            await _navigationService.GoToAsync($"//{nameof(TransactionsPage)}");
+        }
     }
-}

@@ -1,3 +1,4 @@
+using AutoMapper;
 using WealthTrack.Business.Services.Interfaces;
 using WealthTrack.Client.Services.Interfaces;
 using WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration;
@@ -6,9 +7,9 @@ namespace WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration;
 
 public partial class SyncSelectionPage
 {
-    public SyncSelectionPage(IUserService userService, IWalletService walletService, ICurrencyService currencyService)
+    public SyncSelectionPage(IUserService userService, IWalletService walletService, ICurrencyService currencyService, INavigationService navigationService, IMapper mapper, IDialogService dialogService)
     {
         InitializeComponent();
-        BindingContext = new SyncSelectionViewModel(userService, walletService, currencyService, Navigation);
+        BindingContext = new SyncSelectionViewModel(userService, walletService, currencyService, Navigation, navigationService, mapper, dialogService);
     }
 }

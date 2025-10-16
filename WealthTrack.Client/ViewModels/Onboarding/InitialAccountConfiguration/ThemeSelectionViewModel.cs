@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using AutoMapper;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WealthTrack.Business.Services.Interfaces;
@@ -16,6 +17,9 @@ public partial class ThemeSelectionViewModel : ObservableObject
     private readonly IThemeService _themeService;
     private readonly IWalletService _walletService;
     private readonly ICurrencyService _currencyService;
+    private readonly INavigationService _navigationService;
+    private readonly IDialogService _dialogService;
+    private readonly IMapper _mapper;
     
     private readonly INavigation _navigation;
     
@@ -24,12 +28,15 @@ public partial class ThemeSelectionViewModel : ObservableObject
 
     public ICommand NextCommand { get; }
 
-    public ThemeSelectionViewModel(IUserService userService, IThemeService themeService, IWalletService walletService, ICurrencyService currencyService, INavigation navigation)
+    public ThemeSelectionViewModel(IUserService userService, IThemeService themeService, IWalletService walletService, ICurrencyService currencyService, INavigation navigation, INavigationService navigationService, IMapper mapper, IDialogService dialogService)
     {
         _userService = userService;
         _themeService = themeService;
         _walletService = walletService;
         _currencyService = currencyService;
+        _navigationService = navigationService;
+        _dialogService = dialogService;
+        _mapper = mapper;
 
         _navigation = navigation;
         
@@ -62,11 +69,11 @@ public partial class ThemeSelectionViewModel : ObservableObject
         
         if (userSession.CurrentLoginMode == LoginMode.Registered)
         {
-            await _navigation.PushAsync(new SyncSelectionPage(_userService, _walletService, _currencyService));
+            await _navigation.PushAsync(new SyncSelectionPage(_userService, _walletService, _currencyService, _navigationService, _mapper, _dialogService));
         }
         else
         {
-            await _navigation.PushAsync(new InitialWalletCreationPage(_walletService, _currencyService, _userService));
+            await _navigation.PushAsync(new InitialWalletCreationPage(_walletService, _currencyService, _navigationService, _mapper, _dialogService));
         }
     }
 }

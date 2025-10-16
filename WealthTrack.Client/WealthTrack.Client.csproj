@@ -196,6 +196,10 @@
         <MauiXaml Update="Views\Onboarding\InitialAccountConfigurationPages\InitialWalletCreationPage.xaml">
           <SubType>Designer</SubType>
         </MauiXaml>
+
+        <MauiXaml Update="Themes\EmeraldTheme.xaml">
+          <SubType>Designer</SubType>
+        </MauiXaml>
     </ItemGroup>
 
     <ItemGroup>
@@ -252,6 +256,11 @@
 
         <Compile Update="Views\Onboarding\InitialAccountConfigurationPages\InitialWalletCreationPage.xaml.cs">
           <DependentUpon>InitialWalletCreationPage.xaml</DependentUpon>
+          <SubType>Code</SubType>
+        </Compile>
+
+        <Compile Update="Themes\EmeraldTheme.xaml.cs">
+          <DependentUpon>EmeraldTheme.xaml</DependentUpon>
           <SubType>Code</SubType>
         </Compile>
     </ItemGroup>

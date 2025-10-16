@@ -19,6 +19,7 @@
     <Color x:Key="PickerTextColor">#3C003C</Color>
     <Color x:Key="LoadingSpinnerColor">#E91E63</Color>
     <Color x:Key="AccentColor">#FF4081</Color>
+    <Color x:Key="DeleteEntityIconColor">Red</Color>
     
     <!-- Social buttons -->
     <Color x:Key="GoogleButtonBackground">#E03E2D</Color>

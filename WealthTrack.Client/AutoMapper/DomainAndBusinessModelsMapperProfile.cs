@@ -16,5 +16,9 @@ public class BusinessAndClientModelsMapperProfile : Profile
     {
         // Category
         CreateMap<CurrencyDetailsBusinessModel, CurrencyDto>();
+        CreateMap<CurrencyRelatedToWalletDetailsBusinessModel, CurrencyDto>();
+        
+        // Wallet
+        CreateMap<WalletDetailsBusinessModel, WalletDto>();
     }
 }

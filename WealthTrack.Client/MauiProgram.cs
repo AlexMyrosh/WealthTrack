@@ -40,6 +40,7 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        var dbPath = Path.Combine(FileSystem.AppDataDirectory, "WealthTrackDb.db");
         var builder = MauiApp.CreateBuilder();
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("WealthTrack.Client.appsettings.json");
         var config = new ConfigurationBuilder().AddJsonStream(stream!).Build();
@@ -56,6 +57,12 @@ public static class MauiProgram
         builder.Services.AddSingleton(oauthSettings);
 
         builder.Services.AddHttpClient<IAuthService, AuthService>(client => { client.BaseAddress = new Uri(oauthSettings.BackendBaseUrl); })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                // TODO: REMOVE BEFORE DEPLOYING TO PROD!
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            });
+        builder.Services.AddHttpClient<ISyncService, SyncService>(client => { client.BaseAddress = new Uri(oauthSettings.BackendBaseUrl); })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
             {
                 // TODO: REMOVE BEFORE DEPLOYING TO PROD!

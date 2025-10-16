@@ -17,6 +17,8 @@ public partial class CurrencySelectionViewModel : ObservableObject
     private readonly IWalletService _walletService;
     private readonly IThemeService _themeService;
     private readonly IMapper _mapper;
+    private readonly INavigationService _navigationService;
+    private readonly IDialogService _dialogService;
     
     public INavigation Navigation { get; set; } = null!;
     
@@ -25,13 +27,15 @@ public partial class CurrencySelectionViewModel : ObservableObject
 
     public ICommand NextCommand { get; }
 
-    public CurrencySelectionViewModel(IUserService userService, ICurrencyService currencyService, IWalletService walletService, IThemeService themeService, IMapper mapper)
+    public CurrencySelectionViewModel(IUserService userService, ICurrencyService currencyService, IWalletService walletService, IThemeService themeService, IMapper mapper, INavigationService navigationService, IDialogService dialogService)
     {
         _userService = userService;
         _currencyService = currencyService;
         _walletService = walletService;
         _themeService = themeService;
         _mapper = mapper;
+        _navigationService = navigationService;
+        _dialogService = dialogService;
 
         NextCommand = new AsyncRelayCommand(OnNextAsync);
 
@@ -63,6 +67,6 @@ public partial class CurrencySelectionViewModel : ObservableObject
             await _userService.SaveUserSessionAsync(userSession);
         }
         
-        await Navigation.PushAsync(new ThemeSelectionPage(_userService, _themeService, _walletService, _currencyService));
+        await Navigation.PushAsync(new ThemeSelectionPage(_userService, _themeService, _walletService, _currencyService, _navigationService, _mapper, _dialogService));
     }
 }

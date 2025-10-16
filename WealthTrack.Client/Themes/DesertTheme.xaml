@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="WealthTrack.Client.Themes.DesertTheme">
+
+    <Color x:Key="ContentPageBackground">#D6CEC0</Color>
+    <Color x:Key="TitleColor">#9D7464</Color>
+    <Color x:Key="IndicatorViewColor">#131919</Color>
+    <Color x:Key="SelectedIndicatorViewColor">#C8A75F</Color>
+    <Color x:Key="EntryBackground">#D6CEC0</Color>
+    <Color x:Key="EntryTextColor">#9D7464</Color>
+    <Color x:Key="ButtonBackground">#C8A75F</Color>
+    <Color x:Key="ButtonDisabledBackground">#131919</Color>
+    <Color x:Key="ButtonTextColor">#FFFFFF</Color>
+    <Color x:Key="LabelTextColor">#9D7464</Color>
+    <Color x:Key="BorderBackground">#C8A75F</Color>
+    <Color x:Key="PickerBackground">#D6CEC0</Color>
+    <Color x:Key="PickerTextColor">#9D7464</Color>
+    <Color x:Key="LoadingSpinnerColor">#C8A75F</Color>
+    <Color x:Key="AccentColor">#C8A75F</Color>
+    <Color x:Key="DeleteEntityIconColor">#C8A75F</Color>
+
+    <Color x:Key="GoogleButtonBackground">#DB4437</Color>
+    <Color x:Key="AppleButtonBackground">#A8B9CC</Color>
+    <Color x:Key="MicrosoftButtonBackground">#F4B400</Color>
+    <Color x:Key="SocialButtonTextColor">#FFFFFF</Color>
+    
+</ResourceDictionary>

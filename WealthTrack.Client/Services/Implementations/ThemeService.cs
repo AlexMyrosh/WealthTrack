@@ -12,6 +12,9 @@ public class ThemeService : IThemeService
             CustomAppTheme.Light => new Themes.LightTheme(),
             CustomAppTheme.Dark => new Themes.DarkTheme(),
             CustomAppTheme.Pink => new Themes.PinkTheme(),
+            CustomAppTheme.Emerald => new Themes.EmeraldTheme(),
+            CustomAppTheme.Blue => new Themes.BlueTheme(),
+            CustomAppTheme.Desert => new Themes.DesertTheme(),
             _ => new Themes.LightTheme()
         };
         

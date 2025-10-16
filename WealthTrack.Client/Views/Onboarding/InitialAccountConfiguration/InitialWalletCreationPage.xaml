@@ -1,102 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewmodel="clr-namespace:WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:initialConfiguration="clr-namespace:WealthTrack.Client.ViewModels.Onboarding.InitialAccountConfiguration"
+             xmlns:clientModels="clr-namespace:WealthTrack.Client.Models.Dto"
              x:Class="WealthTrack.Client.Views.Onboarding.InitialAccountConfiguration.InitialWalletCreationPage"
-             x:DataType="viewmodel:InitialWalletCreationViewModel"
-             BackgroundColor="{DynamicResource ContentPageBackground}"
-             Title="Getting Started">
-    <ScrollView>
-        <StackLayout Padding="20" Spacing="30">
-            
-            <!-- Header -->
-            <StackLayout Spacing="10" HorizontalOptions="Center">
-                <Label Text="{Binding StepTitle}" 
-                       FontSize="28" 
-                       FontAttributes="Bold" 
+             x:DataType="initialConfiguration:InitialWalletCreationViewModel"
+             BackgroundColor="{DynamicResource ContentPageBackground}">
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="30" Spacing="20">
+
+                <Label Text="Create your wallets"
+                       FontSize="28"
+                       FontAttributes="Bold"
                        HorizontalOptions="Center"
                        TextColor="{DynamicResource TitleColor}" />
                 
-                <Label Text="{Binding StepDescription}" 
-                       FontSize="16" 
-                       HorizontalOptions="Center"
-                       HorizontalTextAlignment="Center"
-                       TextColor="{DynamicResource LabelTextColor}" />
-            </StackLayout>
-            
-            <!-- Wallet Creation Step -->
-            <StackLayout Spacing="20">
-                <Border BackgroundColor="{DynamicResource BorderBackground}" 
-                        StrokeThickness="0"
-                        Padding="20">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="12" />
-                    </Border.StrokeShape>
-                    
-                    <StackLayout Spacing="15">
-                        <Label Text="Wallet Name" 
+                <Border StrokeThickness="1"
+                        Padding="20"
+                        StrokeShape="RoundRectangle 20"
+                        Background="{DynamicResource BorderBackground}">
+
+                    <VerticalStackLayout Spacing="10">
+                        <Entry Placeholder="Wallet name"
+                               Text="{Binding NewWalletName}"
                                FontSize="16"
-                               FontAttributes="Bold"
-                               TextColor="{DynamicResource LabelTextColor}" />
-                        
-                        <Entry Text="{Binding WalletName}" 
-                               Placeholder="e.g., Cash, Credit Card, ..."
-                               BackgroundColor="{DynamicResource EntryBackground}"
-                               TextColor="{DynamicResource EntryTextColor}" />
-                        
-                        <Label Text="Initial Balance" 
-                               FontSize="16" 
-                               FontAttributes="Bold"
-                               TextColor="{DynamicResource LabelTextColor}" />
-                        
-                        <Entry Text="{Binding InitialBalance}" 
-                               Placeholder="0.00"
+                               BackgroundColor="{DynamicResource EntryBackground}" />
+
+                        <Entry Placeholder="Initial balance"
                                Keyboard="Numeric"
-                               BackgroundColor="{DynamicResource EntryBackground}"
-                               TextColor="{DynamicResource EntryTextColor}" />
+                               Text="{Binding NewWalletBalance}"
+                               FontSize="16"
+                               BackgroundColor="{DynamicResource EntryBackground}" />
                         
-                        <Label Text="Currency" 
-                               FontSize="16" 
-                               FontAttributes="Bold"
-                               TextColor="{DynamicResource LabelTextColor}" />
-                        
-                        <Picker ItemsSource="{Binding Currencies}"
-                                SelectedItem="{Binding SelectedCurrency}"
-                                ItemDisplayBinding="{Binding Code}"
-                                BackgroundColor="{DynamicResource PickerBackground}"
-                                TextColor="{DynamicResource PickerTextColor}">
-                        </Picker>
-                    </StackLayout>
+                            <Picker ItemsSource="{Binding Currencies}"
+                                    SelectedItem="{Binding SelectedCurrency}"
+                                    Title="Select currency"
+                                    ItemDisplayBinding="{Binding .}" 
+                                    FontSize="16"
+                                    BackgroundColor="{DynamicResource PickerBackground}"
+                                    TextColor="{DynamicResource PickerTextColor}" />
+
+                        <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                            <Label Text="Include in total balance"
+                                   VerticalOptions="Center"
+                                   TextColor="{DynamicResource LabelTextColor}" />
+                            <Switch IsToggled="{Binding IsPartOfGeneralBalance}"
+                                    OnColor="{DynamicResource AccentColor}" />
+                        </HorizontalStackLayout>
+
+                        <Button Text="Add wallet"
+                                Command="{Binding AddWalletCommand}"
+                                BackgroundColor="{DynamicResource ButtonBackground}"
+                                TextColor="{DynamicResource ButtonTextColor}"
+                                CornerRadius="8"
+                                HeightRequest="45" />
+                    </VerticalStackLayout>
                 </Border>
                 
-                <StackLayout Orientation="Horizontal" Spacing="10">
-                    <Button Text="Create Wallet" 
-                            Command="{Binding CreateWalletCommand}"
-                            BackgroundColor="{DynamicResource ButtonBackground}"
-                            TextColor="{DynamicResource ButtonTextColor}"
-                            CornerRadius="8"
-                            FontSize="16"
-                            FontAttributes="Bold"
-                            HeightRequest="50"
-                            HorizontalOptions="FillAndExpand" />
-                    
-                    <Button Text="Create later" 
-                            Command="{Binding SkipWalletCommand}"
-                            BackgroundColor="{DynamicResource ButtonBackground}"
-                            TextColor="{DynamicResource ButtonTextColor}"
-                            CornerRadius="8"
-                            FontSize="16"
-                            FontAttributes="Bold"
-                            HeightRequest="50"
-                            HorizontalOptions="FillAndExpand" />
-                </StackLayout>
-            </StackLayout>
+                <CollectionView ItemsSource="{Binding Wallets}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="clientModels:WalletDto">
+                            <Border StrokeThickness="1"
+                                    Padding="10"
+                                    Margin="0,5"
+                                    Background="{DynamicResource BorderBackground}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-            <!-- Loading Indicator -->
-            <ActivityIndicator IsRunning="{Binding IsBusy}" 
-                              IsVisible="{Binding IsBusy}"
-                              Color="{DynamicResource LoadingSpinnerColor}"
-                              HorizontalOptions="Center" />
-        </StackLayout>
-    </ScrollView>
+                                    <!-- Текст кошелька -->
+                                    <Label Grid.Column="0"
+                                           Text="{Binding .}"
+                                           FontSize="16"
+                                           TextColor="{DynamicResource LabelTextColor}"
+                                           VerticalOptions="Center" />
+
+                                    <!-- Крестик -->
+                                    <Button Grid.Column="1"
+                                            Text="✕"
+                                            FontSize="16"
+                                            BackgroundColor="Transparent"
+                                            TextColor="{DynamicResource DeleteEntityIconColor}"
+                                            VerticalOptions="Center"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type initialConfiguration:InitialWalletCreationViewModel}}, Path=DeleteWalletCommand}"
+                                            CommandParameter="{Binding Id}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <Button Grid.Row="1"
+                Text="{Binding CompleteButtonText}"
+                Command="{Binding CompleteCommand}"
+                BackgroundColor="{DynamicResource ButtonBackground}"
+                TextColor="{DynamicResource ButtonTextColor}"
+                CornerRadius="8"
+                FontSize="16"
+                FontAttributes="Bold"
+                HeightRequest="50"
+                Margin="20" />
+    </Grid>
 </ContentPage>
